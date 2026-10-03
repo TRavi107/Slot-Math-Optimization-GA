@@ -119,11 +119,11 @@ void RunSim(long spinCount, SimResult& result) {
             break;
         }
 
-        if (scatterCount >= 3) {
+        if (scatterCount >= 3 && scatterCount <=5) {
             win = Paytable[static_cast<int>(GameSymbols::SC)][scatterCount - 3]*Constants::baseBet;
             winnings += win;
-            if (scatterCount != 3 && scatterCount != 4 && scatterCount != 5)
-                std::cout << "Scatter is more " << scatterCount << std::endl;
+            // if (scatterCount != 3 && scatterCount != 4 && scatterCount != 5)
+            //     std::cout << "Scatter is more " << scatterCount << std::endl;
             result.base.updateSymbolsData(win,scatterCount,GameSymbols::SC);
             if (result.CheckIfMaxWinReached(winnings)) {
                 winnings = result.GetRemainingFromMaxWin();

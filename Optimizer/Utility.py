@@ -2,43 +2,17 @@ import random
 import json
 import os
 
-from Parents import VariableType
+from Parents import VariableType, findBest
 
-def generate_reelset_col(symbols, reelSize, seed=None):
-    """
-    Return a list of length `size` built from `symbols`,
-    adding randomly chosen symbols from the list if it's too short.
-    """
-    rng = random.Random(seed)
-    result = list(symbols)
-
-    if not result:
-        raise ValueError("symbols list is empty")
-
-    # Pad with random picks until we reach the target size
-    while len(result) < reelSize:
-        result.append(rng.choice(symbols))
-
-    # If the list is already longer than size, trim it
-    return result[:reelSize]
-
-def generate_reelset(symbols, reelSize,colSize, seed=None):
-    """
-    Return a list of length `size` built from `symbols`,
-    adding randomly chosen symbols from the list if it's too short.
-    """
-    rng = random.Random(seed)
-    result = []
-
+def generate_reelset_col(symbols, reelSize, rng=random):
     if not symbols:
         raise ValueError("symbols list is empty")
+    result = list(symbols) + [rng.choice(symbols) for _ in range(reelSize - len(symbols))]
+    rng.shuffle(result)
+    return result[:reelSize]
 
-    # Pad with random picks until we reach the target size
-    while len(result) < colSize:
-        result.append(generate_reelset_col(symbols,reelSize))
-
-    # If the list is already longer than size, trim it
-    return result[:colSize]
+def generate_reelset(symbols, reelSize, colSize, rng=random):
+    return [generate_reelset_col(symbols, reelSize, rng) for _ in range(colSize)]
 
 
 
@@ -91,5 +65,9 @@ def UpdateParentVars(parent, output):
     parent.updateFitnessVariable(VariableType.freeTriggerRate,output['freeTriggerRate'])
     parent.CalcuteFitness()
 
-
+def make_pairs(pool):
+    """Pair neighbours: (0,1), (2,3), ... An odd leftover is returned alone."""
+    pairs = [(pool[k], pool[k + 1]) for k in range(0, len(pool) - 1, 2)]
+    leftover = pool[-1] if len(pool) % 2 else None
+    return pairs, leftover
 

@@ -1,5 +1,7 @@
 import json, subprocess, tempfile, os
-from pathlib import Path
+import time
+
+from Utility import UpdateParentVars, save_reelset_file
 
 def Evaluate(spin_count, reelset_path, exe):
     fd, out_path = tempfile.mkstemp(suffix=".json")
@@ -17,6 +19,18 @@ def Evaluate(spin_count, reelset_path, exe):
     finally:
         os.remove(out_path)
 
+def evaluate_parent(parent, spins , simulatorPath, path):
+    """Write the parent's reels to `path`, simulate it, store its fitness."""
+    
+    save_reelset_file(parent.baseReelSet, parent.freeReelSet, path)
+    start = time.perf_counter()
+    output = Evaluate(spins, path,simulatorPath)
+
+    elapsed = time.perf_counter() - start
+    print(f"Simulation Took {elapsed:.4f} seconds")
+
+    UpdateParentVars(parent,output)
+    return output
 # HERE = Path(__file__).resolve().parent
 # reelset = HERE / "reelset.json"
 

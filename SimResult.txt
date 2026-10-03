@@ -1,0 +1,43 @@
+Tournament selection
+    best 216.1355, mean dist 422.0429
+    baseRTP : 3.799993205
+    baseHitRate : 1.7057048492677154
+    freeRTP : 6.1907059
+    freeHitRate : 1.6269137859344482
+    freeTriggerRate : 15.700386047363281
+
+Roulette selection
+    best 268.4890, mean dist 333.3790
+    baseRTP : 6.55531777
+    baseHitRate : 1.6827979679877978
+    freeRTP : 6.348974535
+    freeHitRate : 1.9261565208435059
+    freeTriggerRate : 5.952462673187256
+
+SUS selection 
+    linear weight
+        best 113.5696, mean dist 146.8170
+        baseRTP : 2.787588555
+        baseHitRate : 2.016620583525299
+        freeRTP : 2.99698769
+        freeHitRate : 1.8050650358200073
+        freeTriggerRate : 13.327522277832031
+
+        
+
+    boltzmann weight
+        best 132.0343, mean dist 227.0963
+        baseRTP : 1.843183675
+        baseHitRate : 1.9256165150115288
+        freeRTP : 4.28373609
+        freeHitRate : 2.8889081478118896
+        freeTriggerRate : 208.7290496826172
+
+        best 147.2970, mean dist 200.1279
+        baseRTP : 2.749787605
+        baseHitRate : 1.9265558383311403
+        freeRTP : 4.275734425
+        freeHitRate : 1.4872229099273682
+        freeTriggerRate : 13.311785697937012
+
+    
