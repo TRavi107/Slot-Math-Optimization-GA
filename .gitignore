@@ -41,6 +41,10 @@ Debug/
 Release/
 x64/
 x86/
+/Optimizer/Results
+/Optimizer/Runs
+/Optimizer/ReelSets
+
 
 # CMake
 CMakeFiles/

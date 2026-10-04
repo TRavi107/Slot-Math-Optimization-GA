@@ -57,14 +57,6 @@ def save_reelset_file(base_reelset, free_reelset, path):
     with open(path, "w") as f:
         f.write(text)
 
-def UpdateParentVars(parent, output):
-    parent.updateFitnessVariable(VariableType.baseRTP,output['baseRTP'])
-    parent.updateFitnessVariable(VariableType.baseHitRate,output['baseHitRate'])
-    parent.updateFitnessVariable(VariableType.freeRTP,output['freeRTP'])
-    parent.updateFitnessVariable(VariableType.freeHitRate,output['freeHitRate'])
-    parent.updateFitnessVariable(VariableType.freeTriggerRate,output['freeTriggerRate'])
-    parent.CalcuteFitness()
-
 def make_pairs(pool):
     """Pair neighbours: (0,1), (2,3), ... An odd leftover is returned alone."""
     pairs = [(pool[k], pool[k + 1]) for k in range(0, len(pool) - 1, 2)]

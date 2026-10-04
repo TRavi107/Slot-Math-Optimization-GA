@@ -41,6 +41,15 @@ def findWorst(parents):      return max(parents, key=lambda p: p.fitnessValue)
 def findWorstIndex(parents): return max(range(len(parents)), key=lambda i: parents[i].fitnessValue)
 def findBestIndex(parents): return min(range(len(parents)), key=lambda i: parents[i].fitnessValue)
 
+def UpdateParentVars(parent, output):
+    # parent.updateFitnessVariable(VariableType.baseRTP,output['baseRTP'])
+    # parent.updateFitnessVariable(VariableType.baseHitRate,output['baseHitRate'])
+    parent.updateFitnessVariable(VariableType.freeRTP,output['freeRTP'])
+    parent.updateFitnessVariable(VariableType.freeHitRate,output['freeHitRate'])
+    parent.updateFitnessVariable(VariableType.freeRetriggerRate,output['freeReTriggerRate'])
+    # parent.updateFitnessVariable(VariableType.freeTriggerRate,output['freeTriggerRate'])
+    parent.CalcuteFitness()
+
 class FitnessVariable:
     varName = None
     currentValue = 0
@@ -58,3 +67,8 @@ class VariableType(Enum):
     baseHitRate = auto()
     freeHitRate = auto()
     freeTriggerRate = auto()
+    freeRetriggerRate = auto()
+
+class GameMode(Enum):
+    BaseGame = auto()
+    FreeGame = auto()

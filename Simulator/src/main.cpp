@@ -165,6 +165,7 @@ SimResult SimRunnerInit(const long spinCount) {
         << "  \"freeRTP\": "        << r.free.rtp << ",\n"
         << "  \"freeAvgSpins\": "   << r.free.averageSpins << ",\n"
         << "  \"freeTriggerRate\": "<< r.free.triggerRate << ",\n"
+        << "  \"freeReTriggerRate\": "<< r.free.retriggerRate << ",\n"
         << "  \"totalRTP\": "       << r.totalRTP << ",\n"
         << "  \"totalWins\": "      << static_cast<long long>(r.totalWins) << ",\n"
         << "  \"maxWinCount\": "    << r.maxWinCount << ",\n"

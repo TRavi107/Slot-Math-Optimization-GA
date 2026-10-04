@@ -1,7 +1,8 @@
 import json, subprocess, tempfile, os
 import time
 
-from Utility import UpdateParentVars, save_reelset_file
+from Parents import UpdateParentVars
+from Utility import save_reelset_file
 
 def Evaluate(spin_count, reelset_path, exe):
     fd, out_path = tempfile.mkstemp(suffix=".json")
@@ -27,7 +28,7 @@ def evaluate_parent(parent, spins , simulatorPath, path):
     output = Evaluate(spins, path,simulatorPath)
 
     elapsed = time.perf_counter() - start
-    print(f"Simulation Took {elapsed:.4f} seconds")
+    # print(f"Simulation Took {elapsed:.4f} seconds")
 
     UpdateParentVars(parent,output)
     return output

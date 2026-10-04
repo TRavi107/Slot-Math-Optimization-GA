@@ -1,9 +1,9 @@
-from Utility import generate_reelset, save_reelset_file,UpdateParentVars \
+from Utility import generate_reelset, save_reelset_file\
                     , make_pairs
 from FitnessFunction import Evaluate, evaluate_parent
 from Parents import Parent, findWorstIndex, findBest, findWorst , findBestIndex , \
-                    VariableType , FitnessVariable     
-from Selection import crossover,RouletteSelection, tournamentSelection, mutate , \
+                    UpdateParentVars,VariableType , FitnessVariable , GameMode 
+from Selection import RouletteSelection, tournamentSelection, mutate , \
                         linear_rank_weights ,boltzmann_weights, SUS ,\
                         SelectionTypes
 from Replacement import ReplacementType ,ReplaceSingleWorstParent ,GenerationalReplace
@@ -14,20 +14,23 @@ symbols = ["AA", "BB", "CC", "DD", "EE", "FF", "GG", "WD", "SC"]
 reelSize = 50
 columnCount = 5
 fitnessvariable = [
-    FitnessVariable(VariableType.baseRTP , 0 , .57,10),
-    FitnessVariable(VariableType.baseHitRate , 0 , 3,5),
+    # FitnessVariable(VariableType.baseRTP , 0 , .57,10),
+    # FitnessVariable(VariableType.baseHitRate , 0 , 3,5),
     FitnessVariable(VariableType.freeRTP , 0 , .38,10),
     FitnessVariable(VariableType.freeHitRate , 0 , 2.7,5),
-    FitnessVariable(VariableType.freeTriggerRate , 0 , 80,3),
+    FitnessVariable(VariableType.freeRetriggerRate , 0 , 60,4),
+    # FitnessVariable(VariableType.freeTriggerRate , 0 , 80,3),
 ]
 
 populationSize = 10
-generations = 50
-mutationCount = 10
+generations = 0
+mutationCount = 5
 spins = 10_000_000
-createInitialPopulation = True
-selectionType = SelectionTypes.SUS
-replacementTpye = ReplacementType.Generational
+createInitialPopulation = False
+selectionType = SelectionTypes.RouletteSelection
+replacementTpye = ReplacementType.SteadyState
+gameMode = GameMode.FreeGame
+bestParentIndex= 5 # for free game mode
 
 folder = "Optimizer/ReelSets"
 simulatorPath = "build/simulator"
@@ -60,6 +63,7 @@ for i, p in enumerate(parents):
 for gen in range(generations):
     start = time.perf_counter()
     selectedParents = []
+    bestFitnessForEachGen = []
     match replacementTpye:
         case ReplacementType.SteadyState:
             parentNumber = 2
@@ -83,22 +87,37 @@ for gen in range(generations):
     match replacementTpye:
         case ReplacementType.Generational:
             GenerationalReplace(parents, selectedParents, 0, spins, simulatorPath,
-                                fitnessvariable, folder, symbols, mutationCount, gen)
+                                fitnessvariable, folder, symbols, mutationCount, gen ,gameMode)
         case ReplacementType.ElistismGenerational:
             GenerationalReplace(parents, selectedParents, 2, spins, simulatorPath,
-                                fitnessvariable, folder, symbols, mutationCount, gen)
+                                fitnessvariable, folder, symbols, mutationCount, 
+                                gen, gameMode)
 
         case ReplacementType.SteadyState:
 
             ReplaceSingleWorstParent(parents,spins,simulatorPath,fitnessvariable,folder,
-                            selectedParents[0],selectedParents[1],symbols,mutationCount ,gen)
+                            selectedParents[0],selectedParents[1],symbols,mutationCount ,
+                            gen,gameMode, parents[bestParentIndex].baseReelSet)
+            
+    bestFitnessForEachGen.append(findBest(parents).fitnessValue)
 
+    
     elapsed = time.perf_counter() - start
-    print(f"Single gen Took {elapsed:.4f} seconds")
+    # print(f"Single gen Took {elapsed:.4f} seconds")
 
 # output = Evaluate(300_000_000, f"{folder}/parent{findBestIndex(parents)}.json",simulatorPath)
 # print(output['totalRTP'])
 # print(output['baseHitRate'])
+print(f"Best parent is {findBestIndex(parents)}")
 findBest(parents).printData()
+
+output = Evaluate(100_000_000,f"{folder}/parent{findBestIndex(parents)}.json",simulatorPath)
+print(output['totalRTP'])
+print(output['freeTriggerRate'])
+print(output['freeReTriggerRate'])
+print(output['baseHitRate'])
+print(output['freeHitRate'])
+print(output['freeRTP'])
+print(output['baseRTP'])
 
 

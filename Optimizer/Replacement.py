@@ -2,21 +2,31 @@ from enum import Enum , auto
 from FitnessFunction import evaluate_parent
 from Selection import crossover, mutate
 from Utility import make_pairs, save_reelset_file
-from Parents import Parent, FitnessVariable, findBest, findWorstIndex 
+from Parents import Parent, FitnessVariable, findBest, findWorstIndex ,GameMode
 
 class ReplacementType(Enum):
     SteadyState = auto()
     Generational = auto()
     ElistismGenerational = auto()
 
-def ReplaceSingleWorstParent(parents,spins, simulationFolder ,fitnessvariable,folder,parent1,parent2,symbols,mutationCount,gen):
-    child = Parent(
-        fitnessvariable,
-        crossover(parent1.baseReelSet, parent2.baseReelSet),
-        crossover(parent1.freeReelSet, parent2.freeReelSet),
-    )
-    child.baseReelSet = mutate(child.baseReelSet, symbols, mutationCount)
-    child.freeReelSet = mutate(child.freeReelSet, symbols, mutationCount)
+def ReplaceSingleWorstParent(parents,spins, simulationFolder ,fitnessvariable,folder,
+                             parent1,parent2,symbols,mutationCount,gen , gameMode, parentBaseReel):
+
+    match gameMode:
+        case GameMode.BaseGame:
+            child = Parent(
+                fitnessvariable,
+                crossover(parent1.baseReelSet, parent2.baseReelSet),
+                parent1.freeReelSet, # using parent just for placeholder
+            )
+            child.baseReelSet = mutate(child.baseReelSet, symbols, mutationCount)
+        case GameMode.FreeGame:
+            child = Parent(
+                            fitnessvariable,
+                            parentBaseReel,
+                            crossover(parent1.freeReelSet, parent2.freeReelSet),
+                        )
+            child.freeReelSet = mutate(child.freeReelSet, symbols, mutationCount)
 
     # evaluate only the child (writes it to a temp file first)
     evaluate_parent(child,spins,simulationFolder, f"{folder}/child.json")
