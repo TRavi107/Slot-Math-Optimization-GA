@@ -1,68 +1,125 @@
-# Prerequisites
-*.d
-
-# Compiled Object files
-*.slo
-*.lo
+# ===================== C++ =====================
+# Compiled objects
 *.o
 *.obj
+*.slo
+*.lo
+*.ko
 
-# Precompiled Headers
+# Precompiled headers
 *.gch
 *.pch
 
-# Linker files
-*.ilk
-
-# Debugger Files
-*.pdb
-
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-*.so.*
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
+# Libraries
 *.a
 *.lib
+*.la
+*.lai
+*.so
+*.so.*
+*.dylib
+*.dll
 
 # Executables
 *.exe
 *.out
 *.app
 
+# Debug / symbol files
+*.pdb
+*.ilk
+*.dSYM/
+
 # Build directories
 build/
 Build/
-build-*/
+cmake-build-*/
+out/
+bin/
+obj/
+Debug/
+Release/
+x64/
+x86/
+/Optimizer/Results
+/Optimizer/Runs
+/Optimizer/ReelSets
 
-# CMake generated files
+
+# CMake
 CMakeFiles/
 CMakeCache.txt
 cmake_install.cmake
-Makefile
 install_manifest.txt
+CTestTestfile.cmake
+_deps/
 compile_commands.json
 
-# Temporary files
-*.tmp
-*.log
-*.bak
-*.swp
+# Makefile-generated
+Makefile.in
 
-# vcpkg
+# Conan / vcpkg
+conanbuildinfo.*
+conaninfo.txt
+graph_info.json
 vcpkg_installed/
 
-# debug information files
-*.dwo
+# ===================== Python =====================
+# Bytecode
+__pycache__/
+*.py[cod]
+*$py.class
 
-# test output & cache
-Testing/
-.cache/
+# Virtual environments
+venv/
+.venv/
+env/
+.env/
+ENV/
+
+# Packaging / distribution
+dist/
+*.egg-info/
+*.egg
+.eggs/
+wheels/
+pip-wheel-metadata/
+
+# Testing / coverage
+.pytest_cache/
+.tox/
+.nox/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# Type checkers / linters
+.mypy_cache/
+.ruff_cache/
+.pytype/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Environment variables / secrets
+.env
+*.env
+
+# ===================== Editors / OS =====================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.vs/
+*.user
+*.suo
+.DS_Store
+Thumbs.db
+
+# ===================== Data / outputs (optional) =====================
+# Uncomment if simulation results shouldn't be tracked
+# *.csv
+# *.log
+# results/

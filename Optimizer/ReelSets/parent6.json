@@ -1,0 +1,20 @@
+{
+  "BaseGameReel": [
+    [
+      ["GG", "DD", "EE", "AA", "FF", "FF", "DD", "FF", "SC", "FF", "EE", "CC", "CC", "DD", "EE", "DD", "FF", "AA", "EE", "AA", "GG", "EE", "FF", "EE", "SC", "EE", "CC", "GG", "DD", "EE", "GG", "AA", "DD", "FF", "DD", "AA", "AA", "EE", "DD", "FF", "EE", "CC", "AA", "GG", "FF", "CC", "CC", "GG", "CC", "DD"],
+      ["DD", "GG", "FF", "DD", "BB", "CC", "EE", "GG", "AA", "CC", "GG", "AA", "BB", "GG", "EE", "FF", "EE", "AA", "AA", "FF", "GG", "GG", "BB", "BB", "GG", "EE", "DD", "FF", "BB", "FF", "FF", "BB", "BB", "FF", "GG", "FF", "DD", "GG", "DD", "SC", "WD", "GG", "GG", "GG", "DD", "BB", "DD", "EE", "BB", "DD"],
+      ["FF", "EE", "BB", "DD", "AA", "FF", "FF", "GG", "CC", "FF", "BB", "DD", "FF", "FF", "BB", "DD", "EE", "FF", "FF", "BB", "GG", "AA", "EE", "DD", "GG", "FF", "SC", "CC", "DD", "EE", "GG", "AA", "EE", "BB", "SC", "AA", "EE", "CC", "WD", "AA", "AA", "FF", "DD", "CC", "EE", "DD", "CC", "AA", "WD", "DD"],
+      ["CC", "EE", "AA", "GG", "WD", "AA", "DD", "GG", "DD", "SC", "DD", "DD", "FF", "CC", "AA", "WD", "CC", "CC", "DD", "FF", "EE", "FF", "GG", "AA", "AA", "BB", "SC", "AA", "GG", "DD", "DD", "FF", "EE", "AA", "EE", "EE", "DD", "WD", "GG", "EE", "GG", "AA", "EE", "AA", "EE", "AA", "WD", "EE", "EE", "FF"],
+      ["WD", "CC", "FF", "WD", "EE", "CC", "BB", "AA", "BB", "EE", "CC", "SC", "GG", "WD", "GG", "SC", "WD", "BB", "GG", "AA", "CC", "DD", "EE", "FF", "AA", "BB", "EE", "BB", "GG", "WD", "GG", "WD", "FF", "BB", "FF", "WD", "AA", "DD", "AA", "WD", "SC", "EE", "DD", "AA", "DD", "WD", "DD", "WD", "CC", "WD"]
+    ]
+  ],
+  "FreeGameReel": [
+    [
+      ["FF", "DD", "FF", "EE", "FF", "DD", "FF", "CC", "CC", "CC", "AA", "EE", "FF", "FF", "BB", "DD", "CC", "BB", "WD", "FF", "WD", "CC", "DD", "FF", "FF", "EE", "EE", "BB", "BB", "FF", "AA", "GG", "EE", "EE", "GG", "FF", "WD", "AA", "AA", "EE", "WD", "EE", "SC", "GG", "GG", "FF", "FF", "AA", "EE", "DD"],
+      ["CC", "EE", "AA", "EE", "GG", "FF", "SC", "BB", "EE", "BB", "CC", "FF", "AA", "WD", "BB", "EE", "DD", "CC", "DD", "DD", "AA", "WD", "GG", "FF", "EE", "CC", "WD", "WD", "CC", "FF", "AA", "SC", "AA", "DD", "CC", "WD", "GG", "CC", "CC", "AA", "EE", "GG", "BB", "GG", "GG", "BB", "BB", "WD", "CC", "BB"],
+      ["DD", "FF", "BB", "FF", "CC", "WD", "FF", "GG", "CC", "DD", "WD", "WD", "GG", "BB", "CC", "WD", "GG", "AA", "AA", "EE", "DD", "AA", "SC", "GG", "GG", "FF", "GG", "CC", "AA", "AA", "WD", "SC", "FF", "DD", "CC", "DD", "CC", "FF", "GG", "AA", "WD", "BB", "WD", "GG", "CC", "BB", "AA", "EE", "SC", "EE"],
+      ["EE", "BB", "GG", "GG", "AA", "AA", "WD", "EE", "SC", "WD", "DD", "FF", "SC", "GG", "AA", "AA", "CC", "FF", "EE", "BB", "EE", "EE", "CC", "DD", "WD", "BB", "FF", "AA", "WD", "GG", "CC", "WD", "DD", "BB", "GG", "AA", "EE", "WD", "BB", "WD", "CC", "FF", "WD", "CC", "AA", "BB", "DD", "FF", "GG", "BB"],
+      ["FF", "CC", "DD", "GG", "WD", "BB", "SC", "AA", "FF", "GG", "AA", "EE", "SC", "BB", "GG", "GG", "GG", "AA", "FF", "BB", "BB", "FF", "SC", "CC", "WD", "FF", "GG", "BB", "EE", "AA", "GG", "EE", "GG", "WD", "FF", "FF", "CC", "DD", "DD", "CC", "FF", "EE", "BB", "CC", "AA", "GG", "EE", "BB", "FF", "EE"]
+    ]
+  ]
+}
