@@ -40,6 +40,7 @@ void free_game(SimResult& result)
     double winnings = 0;
     int scatterCount =0;
     double win = 0;
+    return; //to skip free game but count trigger rate
     while (freeSpinCount > 0) {
         winnings = 0;
         scatterCount = 0;

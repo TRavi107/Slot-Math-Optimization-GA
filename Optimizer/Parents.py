@@ -42,12 +42,12 @@ def findWorstIndex(parents): return max(range(len(parents)), key=lambda i: paren
 def findBestIndex(parents): return min(range(len(parents)), key=lambda i: parents[i].fitnessValue)
 
 def UpdateParentVars(parent, output):
-    # parent.updateFitnessVariable(VariableType.baseRTP,output['baseRTP'])
-    # parent.updateFitnessVariable(VariableType.baseHitRate,output['baseHitRate'])
-    parent.updateFitnessVariable(VariableType.freeRTP,output['freeRTP'])
-    parent.updateFitnessVariable(VariableType.freeHitRate,output['freeHitRate'])
-    parent.updateFitnessVariable(VariableType.freeRetriggerRate,output['freeReTriggerRate'])
-    # parent.updateFitnessVariable(VariableType.freeTriggerRate,output['freeTriggerRate'])
+    parent.updateFitnessVariable(VariableType.baseRTP,output['baseRTP'])
+    parent.updateFitnessVariable(VariableType.baseHitRate,output['baseHitRate'])
+    # parent.updateFitnessVariable(VariableType.freeRTP,output['freeRTP'])
+    # parent.updateFitnessVariable(VariableType.freeHitRate,output['freeHitRate'])
+    # parent.updateFitnessVariable(VariableType.freeRetriggerRate,output['freeReTriggerRate'])
+    parent.updateFitnessVariable(VariableType.freeTriggerRate,output['freeTriggerRate'])
     parent.CalcuteFitness()
 
 class FitnessVariable:

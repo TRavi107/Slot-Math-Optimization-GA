@@ -90,8 +90,8 @@ def select_parents(parents, n=None, method="rank", s=2.0, T=0.1, rng=random):
 
 
 
-def RouletteSelection(parents,size=2):
-    weights = [1.0 / (1.0 + p.fitnessValue) for p in parents]
+def RouletteSelection(parents, size=2):
+    weights = linear_rank_weights(parents, s=2)
     return random.choices(parents, weights=weights, k=size)
 
 def tournamentSelection(parents, tournamentSize=3, winners=2, rng=random):
@@ -100,29 +100,20 @@ def tournamentSelection(parents, tournamentSize=3, winners=2, rng=random):
             for _ in range(winners)]
 
 def crossover(reelset1, reelset2):
-    """
-    Child reel set: for each reel, first half from parent 1,
-    second half from parent 2.
-    """
     child = []
     for reel1, reel2 in zip(reelset1, reelset2):
-        mid = len(reel1) // 2
-        child.append(reel1[:mid] + reel2[mid:])
-    
+        cut = random.randint(1, len(reel1) - 1)
+        child.append(reel1[:cut] + reel2[cut:])
     return child
 
 def mutate(reelset, symbols, count, rng=random):
-    """
-    Return a copy of `reelset` with `count` randomly chosen positions
-    changed to a different symbol. The original is not modified.
-    """
-    child = [list(reel) for reel in reelset]          # copy so parents stay untouched
+    child = [list(reel) for reel in reelset]
 
     positions = [(r, i) for r in range(len(child)) for i in range(len(child[r]))]
     count = min(count, len(positions))
 
-    for r, i in rng.sample(positions, count):         # distinct positions, no repeats
+    for r, i in rng.sample(positions, count): 
         options = [s for s in symbols if s != child[r][i]]
-        child[r][i] = rng.choice(options)             # guaranteed to differ from the old symbol
+        child[r][i] = rng.choice(options)
 
     return child

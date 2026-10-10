@@ -1,7 +1,6 @@
 from enum import Enum , auto
-from FitnessFunction import evaluate_parent
 from Selection import crossover, mutate
-from Utility import make_pairs, save_reelset_file
+from Utility import EvaluateAndSaveParents, make_pairs, save_reelset_file
 from Parents import Parent, FitnessVariable, findBest, findWorstIndex ,GameMode
 
 class ReplacementType(Enum):
@@ -11,25 +10,11 @@ class ReplacementType(Enum):
 
 def ReplaceSingleWorstParent(parents,spins, simulationFolder ,fitnessvariable,folder,
                              parent1,parent2,symbols,mutationCount,gen , gameMode, parentBaseReel):
-
-    match gameMode:
-        case GameMode.BaseGame:
-            child = Parent(
-                fitnessvariable,
-                crossover(parent1.baseReelSet, parent2.baseReelSet),
-                parent1.freeReelSet, # using parent just for placeholder
-            )
-            child.baseReelSet = mutate(child.baseReelSet, symbols, mutationCount)
-        case GameMode.FreeGame:
-            child = Parent(
-                            fitnessvariable,
-                            parentBaseReel,
-                            crossover(parent1.freeReelSet, parent2.freeReelSet),
-                        )
-            child.freeReelSet = mutate(child.freeReelSet, symbols, mutationCount)
+    child = make_child(parent1,parent2,fitnessvariable,symbols,mutationCount,
+                       gameMode,parentBaseReel)
 
     # evaluate only the child (writes it to a temp file first)
-    evaluate_parent(child,spins,simulationFolder, f"{folder}/child.json")
+    EvaluateAndSaveParents(child,spins,simulationFolder, f"{folder}/child.json")
 
     # replace the worst parent only if the child is closer to 1
     worst_idx = findWorstIndex(parents)
@@ -43,22 +28,37 @@ def ReplaceSingleWorstParent(parents,spins, simulationFolder ,fitnessvariable,fo
                         f"{folder}/parent{worst_idx}.json")
 
     dists = [abs(p.fitnessValue) for p in parents]
+    bestParent = findBest(parents)
+    meanDist = sum(dists) / len(dists)
     print(f"Gen {gen + 1}: child {child.fitnessValue:.4f} | "
         f"{'replaced ' + str(worst_idx) if replaced else 'rejected'} "
         f"(worst was {worst.fitnessValue:.4f}) | "
-        f"best {findBest(parents).fitnessValue:.4f}, "
-        f"mean dist {sum(dists) / len(dists):.4f}")
+        f"best {bestParent.fitnessValue:.4f}, "
+        f"mean dist {meanDist:.4f}")
 
-def make_child(p1, p2, fitnessvariable, symbols, mutationCount):
-    child = Parent(fitnessvariable,
-                   crossover(p1.baseReelSet, p2.baseReelSet),
-                   crossover(p1.freeReelSet, p2.freeReelSet))
-    child.baseReelSet = mutate(child.baseReelSet, symbols, mutationCount)
-    child.freeReelSet = mutate(child.freeReelSet, symbols, mutationCount)
+    
+    return bestParent,meanDist
+
+def make_child(p1, p2, fitnessvariable, symbols, mutationCount,gameMode,parentBaseReel):
+    match gameMode:
+            case GameMode.BaseGame:
+                child = Parent(
+                    fitnessvariable,
+                    crossover(p1.baseReelSet, p2.baseReelSet),
+                    p1.freeReelSet, # using parent just for placeholder
+                )
+                child.baseReelSet = mutate(child.baseReelSet, symbols, mutationCount)
+            case GameMode.FreeGame:
+                child = Parent(
+                                fitnessvariable,
+                                parentBaseReel,
+                                crossover(p1.freeReelSet, p2.freeReelSet),
+                            )
+                child.freeReelSet = mutate(child.freeReelSet, symbols, mutationCount)
     return child
 
 def GenerationalReplace(parents, selected, n_elite, spins, simulatorPath,
-                        fitnessvariable, folder, symbols, mutationCount, gen):
+                        fitnessvariable, folder, symbols, mutationCount, gen,gameMode,parentBaseReel):
     n_children = len(parents) - n_elite
     elites = sorted(parents, key=lambda p: p.fitnessValue)[:n_elite]
 
@@ -68,8 +68,8 @@ def GenerationalReplace(parents, selected, n_elite, spins, simulatorPath,
         for a, b in ((p1, p2), (p2, p1)):
             if len(children) == n_children:
                 break
-            c = make_child(a, b, fitnessvariable, symbols, mutationCount)
-            evaluate_parent(c, spins, simulatorPath, f"{folder}/child.json")
+            c = make_child(a, b, fitnessvariable, symbols, mutationCount,gameMode,parentBaseReel)
+            EvaluateAndSaveParents(c, spins, simulatorPath, f"{folder}/child.json")
             children.append(c)
     assert len(children) == n_children, "select 2 parents per 2 children"
 
@@ -77,6 +77,7 @@ def GenerationalReplace(parents, selected, n_elite, spins, simulatorPath,
     for i, p in enumerate(parents):
         save_reelset_file(p.baseReelSet, p.freeReelSet, f"{folder}/parent{i}.json")
 
-    best = findBest(parents).fitnessValue
+    bestparent = findBest(parents)
     mean = sum(p.fitnessValue for p in parents) / len(parents)
-    print(f"Gen {gen + 1}: best {best:.4f}, mean {mean:.4f}")
+    print(f"Gen {gen + 1}: best {bestparent.fitnessValue:.4f}, mean {mean:.4f}")
+    return bestparent,mean
