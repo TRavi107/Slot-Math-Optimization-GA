@@ -6,17 +6,27 @@ import json, subprocess, tempfile, os
 
 from Parents import Parent, UpdateParentVars, VariableType, findBest
 
-def Evaluate(spin_count, reelset_path, exe):
+def Evaluate(spin_count, reelset_path, exe, run_only_base=False):
     fd, out_path = tempfile.mkstemp(suffix=".json")
     os.close(fd)
     try:
         proc = subprocess.run(
-            [exe, str(spin_count), reelset_path, out_path],
-            capture_output=True, text=True,
-            stdin=subprocess.DEVNULL, timeout=3600,
+            [
+                exe,
+                str(spin_count),
+                reelset_path,
+                "true" if run_only_base else "false",   # argv[3]
+                out_path,                               # argv[4]
+            ],
+            capture_output=True,
+            text=True,
+            stdin=subprocess.DEVNULL,
+            timeout=3600,
         )
         if proc.returncode != 0:
-            raise RuntimeError(f"myapp failed ({proc.returncode}):\n{proc.stdout}{proc.stderr}")
+            raise RuntimeError(
+                f"myapp failed ({proc.returncode}):\n{proc.stdout}{proc.stderr}"
+            )
         with open(out_path, encoding="utf-8") as f:
             return json.load(f)
     finally:
@@ -139,15 +149,15 @@ def LoadInitialParents(parentPath,populationSize,fitnessvariable):
         parents.append(Parent(fitnessvariable,data["BaseGameReel"][0], data["FreeGameReel"][0]))
     return parents
 
-def EvaluateAndSaveParents(parent, spin, simulatorPath, savepath):
+def EvaluateAndSaveParents(parent, spin, simulatorPath, savepath, runBaseOnly):
     save_reelset_file(parent.baseReelSet, parent.freeReelSet, savepath)
-    output = Evaluate(spin, savepath, simulatorPath)
+    output = Evaluate(spin, savepath, simulatorPath,runBaseOnly)
     UpdateParentVars(parent, output)
 
-def EvaluateParents(parents, spins, simulatorPath, folder):
+def EvaluateParents(parents, spins, simulatorPath, folder,runBaseOnly):
     for i, p in enumerate(parents):
         path = f"{folder}/parent{i}.json"
         save_reelset_file(p.baseReelSet, p.freeReelSet, path)
-        output = Evaluate(spins, path, simulatorPath)
+        output = Evaluate(spins, path, simulatorPath,runBaseOnly)
         UpdateParentVars(p, output)
         print(f"parent{i}: fitness {p.fitnessValue:.4f}, rtp {output['totalRTP'] * 100:.2f} %")

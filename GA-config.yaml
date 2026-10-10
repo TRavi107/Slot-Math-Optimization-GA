@@ -1,0 +1,101 @@
+# =====================================================================
+#  Slot Reelset Optimizer - Configuration
+#  Edit the values below, then run:   python main.py config.yaml
+#  Lines starting with # are comments and are ignored.
+# =====================================================================
+
+
+# ---------------------------------------------------------------------
+#  RUN SETTINGS
+# ---------------------------------------------------------------------
+run:
+  # Label for this run; saved with the results so you can tell runs apart.
+  runNumber: 4
+
+  # How many generations to evolve (SteadyState uses this number directly;
+  # Generational uses generations/10, ElistismGenerational uses generations/8).
+  generations: 1000
+
+  # true  = generate brand-new random parents into initialParentsFolder
+  # false = use the seed parents defined in main.py
+  createNewParents: false
+
+  # Number of reelsets (parents) in the population.
+  populationSize: 10
+
+  # Spins per simulation. More = more accurate but slower.
+  #   100_000      quick test
+  #   10_000_000   normal tuning
+  spins: 10_000_000
+
+  # Which part of the game to tune.
+  # Options: BaseGame, FreeGame
+  gameMode: BaseGame
+
+  # (FreeGame mode only) index of the parent whose base reels are kept fixed.
+  bestParentIndex: 5
+
+
+# ---------------------------------------------------------------------
+#  EXPERIMENTS - every combination below is run one after another
+# ---------------------------------------------------------------------
+experiments:
+  # Options: Generational, SteadyState, ElistismGenerational
+  replacementTypes:
+    - Generational
+    - SteadyState
+    - ElistismGenerational
+
+  # Options: RouletteSelection, TournamentSelection, SUS
+  selectionTypes:
+    - RouletteSelection
+    - TournamentSelection
+    - SUS
+
+  # How many reel positions are changed per mutation.
+  # Reel length is 50, so 5 = 10%, 10 = 20%, 15 = 30%.
+  mutationCounts: [3]
+
+
+# ---------------------------------------------------------------------
+#  REEL LAYOUT
+# ---------------------------------------------------------------------
+reels:
+  # All symbols that can appear on a reel. WD = wild, SC = scatter.
+  symbols: [AA, BB, CC, DD, EE, FF, GG, WD, SC]
+
+  # Number of stops on each reel strip.
+  reelSize: 50
+
+  # Number of reels (columns).
+  columnCount: 5
+
+
+# ---------------------------------------------------------------------
+#  FITNESS GOALS - what the optimizer tries to hit
+#    type    : the statistic to optimize
+#    arg1    : second FitnessVariable argument (leave as 0 unless you know)
+#    target  : the value you want
+#    weight  : importance; higher = optimizer cares more
+#    enabled : true to use this goal, false to ignore it
+#
+#  Types: baseRTP, baseHitRate, freeRTP, freeHitRate,
+#         freeTriggerRate, freeRetriggerRate
+# ---------------------------------------------------------------------
+fitnessVariables:
+  - { type: baseRTP,           arg1: 0, target: 0.57, weight: 10, enabled: true  }
+  - { type: baseHitRate,       arg1: 0, target: 3,    weight: 5,  enabled: true  }
+  - { type: freeRTP,           arg1: 0, target: 0.38, weight: 10, enabled: false }
+  - { type: freeHitRate,       arg1: 0, target: 2.7,  weight: 5,  enabled: false }
+  - { type: freeRetriggerRate, arg1: 0, target: 60,   weight: 4,  enabled: false }
+  - { type: freeTriggerRate,   arg1: 0, target: 80,   weight: 3,  enabled: true  }
+
+
+# ---------------------------------------------------------------------
+#  PATHS (relative to the folder you run main.py from)
+# ---------------------------------------------------------------------
+paths:
+  tempParentsFolder:    Optimizer/ReelSets/TempParents
+  initialParentsFolder: Optimizer/ReelSets/InitialParents
+  resultFile:           Results/results.json
+  simulatorPath:        build/simulator

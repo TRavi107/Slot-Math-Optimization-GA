@@ -24,6 +24,7 @@ enum class GameSymbols {
     Invalid
 };
 
+
 const inline double Paytable[][3] = {
     // 3OK  4OK  5OK
     {  20,  100, 200 },  // AA = 0
@@ -72,6 +73,7 @@ struct GameFeatureConsts {
 
 
 namespace Constants {
+
 
     // ─────────────────────────────────────────────
     // File paths and sheet names
@@ -123,5 +125,8 @@ namespace Constants {
 
         }
     }
+
+    inline bool runBaseOnly;
+
 }
 

@@ -40,7 +40,8 @@ void free_game(SimResult& result)
     double winnings = 0;
     int scatterCount =0;
     double win = 0;
-    return; //to skip free game but count trigger rate
+    if(Constants::runBaseOnly )
+        return; //to skip free game but count trigger rate
     while (freeSpinCount > 0) {
         winnings = 0;
         scatterCount = 0;
@@ -213,6 +214,21 @@ int main(int argc, char* argv[])
             }
         }
 
+        if (argc > 3) {
+            std::string arg = argv[3];
+            std::transform(arg.begin(), arg.end(), arg.begin(),
+                [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+
+            if (arg == "1" || arg == "true" || arg == "yes")
+                Constants::runBaseOnly = true;
+            else if (arg == "0" || arg == "false" || arg == "no")
+                Constants::runBaseOnly  = false;
+            else {
+                printf("ERROR: invalid runOnlyBase '%s' (use true/false or 1/0)\n", argv[3]);
+                return 1;
+            }
+        }
+
         SimResult result = SimResult(spinCount, Constants::baseBet, Constants::maxWin);
 
         // RunSim(spinCount, result);
@@ -220,7 +236,7 @@ int main(int argc, char* argv[])
         result.calculate();
 
         if (argc > 3)
-            writeResultsJson(argv[3], result, spinCount);
+            writeResultsJson(argv[4], result, spinCount);
 
         std::vector<std::pair<GameSymbols, /*ValueType*/ decltype(result.base.symbolsData)::mapped_type>>
             rows(result.base.symbolsData.begin(), result.base.symbolsData.end());

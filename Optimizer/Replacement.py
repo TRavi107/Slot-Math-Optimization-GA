@@ -9,12 +9,13 @@ class ReplacementType(Enum):
     ElistismGenerational = auto()
 
 def ReplaceSingleWorstParent(parents,spins, simulationFolder ,fitnessvariable,folder,
-                             parent1,parent2,symbols,mutationCount,gen , gameMode, parentBaseReel):
+                             parent1,parent2,symbols,mutationCount,gen , 
+                             gameMode, parentBaseReel):
     child = make_child(parent1,parent2,fitnessvariable,symbols,mutationCount,
                        gameMode,parentBaseReel)
 
     # evaluate only the child (writes it to a temp file first)
-    EvaluateAndSaveParents(child,spins,simulationFolder, f"{folder}/child.json")
+    EvaluateAndSaveParents(child,spins,simulationFolder, f"{folder}/child.json",gameMode==GameMode.BaseGame)
 
     # replace the worst parent only if the child is closer to 1
     worst_idx = findWorstIndex(parents)
@@ -58,7 +59,8 @@ def make_child(p1, p2, fitnessvariable, symbols, mutationCount,gameMode,parentBa
     return child
 
 def GenerationalReplace(parents, selected, n_elite, spins, simulatorPath,
-                        fitnessvariable, folder, symbols, mutationCount, gen,gameMode,parentBaseReel):
+                        fitnessvariable, folder, symbols, mutationCount, 
+                        gen,gameMode,parentBaseReel):
     n_children = len(parents) - n_elite
     elites = sorted(parents, key=lambda p: p.fitnessValue)[:n_elite]
 
@@ -69,7 +71,7 @@ def GenerationalReplace(parents, selected, n_elite, spins, simulatorPath,
             if len(children) == n_children:
                 break
             c = make_child(a, b, fitnessvariable, symbols, mutationCount,gameMode,parentBaseReel)
-            EvaluateAndSaveParents(c, spins, simulatorPath, f"{folder}/child.json")
+            EvaluateAndSaveParents(c, spins, simulatorPath, f"{folder}/child.json",gameMode==GameMode.BaseGame)
             children.append(c)
     assert len(children) == n_children, "select 2 parents per 2 children"
 
