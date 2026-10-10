@@ -1,0 +1,4 @@
+family,mutation,metric,n_seeds,k_methods,chi2,p,kendall_w
+strategy,5,final_best,1,1,,,
+selection (Steady-state),5,final_best,1,2,,,
+all (exploratory),5,final_best,1,2,,,
