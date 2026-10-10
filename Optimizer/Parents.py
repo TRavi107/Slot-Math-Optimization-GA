@@ -41,15 +41,6 @@ def findWorst(parents):      return max(parents, key=lambda p: p.fitnessValue)
 def findWorstIndex(parents): return max(range(len(parents)), key=lambda i: parents[i].fitnessValue)
 def findBestIndex(parents): return min(range(len(parents)), key=lambda i: parents[i].fitnessValue)
 
-def UpdateParentVars(parent, output):
-    parent.updateFitnessVariable(VariableType.baseRTP,output['baseRTP'])
-    parent.updateFitnessVariable(VariableType.baseHitRate,output['baseHitRate'])
-    # parent.updateFitnessVariable(VariableType.freeRTP,output['freeRTP'])
-    # parent.updateFitnessVariable(VariableType.freeHitRate,output['freeHitRate'])
-    # parent.updateFitnessVariable(VariableType.freeRetriggerRate,output['freeReTriggerRate'])
-    parent.updateFitnessVariable(VariableType.freeTriggerRate,output['freeTriggerRate'])
-    parent.CalcuteFitness()
-
 class FitnessVariable:
     varName = None
     currentValue = 0
@@ -72,3 +63,22 @@ class VariableType(Enum):
 class GameMode(Enum):
     BaseGame = auto()
     FreeGame = auto()
+
+# Simulator JSON key for each fitness variable
+OUTPUT_KEYS = {
+    VariableType.baseRTP:           "baseRTP",
+    VariableType.baseHitRate:       "baseHitRate",
+    VariableType.freeRTP:           "freeRTP",
+    VariableType.freeHitRate:       "freeHitRate",
+    VariableType.freeTriggerRate:   "freeTriggerRate",
+    VariableType.freeRetriggerRate: "freeReTriggerRate",
+}
+
+def UpdateParentVars(parent, output):
+    """Update every fitness variable enabled in the config from the simulator output."""
+    for var in parent.fitnessVariable:
+        key = OUTPUT_KEYS[var.varName]
+        if key not in output:
+            raise KeyError(f"Simulator output has no '{key}' (needed for {var.varName.name})")
+        var.currentValue = output[key]
+    parent.CalcuteFitness()

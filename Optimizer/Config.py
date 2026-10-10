@@ -16,8 +16,11 @@ class Config:
     populationSize: int
     spins: int
     gameMode: GameMode
-    bestParentIndex: int
     finalCheckSpins: int
+
+    # free game: where the fixed base reels come from
+    freeGameBaseSource: str      # same | manual
+    baseReelFile: str            # manual: single reelset file
 
     replacementTypes: list
     selectionTypes: list
@@ -78,21 +81,38 @@ def LoadConfig(path="config.yaml"):
     exp = raw.get("experiments")
     reels = raw.get("reels")
     paths = raw.get("paths")
+    game_mode = _enum(GameMode, _get(run, "gameMode", "run"), "run.gameMode")
+
+    # fitnessVariables is either one list (used in every mode) or one list per mode:
+    #   fitnessVariables:
+    #     BaseGame: [...]
+    #     FreeGame: [...]
     fitness_raw = raw.get("fitnessVariables") or []
+    section = "fitnessVariables"
+    if isinstance(fitness_raw, dict):
+        unknown = set(fitness_raw) - {m.name for m in GameMode}
+        if unknown:
+            raise ConfigError(f"fitnessVariables has unknown mode(s) {sorted(unknown)}. "
+                              f"Use: {', '.join(m.name for m in GameMode)}")
+        section = f"fitnessVariables.{game_mode.name}"
+        fitness_raw = fitness_raw.get(game_mode.name) or []
 
     fitness = []
     for i, fv in enumerate(fitness_raw, start=1):
         if not fv.get("enabled", True):
             continue
-        where = f"fitnessVariables item {i}"
+        where = f"{section} item {i}"
         fitness.append(FitnessVariable(
             _enum(VariableType, _get(fv, "type", where), f"{where} type"),
-            fv.get("arg1", 0),
+            0,                                   # current value, filled in by the simulator
             float(_get(fv, "target", where)),
             float(_get(fv, "weight", where)),
         ))
     if not fitness:
-        raise ConfigError("No fitness goals enabled - set 'enabled: true' on at least one")
+        raise ConfigError(f"No fitness goals enabled under {section} - "
+                          "set 'enabled: true' on at least one")
+
+    fg = raw.get("freeGame") or {}
 
     cfg = Config(
         runNumber=int(_get(run, "runNumber", "run")),
@@ -100,9 +120,11 @@ def LoadConfig(path="config.yaml"):
         createNewParents=bool(_get(run, "createNewParents", "run")),
         populationSize=_positive_int(_get(run, "populationSize", "run"), "run.populationSize"),
         spins=_positive_int(_get(run, "spins", "run"), "run.spins"),
-        gameMode=_enum(GameMode, _get(run, "gameMode", "run"), "run.gameMode"),
-        bestParentIndex=int(run.get("bestParentIndex", 0)),
+        gameMode=game_mode,
         finalCheckSpins=int(str(run.get("finalCheckSpins", 0)).replace("_", "")),
+
+        freeGameBaseSource=str(fg.get("baseReelSource", "same")).strip().lower(),
+        baseReelFile=str(fg.get("baseReelFile", "")),
 
         replacementTypes=[_enum(ReplacementType, n, "experiments.replacementTypes")
                           for n in _get(exp, "replacementTypes", "experiments")],
@@ -124,10 +146,12 @@ def LoadConfig(path="config.yaml"):
         simulatorPath=str(_get(paths, "simulatorPath", "paths")),
     )
 
-    if cfg.bestParentIndex >= cfg.populationSize:
-        raise ConfigError(
-            f"run.bestParentIndex ({cfg.bestParentIndex}) must be less than "
-            f"populationSize ({cfg.populationSize})")
+    if cfg.gameMode.name == "FreeGame":
+        src = cfg.freeGameBaseSource
+        if src not in ("same", "manual"):
+            raise ConfigError(f"freeGame.baseReelSource '{src}' must be same or manual")
+        if src == "manual" and not os.path.isfile(cfg.baseReelFile):
+            raise ConfigError(f"freeGame.baseReelFile not found: '{cfg.baseReelFile}'")
     if cfg.finalCheckSpins < 0:
         raise ConfigError("run.finalCheckSpins must be 0 (off) or a positive number")
     if not os.path.isfile(cfg.simulatorPath):

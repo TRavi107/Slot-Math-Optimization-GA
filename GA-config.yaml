@@ -4,21 +4,25 @@
 #  Lines starting with # are comments and are ignored.
 # =====================================================================
 
-
 # ---------------------------------------------------------------------
 #  RUN SETTINGS
 # ---------------------------------------------------------------------
 run:
   # Label for this run; saved with the results so you can tell runs apart.
-  runNumber: 4
+  runNumber: 1
 
   # How many generations to evolve (SteadyState uses this number directly;
   # Generational uses generations/10, ElistismGenerational uses generations/8).
   generations: 1000
 
-  # true  = generate brand-new random parents into initialParentsFolder
-  # false = use the seed parents defined in main.py
-  createNewParents: false
+  # true  = always generate brand-new random parents into initialParentsFolder
+  # false = reuse existing parents, checked in this order:
+  #           1. resultFile -> seed_<runNumber> -> initial_population
+  #           2. paths.seedParentsFile
+  #         if neither is found, new random parents are created automatically.
+  #   Tip: keep the same runNumber to repeat an experiment on the same parents;
+  #        use a new runNumber to start fresh.
+  createNewParents: true
 
   # Number of reelsets (parents) in the population.
   populationSize: 10
@@ -30,11 +34,33 @@ run:
 
   # Which part of the game to tune.
   # Options: BaseGame, FreeGame
-  gameMode: BaseGame
+  gameMode: FreeGame
 
-  # (FreeGame mode only) index of the parent whose base reels are kept fixed.
-  bestParentIndex: 5
+  # After each experiment, re-test the best reelset with this many spins
+  # and print its stats. 0 = skip (faster). 100_000_000 = high-accuracy check.
+  finalCheckSpins: 300_000_000
 
+# ---------------------------------------------------------------------
+#  FREE GAME TUNING (only used when run.gameMode is FreeGame)
+#  The base-game reels are kept FIXED and only the free-game reels evolve.
+#  Every parent gets the same base reels, so they are compared fairly.
+#
+#  Usual workflow:
+#    1. gameMode: BaseGame, runNumber: 4  -> results saved under seed_4
+#    2. gameMode: FreeGame, runNumber: 4  -> reads base reels from seed_4,
+#                                            saves its results under seed_4_free
+# ---------------------------------------------------------------------
+freeGame:
+  # Where the fixed base reels come from:
+  #   same   : for each combination (mutation + replacement + selection), use the
+  #            best base reels that SAME combination found in the BaseGame run
+  #            with the same runNumber. Every combination must exist there.
+  #   manual : one reelset file (baseReelFile), used for every combination
+  baseReelSource: same
+
+  # manual: a file holding a single parent's reelset. Same format as the
+  # parent files in TempParents, or { "BaseGameReel": [[...], ...] }
+  baseReelFile: Optimizer/ReelSets/fixed_base.json
 
 # ---------------------------------------------------------------------
 #  EXPERIMENTS - every combination below is run one after another
@@ -54,8 +80,7 @@ experiments:
 
   # How many reel positions are changed per mutation.
   # Reel length is 50, so 5 = 10%, 10 = 20%, 15 = 30%.
-  mutationCounts: [3]
-
+  mutationCounts: [5]
 
 # ---------------------------------------------------------------------
 #  REEL LAYOUT
@@ -70,32 +95,36 @@ reels:
   # Number of reels (columns).
   columnCount: 5
 
-
 # ---------------------------------------------------------------------
-#  FITNESS GOALS - what the optimizer tries to hit
+#  FITNESS GOALS - what the optimizer tries to hit, one list per gameMode.
+#  Only the list matching run.gameMode is used.
 #    type    : the statistic to optimize
-#    arg1    : second FitnessVariable argument (leave as 0 unless you know)
 #    target  : the value you want
 #    weight  : importance; higher = optimizer cares more
 #    enabled : true to use this goal, false to ignore it
 #
 #  Types: baseRTP, baseHitRate, freeRTP, freeHitRate,
 #         freeTriggerRate, freeRetriggerRate
+#  Note: in BaseGame mode the simulator runs the base game only, so free-game
+#        goals other than freeTriggerRate don't make sense there.
 # ---------------------------------------------------------------------
 fitnessVariables:
-  - { type: baseRTP,           arg1: 0, target: 0.57, weight: 10, enabled: true  }
-  - { type: baseHitRate,       arg1: 0, target: 3,    weight: 5,  enabled: true  }
-  - { type: freeRTP,           arg1: 0, target: 0.38, weight: 10, enabled: false }
-  - { type: freeHitRate,       arg1: 0, target: 2.7,  weight: 5,  enabled: false }
-  - { type: freeRetriggerRate, arg1: 0, target: 60,   weight: 4,  enabled: false }
-  - { type: freeTriggerRate,   arg1: 0, target: 80,   weight: 3,  enabled: true  }
+  BaseGame:
+    - { type: baseRTP, target: 0.57, weight: 10, enabled: true }
+    - { type: baseHitRate, target: 3, weight: 6, enabled: true }
+    - { type: freeTriggerRate, target: 80, weight: 3, enabled: true }
 
+  FreeGame:
+    - { type: freeRTP, target: 0.38, weight: 10, enabled: true }
+    - { type: freeHitRate, target: 2.7, weight: 6, enabled: true }
+    - { type: freeRetriggerRate, target: 60, weight: 3, enabled: true }
 
 # ---------------------------------------------------------------------
-#  PATHS (relative to the folder you run main.py from)
+#  PATHS
 # ---------------------------------------------------------------------
 paths:
-  tempParentsFolder:    Optimizer/ReelSets/TempParents
+  tempParentsFolder: Optimizer/ReelSets/TempParents
   initialParentsFolder: Optimizer/ReelSets/InitialParents
-  resultFile:           Results/results.json
-  simulatorPath:        build/simulator
+  seedParentsFile: Optimizer/ReelSets/seed_parents.json
+  resultFile: Results/results.json
+  simulatorPath: build/simulator

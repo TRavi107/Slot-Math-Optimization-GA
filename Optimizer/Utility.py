@@ -72,6 +72,7 @@ def save_sim_results(startingParents, results, best_parent, replacement_type, se
         },
     }
 
+    os.makedirs(os.path.dirname(filepath) or ".", exist_ok=True)
     tmp = filepath + ".tmp"
     with open(tmp, "w") as f:
         f.write(_compact(json.dumps(data, indent=2)))

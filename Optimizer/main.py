@@ -14,12 +14,12 @@ import sys
 import time
 
 from Config import LoadConfig, ConfigError
-from Parents import Parent, findBest, findBestIndex ,GameMode
+from Parents import Parent, findBest
 from Replacement import ReplacementType, ReplaceSingleWorstParent, GenerationalReplace
 from Selection import (SelectionTypes, RouletteSelection, tournamentSelection,
                        linear_rank_weights, SUS)
 from Utility import (CreateInitialPopulation, EvaluateParents, LoadInitialParents,
-                     save_sim_results, Evaluate)
+                     save_sim_results, save_reelset_file, Evaluate)
 
 # ---------------- algorithm constants ----------------
 ELITE_COUNT = 2            # parents carried over unchanged in ElistismGenerational
@@ -59,10 +59,11 @@ def select_parents(parents, selection, count):
     raise ValueError(f"Unsupported selection type: {selection}")
 
 
-def run_generation(parents, selected, replacement, mutation_count, gen, cfg):
-    """Produce and evaluate one generation. Returns (best_parent, mean_distance)."""
-    fixed_base_reels = parents[cfg.bestParentIndex].baseReelSet   # used in FreeGame mode
-
+def run_generation(parents, selected, replacement, mutation_count, gen, cfg, fixed_base_reels):
+    """
+    Produce and evaluate one generation. Returns (best_parent, mean_distance).
+    fixed_base_reels: base reels every child uses in FreeGame mode (None in BaseGame mode).
+    """
     if replacement == ReplacementType.SteadyState:
         return ReplaceSingleWorstParent(
             parents, cfg.spins, cfg.simulatorPath, cfg.fitnessVariables, cfg.folder,
@@ -73,7 +74,7 @@ def run_generation(parents, selected, replacement, mutation_count, gen, cfg):
     return GenerationalReplace(
         parents, selected, elite, cfg.spins, cfg.simulatorPath,
         cfg.fitnessVariables, cfg.folder, cfg.symbols, mutation_count,
-        gen, cfg.gameMode, fixed_base_reels )
+        gen, cfg.gameMode, fixed_base_reels)
 
 
 # ---------------- main steps ----------------
@@ -130,7 +131,24 @@ def _create_new_parents(cfg):
     return LoadInitialParents(cfg.parentsFolder, cfg.populationSize, cfg.fitnessVariables)
 
 
+def _base_run_parents(cfg):
+    """FreeGame + same: the initial parents the BaseGame run (seed_<runNumber>) started from."""
+    seed_key = f"seed_{cfg.runNumber}"
+    initial = (_read_json(cfg.resultFile) or {}).get(seed_key, {}).get("initial_population")
+    if not _usable(initial, f"{cfg.resultFile} [{seed_key}]", cfg):
+        return None
+    note = " (createNewParents ignored)" if cfg.createNewParents else ""
+    print(f"[parents] FreeGame: starting from the BaseGame run's initial parents ({seed_key}){note}")
+    return [Parent(cfg.fitnessVariables, s["BaseGameReel"], s["FreeGameReel"]) for s in initial]
+
+
 def load_initial_parents(cfg):
+    # FreeGame + same continues the BaseGame run, so it starts from the same parents
+    if cfg.gameMode.name == "FreeGame" and cfg.freeGameBaseSource == "same":
+        parents = _base_run_parents(cfg)
+        if parents is not None:
+            return parents
+
     if cfg.createNewParents:
         return _create_new_parents(cfg)
 
@@ -143,7 +161,80 @@ def load_initial_parents(cfg):
     return [Parent(cfg.fitnessVariables, s["BaseGameReel"], s["FreeGameReel"]) for s in seeds]
 
 
-def run_optimization(initial_parents, replacement, selection, mutation_count, cfg):
+def _unwrap_reelset(reels):
+    """Parent files written by save_reelset_file have an extra list level: [[reel0, reel1, ...]]."""
+    if reels and isinstance(reels[0], list) and reels[0] and isinstance(reels[0][0], list):
+        return reels[0]
+    return reels
+
+
+def _check_base_reels(reels, where, cfg):
+    reels = _unwrap_reelset(reels)
+    if len(reels) != cfg.columnCount:
+        raise ConfigError(f"freeGame: base reels from {where} have {len(reels)} reels, "
+                          f"expected {cfg.columnCount}")
+    unknown = {s for reel in reels for s in reel} - set(cfg.symbols)
+    if unknown:
+        raise ConfigError(f"freeGame: base reels from {where} contain unknown symbols {sorted(unknown)}")
+    return copy.deepcopy(reels)
+
+
+def base_reels_from_file(cfg):
+    """manual: one reelset file, used for every combination."""
+    data = _read_json(cfg.baseReelFile)
+    if data is None:
+        raise ConfigError(f"freeGame: base reel file '{cfg.baseReelFile}' not found or empty")
+    reels = data["BaseGameReel"] if isinstance(data, dict) else data
+    return _check_base_reels(reels, cfg.baseReelFile, cfg)
+
+
+def base_reels_from_same_combos(cfg):
+    """
+    same: for every (mutation, replacement, selection) in this run, read the best base reels
+    the BaseGame run with the same runNumber (seed_<runNumber>) saved for that combination.
+    Everything is loaded up front so a missing entry stops the run before any spinning.
+    Returns {(mutation, replacement, selection): base_reels}.
+    """
+    data = _read_json(cfg.resultFile)
+    if data is None:
+        raise ConfigError(f"freeGame: results file '{cfg.resultFile}' not found or empty. "
+                          "Run a BaseGame optimization first, or use baseReelSource: manual")
+
+    seed_key = f"seed_{cfg.runNumber}"
+    if seed_key not in data:
+        raise ConfigError(f"freeGame: no BaseGame results for runNumber {cfg.runNumber} "
+                          f"('{seed_key}') in {cfg.resultFile}. Run BaseGame mode with this "
+                          f"runNumber first. Available: {', '.join(data) or 'none'}")
+    saved = data[seed_key].get("results", {})
+
+    bases = {}
+    missing = []
+    for m in cfg.mutationCounts:
+        for rep in cfg.replacementTypes:
+            for sel in cfg.selectionTypes:
+                path = f"mutation_{m}/{rep.name}_{sel.name}"
+                entry = saved.get(f"mutation_{m}", {}).get(f"{rep.name}_{sel.name}")
+                if entry is None:
+                    missing.append(path)
+                    continue
+                bases[(m, rep, sel)] = _check_base_reels(
+                    entry["reelset"]["BaseGameReel"], f"{seed_key}/{path}", cfg)
+
+    if missing:
+        raise ConfigError(f"freeGame: {seed_key} has no BaseGame result for: {', '.join(missing)}")
+    return bases
+
+
+def results_seed(cfg):
+    """
+    Key results are saved under: BaseGame -> seed_<n>, FreeGame -> seed_<n>_free.
+    Keeping them apart lets both stages share one runNumber without the free-game
+    run overwriting the BaseGame results it reads its base reels from.
+    """
+    return f"{cfg.runNumber}_free" if cfg.gameMode.name == "FreeGame" else cfg.runNumber
+
+
+def run_optimization(initial_parents, replacement, selection, mutation_count, cfg, fixed_base_reels):
     generations = generations_for(replacement, cfg)
     parent_count = parents_per_generation(replacement, cfg.populationSize)
     print(f"\n>> {replacement.name} + {selection.name} | "
@@ -152,24 +243,37 @@ def run_optimization(initial_parents, replacement, selection, mutation_count, cf
     parents = copy.deepcopy(initial_parents)
     gen_results = []
 
+    # best parent seen in ANY generation (the initial population counts too).
+    # Generational replacement without elitism can drop its best parent, so the
+    # last generation's best is not always the best that was found.
+    best_ever = copy.deepcopy(findBest(parents))
+    best_ever_gen = 0
+
     for gen in range(generations):
         selected = select_parents(parents, selection, parent_count)
         best_parent, mean_dist = run_generation(parents, selected, replacement,
-                                                mutation_count, gen, cfg)
+                                                mutation_count, gen, cfg, fixed_base_reels)
         gen_results.append((best_parent.fitnessValue, mean_dist))
 
-    save_sim_results(initial_parents, gen_results, findBest(parents), replacement, selection,
-                     cfg.resultFile, mutation_count, cfg.runNumber)
+        if best_parent.fitnessValue < best_ever.fitnessValue:   # lower = better
+            best_ever = copy.deepcopy(best_parent)
+            best_ever_gen = gen + 1
 
-    best_index = findBestIndex(parents)
-    print(f"Best parent is {best_index}")
-    return best_index
+    save_sim_results(initial_parents, gen_results, best_ever, replacement, selection,
+                     cfg.resultFile, mutation_count, results_seed(cfg))
+
+    last_best = findBest(parents).fitnessValue
+    found = f"generation {best_ever_gen}" if best_ever_gen else "the initial population"
+    print(f"Best ever: fitness {best_ever.fitnessValue:.4f}, found in {found} "
+          f"(last generation's best: {last_best:.4f})")
+    return best_ever
 
 
-def final_check(best_index, cfg):
-    """Re-run the best reelset with many spins to confirm its stats."""
-    path = f"{cfg.folder}/parent{best_index}.json"
-    print(f"Final check of {path} with {cfg.finalCheckSpins:,} spins...")
+def final_check(best_parent, cfg):
+    """Re-run the best reelset (full game) with many spins to confirm its stats."""
+    path = f"{cfg.folder}/best.json"
+    save_reelset_file(best_parent.baseReelSet, best_parent.freeReelSet, path)
+    print(f"Final check of best reelset with {cfg.finalCheckSpins:,} spins...")
     out = Evaluate(cfg.finalCheckSpins, path, cfg.simulatorPath)
     for label, key in [("Total RTP", "totalRTP"), ("Base RTP", "baseRTP"),
                        ("Base hit rate", "baseHitRate"), ("Free RTP", "freeRTP"),
@@ -178,28 +282,63 @@ def final_check(best_index, cfg):
         print(f"  {label:<20} {out.get(key)}")
 
 
+def with_base_reels(parents, base_reels):
+    """Copy of parents where every parent uses the same base reels (fair free-game comparison)."""
+    parents = copy.deepcopy(parents)
+    for p in parents:
+        p.baseReelSet = copy.deepcopy(base_reels)
+    return parents
+
+
+def evaluate(parents, cfg, label):
+    print(f"Evaluating {len(parents)} initial parents{label}...")
+    EvaluateParents(parents, cfg.spins, cfg.simulatorPath, cfg.folder,
+                    cfg.gameMode.name == "BaseGame")   # BaseGame: simulate base game only
+
+
 def main():
     config_path = sys.argv[1] if len(sys.argv) > 1 else "GA-config.yaml"
     try:
         cfg = LoadConfig(config_path)
         initial_parents = load_initial_parents(cfg)
+
+        free_game = cfg.gameMode.name == "FreeGame"
+        manual_base = None     # FreeGame + manual: one base for every combination
+        same_bases = {}        # FreeGame + same:   base per combination
+        if free_game and cfg.freeGameBaseSource == "manual":
+            manual_base = base_reels_from_file(cfg)
+            print(f"[free game] Base reels fixed from {cfg.baseReelFile} for all combinations")
+        elif free_game:
+            same_bases = base_reels_from_same_combos(cfg)
+            print(f"[free game] Base reels per combination from seed_{cfg.runNumber} "
+                  f"({len(same_bases)} found)")
     except (ConfigError, FileNotFoundError) as e:
         print(f"\nCONFIG ERROR: {e}\n")
         sys.exit(1)
 
-    print(f"Evaluating {len(initial_parents)} initial parents...")
-    EvaluateParents(initial_parents, cfg.spins, cfg.simulatorPath, cfg.folder, 
-                    cfg.gameMode == GameMode.BaseGame)
+    # BaseGame and manual: the starting population is the same for every combination,
+    # so evaluate it once. "same" evaluates per combination because the base changes.
+    if not same_bases:
+        if manual_base is not None:
+            initial_parents = with_base_reels(initial_parents, manual_base)
+        evaluate(initial_parents, cfg, "")
 
     start = time.perf_counter()
     for mutation_count in cfg.mutationCounts:
         for replacement in cfg.replacementTypes:
             for selection in cfg.selectionTypes:
                 sim_start = time.perf_counter()
-                best_index = run_optimization(initial_parents, replacement, selection,
-                                              mutation_count, cfg)
+
+                parents, base = initial_parents, manual_base
+                if same_bases:
+                    base = same_bases[(mutation_count, replacement, selection)]
+                    parents = with_base_reels(initial_parents, base)
+                    evaluate(parents, cfg, f" on {replacement.name}_{selection.name} base reels")
+
+                best_parent = run_optimization(parents, replacement, selection,
+                                               mutation_count, cfg, base)
                 if cfg.finalCheckSpins > 0:
-                    final_check(best_index, cfg)
+                    final_check(best_parent, cfg)
                 print(f"{replacement.name}_{selection.name} took "
                       f"{time.perf_counter() - sim_start:.1f}s")
 

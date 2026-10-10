@@ -1,6 +1,6 @@
 from enum import Enum , auto
 from Selection import crossover, mutate
-from Utility import EvaluateAndSaveParents, make_pairs, save_reelset_file
+from Utility import EvaluateAndSaveParents, make_pairs
 from Parents import Parent, FitnessVariable, findBest, findWorstIndex ,GameMode
 
 class ReplacementType(Enum):
@@ -24,9 +24,6 @@ def ReplaceSingleWorstParent(parents,spins, simulationFolder ,fitnessvariable,fo
 
     if replaced:
         parents[worst_idx] = child
-        # keep the file on disk in sync with the object
-        save_reelset_file(child.baseReelSet, child.freeReelSet,
-                        f"{folder}/parent{worst_idx}.json")
 
     dists = [abs(p.fitnessValue) for p in parents]
     bestParent = findBest(parents)
@@ -76,8 +73,6 @@ def GenerationalReplace(parents, selected, n_elite, spins, simulatorPath,
     assert len(children) == n_children, "select 2 parents per 2 children"
 
     parents[:] = elites + children
-    for i, p in enumerate(parents):
-        save_reelset_file(p.baseReelSet, p.freeReelSet, f"{folder}/parent{i}.json")
 
     bestparent = findBest(parents)
     mean = sum(p.fitnessValue for p in parents) / len(parents)
