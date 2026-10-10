@@ -1,6 +1,6 @@
 from enum import Enum, auto
 from Selection import crossover, mutate
-from Utility import EvaluateAndSaveParents, make_pairs
+from Utility.Utility import EvaluateAndSaveParents, make_pairs
 from Parents import Parent, FitnessVariable, findBest, findWorstIndex, GameMode
 
 

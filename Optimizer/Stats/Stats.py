@@ -159,7 +159,7 @@ def load(json_file, stage="base"):
 def _reeval_seed(master, stage, mutation, combo):
     """Simulator seed for this script's re-evaluation: a label no optimizer stream uses, so it is
     independent of the run's own simulator seed and of its final-check seed."""
-    from Seeding import derive_seed   # project module (Optimizer/), only needed when simulating
+    from Optimizer.Utility.Seeding import derive_seed   # project module (Optimizer/), only needed when simulating
     strat = combo.split("_", 1)[0]
     m = "any" if strat in NO_MUTATION else mutation    # random search: one reelset for every rate
     return derive_seed(master, "stats_reeval", STAGE_MODE[stage], m, combo)
@@ -214,7 +214,7 @@ def reevaluate(df, mode, stage, spins, settings, cache_path):
 
     unique = {k: (s, r) for _, k, s, r in sim_needed if k not in cache}
     if unique:
-        from Utility import Evaluate, save_reelset_file   # project modules (Optimizer/)
+        from Optimizer.Utility.Utility import Evaluate, save_reelset_file   # project modules (Optimizer/)
         if not os.path.isfile(settings["simulator"]):
             raise SystemExit(f"[stats] simulator not found at {settings['simulator']} (paths.simulatorPath). "
                              "Build it, or run from the 'Math Optimization' folder.")

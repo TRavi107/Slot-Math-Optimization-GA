@@ -12,7 +12,7 @@
 #include <thread>
 #include <vector>
 
-#include "../Utility/rng.hpp"
+#include "../Utility/Rng.hpp"
 
 namespace SimRunner {
     //
@@ -32,9 +32,28 @@ namespace SimRunner {
     //   RNG seeded with Rng::jobSeed(seed, j), and job results are merged in job
     //   order. So the result depends only on (seed, spinCount) — never on the
     //   number of CPU cores or on which thread happened to run which job.
+    //   (The timing in RunInfo does depend on the machine; it is not part of the result.)
     // ─────────────────────────────────────────────
 
     constexpr long long JOB_SPINS = 1'000'000;   // fixed: changing it changes results
+
+    // What one call cost: filled in by RunMultiThreadSim when `info` is given.
+    struct RunInfo {
+        int workers = 0;            // worker threads actually used
+        int hardwareThreads = 0;    // logical CPUs the OS reports
+        long long jobs = 0;         // JOB_SPINS-sized jobs
+        double seconds = 0.0;       // wall time from launching workers to the merged result
+    };
+
+    // Worker threads a run of `spinCount` spins uses: 80% of the logical CPUs
+    // (leaves the machine usable), never more than there are jobs.
+    inline int workerCount(long long spinCount, int workerOverride = 0) {
+        const long long jobCount = (spinCount + JOB_SPINS - 1) / JOB_SPINS;
+        int hwThreads = static_cast<int>(std::thread::hardware_concurrency());
+        int workers = std::max(1, static_cast<int>(std::floor(hwThreads * 0.8)));
+        if (workerOverride > 0) workers = workerOverride;
+        return static_cast<int>(std::max(1LL, std::min<long long>(workers, jobCount)));
+    }
 
     // ─────────────────────────────────────────────
     // Progress bar printer
@@ -49,17 +68,15 @@ namespace SimRunner {
 
     // ─────────────────────────────────────────────
     // Multi-threaded, deterministic simulation runner
+    // workerOverride > 0 fixes the thread count (results stay identical).
     // ─────────────────────────────────────────────
     template <typename Result, typename MakeResult, typename RunSim>
     inline Result RunMultiThreadSim(const long long spinCount, const uint64_t seed,
                                     MakeResult makeResult, RunSim runSim,
-                                    int workerOverride = 0) {
+                                    int workerOverride = 0, RunInfo* info = nullptr) {
+        const auto t0 = std::chrono::steady_clock::now();
         const long long jobCount = (spinCount + JOB_SPINS - 1) / JOB_SPINS;
-
-        int hwThreads = static_cast<int>(std::thread::hardware_concurrency());
-        int workers = std::max(1, static_cast<int>(std::floor(hwThreads * 0.8)));
-        if (workerOverride > 0) workers = workerOverride;      // for testing only
-        workers = static_cast<int>(std::max(1LL, std::min<long long>(workers, jobCount)));
+        const int workers = workerCount(spinCount, workerOverride);
 
         // One slot per job; each slot is written by exactly one thread.
         std::vector<std::optional<Result>> jobResults(static_cast<size_t>(jobCount));
@@ -102,7 +119,9 @@ namespace SimRunner {
                 print_progress(done, spinCount);
                 std::cout << "\n";
             }
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            // short poll: a 10M-spin call can finish in well under a second, and a
+            // long sleep here would be counted as simulation time
+            std::this_thread::sleep_for(std::chrono::milliseconds(5));
         }
         for (auto& f : futures) f.get();       // rethrows any worker exception
 
@@ -114,6 +133,12 @@ namespace SimRunner {
         for (auto& r : jobResults)
             finalSim += *r;
 
+        if (info) {
+            info->workers = workers;
+            info->hardwareThreads = static_cast<int>(std::thread::hardware_concurrency());
+            info->jobs = jobCount;
+            info->seconds = std::chrono::duration<double>(std::chrono::steady_clock::now() - t0).count();
+        }
         return finalSim;
     }
 }

@@ -8,6 +8,10 @@ from Selection import SelectionTypes
 from Replacement import ReplacementType
 from Baselines import BaselineType
 
+# run.gameMode: one of the GameMode stages, or BOTH_MODE = BaseGame then FreeGame
+BOTH_MODE = "Both"
+RUN_MODES = [m.name for m in GameMode] + [BOTH_MODE]
+
 
 @dataclass
 class Config:
@@ -16,11 +20,16 @@ class Config:
     generations: int
     populationSize: int
     spins: int
-    gameMode: GameMode
+    gameMode: GameMode           # the stage currently being executed (set per stage by main.py)
     finalCheckSpins: int
 
+    # run.gameMode as written in the config: BaseGame | FreeGame | Both
+    runMode: str
+    # stages run for every run number, in order: [BaseGame], [FreeGame] or [BaseGame, FreeGame]
+    stages: list
+
     # free game: where the fixed base reels come from
-    freeGameBaseSource: str      # same | manual
+    freeGameBaseSource: str      # same | manual  (Both always uses same)
     baseReelFile: str            # manual: single reelset file
 
     runGA: bool                  # false = skip the GA sweep, run only the baselines
@@ -37,7 +46,8 @@ class Config:
     reelSize: int
     columnCount: int
 
-    fitnessVariables: list
+    fitnessVariables: list       # goals of the current stage
+    fitnessByMode: dict          # GameMode -> goals, for every stage in `stages`
 
     folder: str
     parentsFolder: str
@@ -132,6 +142,52 @@ def _run_numbers(run):
     return numbers
 
 
+def _run_mode(run):
+    """run.gameMode -> (mode name, [stages]). Both = BaseGame first, then FreeGame."""
+    name = str(_get(run, "gameMode", "run")).strip()
+    if name == BOTH_MODE:
+        return BOTH_MODE, [GameMode.BaseGame, GameMode.FreeGame]
+    if name not in RUN_MODES:
+        raise ConfigError(f"'{name}' is not valid for run.gameMode. "
+                          f"Choose one of: {', '.join(RUN_MODES)}")
+    return name, [GameMode[name]]
+
+
+def _fitness(raw, mode):
+    """
+    The goals for one stage. fitnessVariables is either one list (used in every mode)
+    or one list per mode:
+        fitnessVariables:
+          BaseGame: [...]
+          FreeGame: [...]
+    """
+    fitness_raw = raw.get("fitnessVariables") or []
+    section = "fitnessVariables"
+    if isinstance(fitness_raw, dict):
+        unknown = set(fitness_raw) - {m.name for m in GameMode}
+        if unknown:
+            raise ConfigError(f"fitnessVariables has unknown mode(s) {sorted(unknown)}. "
+                              f"Use: {', '.join(m.name for m in GameMode)}")
+        section = f"fitnessVariables.{mode.name}"
+        fitness_raw = fitness_raw.get(mode.name) or []
+
+    fitness = []
+    for i, fv in enumerate(fitness_raw, start=1):
+        if not fv.get("enabled", True):
+            continue
+        where = f"{section} item {i}"
+        fitness.append(FitnessVariable(
+            _enum(VariableType, _get(fv, "type", where), f"{where} type"),
+            0,                                   # current value, filled in by the simulator
+            float(_get(fv, "target", where)),
+            float(_get(fv, "weight", where)),
+        ))
+    if not fitness:
+        raise ConfigError(f"No fitness goals enabled under {section} - "
+                          "set 'enabled: true' on at least one")
+    return fitness
+
+
 def _baselines(raw):
     """
     Optional section; leaving it out runs no baselines (older configs keep working).
@@ -175,36 +231,8 @@ def LoadConfig(path="config.yaml"):
     paths = raw.get("paths")
     if run is None:
         raise ConfigError("Missing 'run:' section in the config file")
-    game_mode = _enum(GameMode, _get(run, "gameMode", "run"), "run.gameMode")
-
-    # fitnessVariables is either one list (used in every mode) or one list per mode:
-    #   fitnessVariables:
-    #     BaseGame: [...]
-    #     FreeGame: [...]
-    fitness_raw = raw.get("fitnessVariables") or []
-    section = "fitnessVariables"
-    if isinstance(fitness_raw, dict):
-        unknown = set(fitness_raw) - {m.name for m in GameMode}
-        if unknown:
-            raise ConfigError(f"fitnessVariables has unknown mode(s) {sorted(unknown)}. "
-                              f"Use: {', '.join(m.name for m in GameMode)}")
-        section = f"fitnessVariables.{game_mode.name}"
-        fitness_raw = fitness_raw.get(game_mode.name) or []
-
-    fitness = []
-    for i, fv in enumerate(fitness_raw, start=1):
-        if not fv.get("enabled", True):
-            continue
-        where = f"{section} item {i}"
-        fitness.append(FitnessVariable(
-            _enum(VariableType, _get(fv, "type", where), f"{where} type"),
-            0,                                   # current value, filled in by the simulator
-            float(_get(fv, "target", where)),
-            float(_get(fv, "weight", where)),
-        ))
-    if not fitness:
-        raise ConfigError(f"No fitness goals enabled under {section} - "
-                          "set 'enabled: true' on at least one")
+    run_mode, stages = _run_mode(run)
+    fitness_by_mode = {mode: _fitness(raw, mode) for mode in stages}
 
     if "createNewParents" in run:
         print("[config] run.createNewParents is no longer used and is ignored: a run reuses "
@@ -212,6 +240,12 @@ def LoadConfig(path="config.yaml"):
               "seeded by the runNumber. You can delete that line.")
 
     fg = raw.get("freeGame") or {}
+    base_source = str(fg.get("baseReelSource", "same")).strip().lower()
+    if run_mode == BOTH_MODE and base_source != "same":
+        print(f"[config] gameMode Both always takes each combination's base reels from its "
+              f"own BaseGame result; freeGame.baseReelSource '{base_source}' is ignored.")
+        base_source = "same"
+
     run_numbers = _run_numbers(run)
     baseline_types, sa_start, sa_end = _baselines(raw)
 
@@ -221,10 +255,13 @@ def LoadConfig(path="config.yaml"):
         generations=_positive_int(_get(run, "generations", "run"), "run.generations"),
         populationSize=_positive_int(_get(run, "populationSize", "run"), "run.populationSize"),
         spins=_positive_int(_get(run, "spins", "run"), "run.spins"),
-        gameMode=game_mode,
+        gameMode=stages[0],
         finalCheckSpins=int(str(run.get("finalCheckSpins", 0)).replace("_", "")),
 
-        freeGameBaseSource=str(fg.get("baseReelSource", "same")).strip().lower(),
+        runMode=run_mode,
+        stages=stages,
+
+        freeGameBaseSource=base_source,
         baseReelFile=str(fg.get("baseReelFile", "")),
 
         runGA=bool((exp or {}).get("runGA", True)),
@@ -243,7 +280,8 @@ def LoadConfig(path="config.yaml"):
         reelSize=_positive_int(_get(reels, "reelSize", "reels"), "reels.reelSize"),
         columnCount=_positive_int(_get(reels, "columnCount", "reels"), "reels.columnCount"),
 
-        fitnessVariables=fitness,
+        fitnessVariables=fitness_by_mode[stages[0]],
+        fitnessByMode=fitness_by_mode,
 
         folder=str(_get(paths, "tempParentsFolder", "paths")),
         parentsFolder=str(_get(paths, "initialParentsFolder", "paths")),
@@ -255,7 +293,7 @@ def LoadConfig(path="config.yaml"):
     if not cfg.runGA and not cfg.baselineTypes:
         raise ConfigError("experiments.runGA is false and baselines.methods is empty - "
                           "nothing to run")
-    if cfg.gameMode.name == "FreeGame":
+    if cfg.runMode == "FreeGame":
         src = cfg.freeGameBaseSource
         if src not in ("same", "manual"):
             raise ConfigError(f"freeGame.baseReelSource '{src}' must be same or manual")

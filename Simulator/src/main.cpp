@@ -1,5 +1,7 @@
+
 #include <algorithm>
 #include <cerrno>
+#include <chrono>
 #include <cstdint>
 #include <cstdlib>
 #include <fstream>
@@ -12,7 +14,7 @@
 #include "constants.hpp"
 #include "reelsFunction.hpp"
 #include "Utility/Utilities.hpp"
-#include "Utility/rng.hpp"
+#include "Utility/Rng.hpp"
 #include "Stats/simResult.hpp"
 #include "WinningFunctions.hpp"
 #include "multiThread/SimRunner.hpp"
@@ -23,6 +25,13 @@
 // Same <spins>, reelset, runBaseOnly and <seed>  ->  bit-identical results,
 // on any machine and any number of CPU cores.
 // Without a seed a random one is chosen and printed, so the run can be replayed.
+//
+// The output JSON also carries "compute" (time taken, threads used) and "build"
+// (compiler, build type). Those describe the machine, not the game, so they differ
+// between machines and between calls; every other field is reproducible.
+//
+// Environment: SIM_THREADS=<n> fixes the number of worker threads (default: 80% of
+// the logical CPUs). It changes only the speed, never the results.
 
 std::vector<std::vector<GameSymbols>> baseReels;
 std::vector<std::vector<GameSymbols>> freeReels;
@@ -147,8 +156,70 @@ SimResult SimRunnerInit(const long long spinCount) {
     return SimResult(spinCount, Constants::baseBet, Constants::maxWin);
 }
 
+// ─────────────────────────────────────────────
+// Build description, recorded with every result so timings can be compared
+// ─────────────────────────────────────────────
+static std::string compilerName() {
+#if defined(__clang__)
+    return std::string("Clang ") + __clang_version__;
+#elif defined(__GNUC__)
+    return "GCC " + std::to_string(__GNUC__) + "." + std::to_string(__GNUC_MINOR__) + "." +
+           std::to_string(__GNUC_PATCHLEVEL__);
+#elif defined(_MSC_VER)
+    return "MSVC " + std::to_string(_MSC_FULL_VER);
+#else
+    return "unknown";
+#endif
+}
+
+static std::string buildType() {
+#ifdef SIM_BUILD_TYPE
+    const std::string t = SIM_BUILD_TYPE;     // from CMake ($<CONFIG>)
+    if (!t.empty()) return t;
+#endif
+#ifdef NDEBUG
+    return "unknown (NDEBUG set)";
+#else
+    return "unknown (no NDEBUG: likely Debug)";
+#endif
+}
+
+// true = compiled with optimisation. GCC/Clang define __OPTIMIZE__ for -O1 and up;
+// MSVC has no such macro, so Release (NDEBUG, no _DEBUG) is taken as optimised there.
+static const char* optimised() {
+#if defined(__OPTIMIZE__)
+    return "true";
+#elif defined(_MSC_VER) && defined(NDEBUG) && !defined(_DEBUG)
+    return "true";
+#elif defined(__GNUC__) || defined(__clang__)
+    return "false";
+#else
+    return "null";
+#endif
+}
+
+static std::string targetName() {
+#if defined(_WIN32)
+    std::string os = "windows";
+#elif defined(__APPLE__)
+    std::string os = "macos";
+#elif defined(__linux__)
+    std::string os = "linux";
+#else
+    std::string os = "unknown";
+#endif
+#if defined(__x86_64__) || defined(_M_X64)
+    return os + "-x86_64";
+#elif defined(__aarch64__) || defined(_M_ARM64)
+    return os + "-arm64";
+#else
+    return os;
+#endif
+}
+
 static void writeResultsJson(const std::string& path, const SimResult& r,
-                             long long spinCount, uint64_t seed)
+                             long long spinCount, uint64_t seed,
+                             const SimRunner::RunInfo& run, double wallSeconds)
 {
     std::ostringstream j;
     j << std::setprecision(17);
@@ -168,7 +239,7 @@ static void writeResultsJson(const std::string& path, const SimResult& r,
     << "  \"maxWinCount\": "    << r.maxWinCount << ",\n"
     << "  \"winDistribution\": {";
 
-    // sorted keys -> byte-identical file for identical results
+    // sorted keys -> byte-identical stats for identical results
     std::vector<std::pair<std::string, double>> buckets(r.winDistribution.begin(), r.winDistribution.end());
     std::sort(buckets.begin(), buckets.end(),
         [](const auto& a, const auto& b) { return a.first < b.first; });
@@ -179,7 +250,25 @@ static void writeResultsJson(const std::string& path, const SimResult& r,
         << "\"" << MiniJson::jsonEscape(bucket) << "\": " << value;
         first = false;
     }
-    j << "\n  }\n}\n";
+    j << "\n  },\n";
+
+    // machine-dependent: how long this call took and how it was built
+    j << std::setprecision(6)
+      << "  \"compute\": {\n"
+      << "    \"wallSeconds\": "     << wallSeconds << ",\n"       // whole program up to here
+      << "    \"simSeconds\": "      << run.seconds << ",\n"       // spinning + merging only
+      << "    \"threads\": "         << run.workers << ",\n"
+      << "    \"hardwareThreads\": " << run.hardwareThreads << ",\n"
+      << "    \"jobs\": "            << run.jobs << ",\n"
+      << "    \"spinsPerSecond\": "  << (run.seconds > 0 ? spinCount / run.seconds : 0.0) << "\n"
+      << "  },\n"
+      << "  \"build\": {\n"
+      << "    \"compiler\": \""  << MiniJson::jsonEscape(compilerName()) << "\",\n"
+      << "    \"buildType\": \"" << MiniJson::jsonEscape(buildType()) << "\",\n"
+      << "    \"optimized\": "   << optimised() << ",\n"
+      << "    \"cxxStandard\": " << __cplusplus << ",\n"
+      << "    \"target\": \""    << targetName() << "\"\n"
+      << "  }\n}\n";
 
     std::ofstream out(path, std::ios::binary);
     if (!out) throw std::runtime_error("failed to write results file '" + path + "'");
@@ -195,8 +284,20 @@ static uint64_t parseSeed(const char* text) {
     return static_cast<uint64_t>(v);
 }
 
+// SIM_THREADS environment variable, 0 = not set (use the default)
+static int threadOverride() {
+    const char* v = std::getenv("SIM_THREADS");
+    if (!v || !*v) return 0;
+    char* end = nullptr;
+    long n = std::strtol(v, &end, 10);
+    if (*end != '\0' || n <= 0)
+        throw std::runtime_error(std::string("invalid SIM_THREADS '") + v + "' (use a positive integer)");
+    return static_cast<int>(n);
+}
+
 int main(int argc, char* argv[])
 {
+    const auto programStart = std::chrono::steady_clock::now();
     try{
         std::string reelSetPath = (argc > 2) ? std::string(argv[2]) : Constants::reelSetFilePath;
 
@@ -248,11 +349,19 @@ int main(int argc, char* argv[])
         }
         std::cout << "Seed: " << seed << '\n';
 
-        SimResult result = SimRunner::RunMultiThreadSim<SimResult>(spinCount, seed, SimRunnerInit, RunSim);
+        SimRunner::RunInfo runInfo;
+        SimResult result = SimRunner::RunMultiThreadSim<SimResult>(spinCount, seed, SimRunnerInit, RunSim,
+                                                                   threadOverride(), &runInfo);
         result.calculate();
 
+        const double wallSeconds = std::chrono::duration<double>(
+            std::chrono::steady_clock::now() - programStart).count();
+        std::cout << "Time: " << runInfo.seconds << " s on " << runInfo.workers << " of "
+                  << runInfo.hardwareThreads << " threads (" << compilerName() << ", "
+                  << buildType() << ")\n";
+
         if (argc > 4)                                   // argv[4] exists only when argc > 4
-            writeResultsJson(argv[4], result, spinCount, seed);
+            writeResultsJson(argv[4], result, spinCount, seed, runInfo, wallSeconds);
 
         std::vector<std::pair<GameSymbols, decltype(result.base.symbolsData)::mapped_type>>
             rows(result.base.symbolsData.begin(), result.base.symbolsData.end());

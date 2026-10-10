@@ -8,7 +8,7 @@
 #include <cctype>
 #include <cstdlib>
 #include "Utility/MiniJson.hpp"
-#include "Utility/rng.hpp"
+#include "Utility/Rng.hpp"
 #include "constants.hpp"
 // ─────────────────────────────────────────────
 // get_col_data

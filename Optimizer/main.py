@@ -7,9 +7,20 @@ Usage:
 
 All settings live in the YAML config; nothing here needs editing for a normal run.
 This file holds the experiment itself: the GA's settings and generation loop, the
-baseline runner and the sweep over runs and combinations. The run plumbing that
-shouldn't need editing (seeds, starting parents, free-game base reels, summary)
+baseline runner and the sweep over runs, stages and combinations. The run plumbing
+that shouldn't need editing (seeds, starting parents, free-game base reels, summary)
 lives in Helpers.py.
+
+GAME MODES (run.gameMode)
+    BaseGame   tune the base reels                         -> saved under seed_<n>
+    FreeGame   keep base reels fixed, tune the free reels  -> saved under seed_<n>_free
+    Both       for every run number: the whole BaseGame sweep first, then the whole
+               FreeGame sweep. Each free-game combination (mutation + replacement +
+               selection, or mutation + baseline) uses the best base reels that SAME
+               combination just found in the BaseGame stage as its fixed base reels,
+               and starts from the same initial parents. Results are identical to
+               running BaseGame and then FreeGame (baseReelSource: same) separately
+               with the same run number and settings.
 
 MULTIPLE RUNS
     run.runNumbers lists the runs to execute, e.g. [1, 2, 3] or "1-30".
@@ -39,36 +50,47 @@ STARTING PARENTS
     A run reuses the initial parents saved for its runNumber if there are any,
     otherwise it generates new ones seeded by the runNumber
     (see Helpers.load_initial_parents). For fresh parents, use a new runNumber.
+
+COMPUTING COST (see Compute.py)
+    Every simulator call is timed. Each experiment saves its total timing (search,
+    final check, wall time) under ... -> <combo> -> timing,
+    and each stage of a run saves its totals under seed_<n> -> compute and the machine
+    (CPU, threads, OS, compiler, build mode) under seed_<n> -> machines.
+    Compare.py turns these into the computing-cost charts and report.
 """
 import copy
 import json
 import sys
 import time
 
+import Stats.Compute as Compute
 from Baselines import (BaselineType, Problem, results_key, uses_mutation,
                        random_search, hill_climbing, simulated_annealing)
-from Config import LoadConfig, ConfigError
-from Helpers import (sim_seed_for, ga_stream_labels, ga_seed_for, baseline_stream_labels,
+from Utility.Config import LoadConfig, ConfigError
+from Utility.Helpers import (sim_seed_for, ga_stream_labels, ga_seed_for, baseline_stream_labels,
                      baseline_seed_for, final_check_seed_for, baseline_final_check_seed_for,
                      ga_key, results_seed, load_initial_parents, with_base_reels,
                      evaluate_population, base_reels_from_file, base_reels_from_same_combos,
-                     preflight, for_run, check_best, print_summary)
+                     preflight, for_run, for_stage, is_both, check_best, print_summary)
 from Parents import findBest
 from Replacement import ReplacementType, ReplaceSingleWorstParent, GenerationalReplace
 from Selection import (SelectionTypes, RouletteSelection, tournamentSelection,
                        linear_rank_weights, SUS)
-from Seeding import make_rng
-from Utility import save_sim_results, save_baseline_results, save_best_spin, start_run_entry
+from Utility.Seeding import make_rng
+from Utility.Utility import (save_sim_results, save_baseline_results, save_best_spin, start_run_entry,
+                     save_run_compute)
 
 # ---------------- algorithm constants ----------------
 ELITE_COUNT = 2            # parents carried over unchanged in ElistismGenerational
 STEADY_STATE_PARENTS = 2   # parents selected per generation in SteadyState
 SUS_PRESSURE = 2           # selection pressure for linear rank weights (SUS)
 
+STAGE_TAG = {"BaseGame": "base", "FreeGame": "free"}   # summary label prefix in Both mode
+
 
 def run_meta(cfg):
     """Saved once per seed_<n>: the settings that produced this run."""
-    return {
+    meta = {
         "masterSeed": cfg.runNumber,
         "gameMode": cfg.gameMode.name,
         "simSeed": str(sim_seed_for(cfg)),   # string: 64-bit safe in any JSON reader
@@ -77,6 +99,9 @@ def run_meta(cfg):
         "generations": cfg.generations,
         "finalCheckSpins": cfg.finalCheckSpins,
     }
+    if is_both(cfg):
+        meta["runMode"] = "Both (BaseGame then FreeGame, base reels per combination)"
+    return meta
 
 
 # ---------------- GA mechanics ----------------
@@ -230,12 +255,29 @@ def run_baseline(start_parents, method, mutation_count, cfg, fixed_base_reels):
     return run, combo_meta
 
 
-# ---------------- one run: every experiment ----------------
-def run_one(cfg):
+def _cost_line(label, timing):
+    """Console line: wall time of one experiment and its time per evaluation."""
+    n = timing["evaluations"]
+    per = f", {timing['searchSeconds'] / n:.2f} s per evaluation" if n else ""
+    return f"{label} took {timing['wallSeconds']:.1f}s ({n} evaluations{per})"
+
+
+# ---------------- one stage of one run: every experiment ----------------
+def run_stage(cfg):
     """
-    Run the full experiment sweep for cfg.runNumber.
+    Run the full experiment sweep for cfg.runNumber in one game mode (cfg.gameMode).
     Returns [(combination label, best fitness)] for the end-of-batch summary.
     """
+    stage_start, stage_mark = time.perf_counter(), Compute.mark()
+    machine = {}
+
+    def machine_id():
+        """The machine's id; described once the simulator has reported its build."""
+        if not machine:
+            info = Compute.machine_info(cfg.simulatorPath)
+            machine.update(id=Compute.machine_id(info), info=info)
+        return machine["id"]
+
     print(f"[seed] master seed (runNumber) = {cfg.runNumber}, "
           f"simulator seed = {sim_seed_for(cfg)}")
     initial_parents = load_initial_parents(cfg)
@@ -271,44 +313,53 @@ def run_one(cfg):
         evaluate_population(parents, cfg, f" on {key} base reels")
         return parents, base
 
+    def timed(t0, m0, m1, m2):
+        """Timing of one experiment: start evaluations, search, final check (marks m0..m2..now)."""
+        return Compute.experiment_timing(Compute.since(m0, m1), Compute.since(m1, m2),
+                                         Compute.since(m2), time.perf_counter() - t0, machine_id())
+
     summary = []
-    random_search_done = {}   # RandomSearch ignores mutation: base reels -> (run, meta, record)
+    random_search_done = {}   # RandomSearch ignores mutation: base reels -> (run, meta, record, timing, m)
     for mutation_count in cfg.mutationCounts:
         if cfg.runGA:
             for replacement in cfg.replacementTypes:
                 for selection in cfg.selectionTypes:
-                    sim_start = time.perf_counter()
+                    t0, m0 = time.perf_counter(), Compute.mark()
                     parents, base = starting_point(mutation_count, ga_key(replacement, selection))
+                    m1 = Compute.mark()
                     best_parent = run_optimization(parents, replacement, selection,
                                                    mutation_count, cfg, base)
+                    m2 = Compute.mark()
                     # stats of the best reelset: final check, or the run's own output
                     record = check_best(best_parent, cfg, final_check_seed_for(
                         cfg, mutation_count, replacement, selection))
+                    timing = timed(t0, m0, m1, m2)
                     save_best_spin(record, ga_key(replacement, selection), cfg.resultFile,
-                                   mutation_count, results_seed(cfg))
-                    print(f"{replacement.name}_{selection.name} took "
-                          f"{time.perf_counter() - sim_start:.1f}s")
+                                   mutation_count, results_seed(cfg), timing=timing)
+                    print(_cost_line(f"{replacement.name}_{selection.name}", timing))
 
                     label = f"m{mutation_count} {replacement.name}_{selection.name}"
                     summary.append((label, best_parent.fitnessValue))
 
         for method in cfg.baselineTypes:
-            sim_start = time.perf_counter()
+            t0, m0 = time.perf_counter(), Compute.mark()
             key = results_key(method)
             label = f"m{mutation_count} {key}"
 
             # RandomSearch gives the same result under every mutation count, so run it
             # once and store a copy under each mutation_<m> key (charts need it there).
+            # The copy's timing is marked reusedFrom, so it is not counted twice.
             cache_key = None
             if not uses_mutation(method):
                 base = same_bases[(mutation_count, key)] if same_bases else manual_base
                 cache_key = json.dumps(base)
                 if cache_key in random_search_done:
-                    run, meta, record = random_search_done[cache_key]
+                    run, meta, record, timing, first_m = random_search_done[cache_key]
                     save_baseline_results(run.history, run.best, key, cfg.resultFile,
                                           mutation_count, results_seed(cfg),
                                           run_meta=run_meta(cfg), combo_meta=meta)
-                    save_best_spin(record, key, cfg.resultFile, mutation_count, results_seed(cfg))
+                    save_best_spin(record, key, cfg.resultFile, mutation_count, results_seed(cfg),
+                                   timing=dict(timing, reusedFrom=f"mutation_{first_m}"))
                     print(f"\n>> {method.name} baseline | mutation {mutation_count}: "
                           f"same as above (random search does not use mutation), "
                           f"saved again under mutation_{mutation_count}")
@@ -316,17 +367,62 @@ def run_one(cfg):
                     continue
 
             parents, base = starting_point(mutation_count, key)
+            m1 = Compute.mark()
             run, meta = run_baseline(parents, method, mutation_count, cfg, base)
             save_baseline_results(run.history, run.best, key, cfg.resultFile,
                                   mutation_count, results_seed(cfg),
                                   run_meta=run_meta(cfg), combo_meta=meta)
+            m2 = Compute.mark()
             record = check_best(run.best, cfg,
                                 baseline_final_check_seed_for(cfg, method, mutation_count))
-            save_best_spin(record, key, cfg.resultFile, mutation_count, results_seed(cfg))
+            timing = timed(t0, m0, m1, m2)
+            save_best_spin(record, key, cfg.resultFile, mutation_count, results_seed(cfg),
+                           timing=timing)
             if cache_key is not None:
-                random_search_done[cache_key] = (run, meta, record)
-            print(f"{key} took {time.perf_counter() - sim_start:.1f}s")
+                random_search_done[cache_key] = (run, meta, record, timing, mutation_count)
+            print(_cost_line(key, timing))
             summary.append((label, run.best.fitnessValue))
+
+    # total time of this stage (every combination, start population included),
+    # and the machine that ran it
+    stage_calls = Compute.since(stage_mark)
+    total = round(time.perf_counter() - stage_start, 3)
+    if stage_calls:
+        machine_id()
+        save_run_compute({"totalSeconds": total}, machine["id"], machine["info"],
+                         cfg.resultFile, results_seed(cfg))
+        calls = Compute.summary(stage_calls)
+        print(f"\n[compute] {Compute.describe(machine['info'], calls.get('threads', []))}")
+        print(f"[compute] stage took {total / 3600:.2f} h, {calls['seconds'] / 3600:.2f} h of it simulating "
+              f"({len(stage_calls)} simulator calls)")
+        Compute.warn_if_slow_build()
+    return summary
+
+
+# ---------------- one run: every stage ----------------
+def run_one(cfg):
+    """
+    Run every stage of cfg.runMode for cfg.runNumber: BaseGame, FreeGame, or (Both)
+    BaseGame then FreeGame. In Both, the free stage reads each combination's best base
+    reels from the BaseGame results this run has just saved under seed_<n>.
+    Returns [(combination label, best fitness)] for the end-of-batch summary.
+    """
+    summary = []
+    both = is_both(cfg)
+    for i, mode in enumerate(cfg.stages, start=1):
+        stage_cfg = for_stage(cfg, mode)
+        if both:
+            note = ("" if mode.name == "BaseGame" else
+                    " - base reels per combination = that combination's best BaseGame reels")
+            print(f"\n======== Stage {i}/{len(cfg.stages)}: {mode.name} "
+                  f"(saved as seed_{results_seed(stage_cfg)}){note} ========")
+        stage_start = time.perf_counter()
+        results = run_stage(stage_cfg)
+        if both:
+            tag = STAGE_TAG[mode.name]
+            results = [(f"{tag} {label}", fit) for label, fit in results]
+            print(f"\n{mode.name} stage took {(time.perf_counter() - stage_start) / 60:.1f} min")
+        summary += results
     return summary
 
 
@@ -340,15 +436,19 @@ def main():
         sys.exit(1)
 
     runs = cfg.runNumbers
-    print(f"[runs] {len(runs)} run(s): {runs}  ->  saved as "
-          f"{', '.join('seed_' + str(results_seed(for_run(cfg, n))) for n in runs)}")
+    saved_as = ", ".join("seed_" + str(results_seed(for_stage(for_run(cfg, n), mode)))
+                         for n in runs for mode in cfg.stages)
+    print(f"[mode] {cfg.runMode}" + (" -> BaseGame then FreeGame for every run, each free-game "
+                                     "combination on its own best BaseGame reels"
+                                     if is_both(cfg) else ""))
+    print(f"[runs] {len(runs)} run(s): {runs}  ->  saved as {saved_as}")
     if cfg.baselineTypes:
         print(f"[baselines] {', '.join(b.name for b in cfg.baselineTypes)} "
               f"({cfg.generations} evaluations each)"
               + ("" if cfg.runGA else "  |  GA skipped (experiments.runGA: false)"))
 
     all_results = {}
-    start = time.perf_counter()
+    start, start_mark = time.perf_counter(), Compute.mark()
     for i, n in enumerate(runs, start=1):
         print(f"\n################ Run {i}/{len(runs)}: runNumber {n} ################")
         run_start = time.perf_counter()
@@ -362,7 +462,9 @@ def main():
         print(f"\nRun {n} took {(time.perf_counter() - run_start) / 60:.1f} min")
 
     print_summary(all_results)
-    print(f"\nTotal time: {(time.perf_counter() - start) / 60:.1f} min")
+    calls = Compute.summary(Compute.since(start_mark))
+    print(f"\nTotal time: {(time.perf_counter() - start) / 60:.1f} min "
+          f"({calls['evaluations']} simulator calls, {calls['seconds'] / 60:.1f} min of it simulating)")
 
 
 if __name__ == "__main__":

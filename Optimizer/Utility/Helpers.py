@@ -6,7 +6,8 @@ the algorithms or the experiment.
     results keys   where each experiment is saved in the results file
     parents        which reelsets a run starts from
     free game      where the fixed base reels come from, checked before spinning
-    run helpers    per-run config copy, final check and bestSpin record, end-of-batch summary
+    run helpers    per-run / per-stage config copy, final check and bestSpin record,
+                   end-of-batch summary
 
 Careful with the seed functions: changing a label changes the random stream, so
 existing seed_<n> results would no longer be reproducible.
@@ -17,10 +18,10 @@ import json
 import os
 
 from Baselines import BASELINE_TAG, results_key, uses_mutation
-from Config import ConfigError
+from Utility.Config import ConfigError, BOTH_MODE
 from Parents import Parent, OUTPUT_KEYS
-from Seeding import derive_seed, make_rng
-from Utility import (CreateInitialPopulation, EvaluateParents, LoadInitialParents,
+from Utility.Seeding import derive_seed, make_rng
+from Utility.Utility import (CreateInitialPopulation, EvaluateParents, LoadInitialParents,
                      save_reelset_file, Evaluate)
 
 
@@ -282,14 +283,16 @@ def preflight(cfg):
     """
     Check every run can start before any spinning, so a 30-run batch can't fail
     hours in because run 17 has no BaseGame results to read.
+    Both mode needs no check: its free stage reads the BaseGame results the same
+    run has just produced.
     """
-    if cfg.gameMode.name != "FreeGame":
+    if cfg.runMode != "FreeGame":
         return
     if cfg.freeGameBaseSource == "manual":
         base_reels_from_file(cfg)
         return
     for n in cfg.runNumbers:
-        base_reels_from_same_combos(for_run(cfg, n))
+        base_reels_from_same_combos(for_stage(for_run(cfg, n), cfg.stages[0]))
 
 
 # =====================================================================
@@ -298,6 +301,20 @@ def preflight(cfg):
 def for_run(cfg, run_number):
     """Copy of the config for one run: identical settings, this run number as the seed."""
     return dataclasses.replace(cfg, runNumber=run_number)
+
+
+def for_stage(cfg, mode):
+    """
+    Copy of the config for one stage (BaseGame or FreeGame) of a run: that stage's
+    game mode and fitness goals. Seeds, results keys and parent loading all follow
+    gameMode, so in Both mode each stage behaves exactly as if it had been run on its
+    own with gameMode set to that stage (same seeds, same seed_<n> / seed_<n>_free keys).
+    """
+    return dataclasses.replace(cfg, gameMode=mode, fitnessVariables=cfg.fitnessByMode[mode])
+
+
+def is_both(cfg):
+    return cfg.runMode == BOTH_MODE
 
 
 def final_check(best_parent, cfg, seed):

@@ -17,17 +17,19 @@ run:
   #   runNumbers: "1-30"           range, same as [1, 2, ..., 30]
   #   runNumbers: [1-10, 50]       ranges and numbers mixed
   # To re-create a single run later: runNumbers: [7]  (same settings as before)
-  runNumbers: [1]
+  runNumbers: [1, 2, 3]
 
   # How many generations to evolve (SteadyState uses this number directly;
   # Generational uses generations/populationSize,
   # ElistismGenerational uses generations/(populationSize-2)).
   # This is also the evaluation budget of every baseline.
-  generations: 200
+  generations: 50
 
-  # Which part of the game to tune.
-  # Options: BaseGame, FreeGame
-  gameMode: BaseGame
+  # Starting parents are picked automatically, in this order:
+  #   1. resultFile -> seed_<runNumber> -> initial_population  (the parents this run used before)
+  #   2. paths.seedParentsFile                                  (a fixed set you provide)
+  #   3. new random parents, seeded by the run number (same number -> same parents)
+  # For fresh parents, use a new run number.
 
   # Number of reelsets (parents) in the population.
   populationSize: 10
@@ -36,21 +38,36 @@ run:
   # Changing this changes every result, so keep it fixed across runs you compare.
   #   100_000      quick test
   #   10_000_000   normal tuning
-  spins: 10_000_000
+  spins: 1_000_000
+
+  # Which part of the game to tune.
+  # Options:
+  #   BaseGame : tune the base reels                         -> saved as seed_<n>
+  #   FreeGame : keep base reels fixed, tune the free reels  -> saved as seed_<n>_free
+  #   Both     : for every run number, run the whole BaseGame sweep first, then the
+  #              whole FreeGame sweep. Each free-game combination (mutation +
+  #              replacement + selection, or mutation + baseline) uses the best base
+  #              reels that SAME combination just found in the BaseGame stage, and
+  #              starts from the same initial parents. Saves seed_<n> and seed_<n>_free,
+  #              identical to running BaseGame and then FreeGame (baseReelSource: same).
+  gameMode: Both
 
   # After each experiment, re-test the best reelset with this many spins
   # and print its stats. 0 = skip (faster). 100_000_000 = high-accuracy check.
-  finalCheckSpins: 300_000_000
+  finalCheckSpins: 10_000_000
 
 # ---------------------------------------------------------------------
-#  FREE GAME TUNING (only used when run.gameMode is FreeGame)
+#  FREE GAME TUNING (used when run.gameMode is FreeGame)
 #  The base-game reels are kept FIXED and only the free-game reels evolve.
 #  Every parent gets the same base reels, so they are compared fairly.
 #
-#  Usual workflow:
-#    1. gameMode: BaseGame, runNumbers: [1-5] -> results saved under seed_1 ... seed_5
-#    2. gameMode: FreeGame, runNumbers: [1-5] -> run n reads its base reels from seed_n,
-#                                                 saves its results under seed_n_free
+#  Two ways to tune both parts of the game:
+#    a. gameMode: Both, runNumbers: [1-5]   -> one command does both stages per run
+#    b. two separate commands (same result as a):
+#       1. gameMode: BaseGame, runNumbers: [1-5] -> results saved under seed_1 ... seed_5
+#       2. gameMode: FreeGame, runNumbers: [1-5] -> run n reads its base reels from seed_n,
+#                                                   saves its results under seed_n_free
+#  gameMode Both always uses "same" below; baseReelSource is ignored there.
 # ---------------------------------------------------------------------
 freeGame:
   # Where the fixed base reels come from:
@@ -67,30 +84,30 @@ freeGame:
 
 # ---------------------------------------------------------------------
 #  EXPERIMENTS - every combination below is run one after another,
-#  once per run number
+#  once per run number (and once per stage in gameMode Both)
 # ---------------------------------------------------------------------
 experiments:
   # true  = run the GA combinations below
   # false = skip the GA and run only the baselines. Use this to add baselines
-  #         to runs whose GA results already exist (with createNewParents: false,
-  #         so each run starts from the initial_population saved in resultFile).
+  #         to runs whose GA results already exist (each run starts from the
+  #         initial_population saved for it in resultFile).
   runGA: true
 
   # Options: Generational, SteadyState, ElistismGenerational
   replacementTypes:
-    # - Generational
+    - Generational
     - SteadyState
-    # - ElistismGenerational
+    - ElistismGenerational
 
   # Options: RouletteSelection, TournamentSelection, SUS
   selectionTypes:
     - RouletteSelection
     - TournamentSelection
-    # - SUS
+    - SUS
 
   # How many reel positions are changed per mutation.
   # Reel length is 50, so 5 = 10%, 10 = 20%, 15 = 30%.
-  mutationCounts: [5]
+  mutationCounts: [5, 10]
 
 # ---------------------------------------------------------------------
 #  BASELINES - simple optimizers to compare the GA against.
@@ -131,7 +148,8 @@ reels:
 
 # ---------------------------------------------------------------------
 #  FITNESS GOALS - what the optimizer tries to hit, one list per gameMode.
-#  Only the list matching run.gameMode is used.
+#  Only the list matching the stage being run is used (gameMode Both uses
+#  BaseGame for its base stage and FreeGame for its free stage).
 #    type    : the statistic to optimize
 #    target  : the value you want
 #    weight  : importance; higher = optimizer cares more

@@ -42,7 +42,7 @@ from enum import Enum, auto
 
 from Parents import Parent, GameMode, findBest
 from Selection import mutate
-from Utility import EvaluateAndSaveParents, generate_reelset
+from Utility.Utility import EvaluateAndSaveParents, generate_reelset
 
 
 class BaselineType(Enum):
