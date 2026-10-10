@@ -44,6 +44,7 @@ x86/
 /Optimizer/Results
 /Optimizer/Runs
 /Optimizer/ReelSets
+/Parallel
 
 
 # CMake

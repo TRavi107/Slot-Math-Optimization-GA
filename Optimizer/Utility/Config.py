@@ -2,6 +2,10 @@ import os
 from dataclasses import dataclass
 
 import yaml
+import sys
+
+PARENT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, PARENT)
 
 from Parents import VariableType, FitnessVariable, GameMode
 from Selection import SelectionTypes
