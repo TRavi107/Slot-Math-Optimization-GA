@@ -17,13 +17,13 @@ run:
   #   runNumbers: "1-30"           range, same as [1, 2, ..., 30]
   #   runNumbers: [1-10, 50]       ranges and numbers mixed
   # To re-create a single run later: runNumbers: [7]  (same settings as before)
-  runNumbers: [1, 2]
+  runNumbers: [1]
 
   # How many generations to evolve (SteadyState uses this number directly;
   # Generational uses generations/populationSize,
   # ElistismGenerational uses generations/(populationSize-2)).
   # This is also the evaluation budget of every baseline.
-  generations: 500
+  generations: 200
 
   # Which part of the game to tune.
   # Options: BaseGame, FreeGame
@@ -37,7 +37,6 @@ run:
   #   100_000      quick test
   #   10_000_000   normal tuning
   spins: 10_000_000
-
 
   # After each experiment, re-test the best reelset with this many spins
   # and print its stats. 0 = skip (faster). 100_000_000 = high-accuracy check.
