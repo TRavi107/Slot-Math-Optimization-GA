@@ -10,7 +10,8 @@ from Replacement import ReplacementType
 
 @dataclass
 class Config:
-    runNumber: int
+    runNumber: int               # the run currently being executed (set per run by main.py)
+    runNumbers: list             # every run to execute, in order
     generations: int
     createNewParents: bool
     populationSize: int
@@ -67,6 +68,54 @@ def _positive_int(value, where):
     return v
 
 
+def _non_negative_int(value, where):
+    try:
+        v = int(str(value).replace("_", "").strip())
+    except ValueError:
+        raise ConfigError(f"{where} must be a whole number, got '{value}'") from None
+    if v < 0:
+        raise ConfigError(f"{where} must be 0 or more, got {v}")
+    return v
+
+
+def _run_numbers(run):
+    """
+    run.runNumbers accepts:
+        runNumbers: [1, 2, 3]        explicit list (recommended - easy to re-create one run)
+        runNumbers: "1-30"           inclusive range, same as [1, 2, ..., 30]
+        runNumbers: [1-10, 50]       ranges and numbers mixed
+        runNumbers: 4                a single run
+    The old single setting `runNumber: 4` still works.
+    """
+    if "runNumbers" in run:
+        raw, where = run["runNumbers"], "run.runNumbers"
+    elif "runNumber" in run:
+        raw, where = run["runNumber"], "run.runNumber"
+    else:
+        raise ConfigError("Missing setting 'runNumbers' under 'run:' in the config file")
+
+    items = raw if isinstance(raw, list) else [raw]
+    numbers = []
+    for item in items:
+        text = str(item).strip()
+        if "-" in text.lstrip("-"):                      # "a-b" range
+            lo, hi = text.split("-", 1)
+            lo = _non_negative_int(lo, where)
+            hi = _non_negative_int(hi, where)
+            if hi < lo:
+                raise ConfigError(f"{where}: range '{text}' ends before it starts")
+            numbers.extend(range(lo, hi + 1))
+        else:
+            numbers.append(_non_negative_int(text, where))
+
+    if not numbers:
+        raise ConfigError(f"{where} is empty - give at least one run number")
+    dups = sorted({n for n in numbers if numbers.count(n) > 1})
+    if dups:
+        raise ConfigError(f"{where} lists these run numbers more than once: {dups}")
+    return numbers
+
+
 def LoadConfig(path="config.yaml"):
     if not os.path.exists(path):
         raise ConfigError(f"Config file not found: {path}")
@@ -81,6 +130,8 @@ def LoadConfig(path="config.yaml"):
     exp = raw.get("experiments")
     reels = raw.get("reels")
     paths = raw.get("paths")
+    if run is None:
+        raise ConfigError("Missing 'run:' section in the config file")
     game_mode = _enum(GameMode, _get(run, "gameMode", "run"), "run.gameMode")
 
     # fitnessVariables is either one list (used in every mode) or one list per mode:
@@ -113,9 +164,11 @@ def LoadConfig(path="config.yaml"):
                           "set 'enabled: true' on at least one")
 
     fg = raw.get("freeGame") or {}
+    run_numbers = _run_numbers(run)
 
     cfg = Config(
-        runNumber=int(_get(run, "runNumber", "run")),
+        runNumber=run_numbers[0],
+        runNumbers=run_numbers,
         generations=_positive_int(_get(run, "generations", "run"), "run.generations"),
         createNewParents=bool(_get(run, "createNewParents", "run")),
         populationSize=_positive_int(_get(run, "populationSize", "run"), "run.populationSize"),

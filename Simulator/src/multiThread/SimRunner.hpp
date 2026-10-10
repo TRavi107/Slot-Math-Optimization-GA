@@ -4,11 +4,15 @@
 #include <atomic>
 #include <chrono>
 #include <cmath>
+#include <cstdint>
 #include <future>
 #include <iostream>
+#include <optional>
 #include <string>
 #include <thread>
 #include <vector>
+
+#include "../Utility/rng.hpp"
 
 namespace SimRunner {
     //
@@ -16,15 +20,21 @@ namespace SimRunner {
     //
     //   Result       any type that supports `Result& operator+=(const Result&)`
     //
-    //   MakeResult   a callable `Result(int spins)` that returns a fresh,
-    //                correctly-sized accumulator. This is where all the
-    //                type-specific construction (baseBet, maxWin, the matrix
-    //                data, etc.) now lives — on the caller's side.
+    //   MakeResult   a callable `Result(long long spins)` that returns a fresh,
+    //                correctly-sized accumulator.
     //
-    //   RunSim       a callable `void(long batch, Result&)` that runs `batch`
-    //                spins and accumulates the outcome directly into the
-    //                accumulator (zero temporaries).
+    //   RunSim       a callable `void(long long spins, Result&, Rng::Xoshiro256ss&)`
+    //                that runs `spins` spins using the given RNG and accumulates
+    //                the outcome directly into the accumulator.
+    //
+    // REPRODUCIBILITY
+    //   The work is cut into fixed-size jobs (JOB_SPINS). Job j always uses the
+    //   RNG seeded with Rng::jobSeed(seed, j), and job results are merged in job
+    //   order. So the result depends only on (seed, spinCount) — never on the
+    //   number of CPU cores or on which thread happened to run which job.
     // ─────────────────────────────────────────────
+
+    constexpr long long JOB_SPINS = 1'000'000;   // fixed: changing it changes results
 
     // ─────────────────────────────────────────────
     // Progress bar printer
@@ -38,118 +48,71 @@ namespace SimRunner {
     }
 
     // ─────────────────────────────────────────────
-    // Run a chunk of spins in one worker.
-    // Reports progress via a shared atomic counter.
+    // Multi-threaded, deterministic simulation runner
     // ─────────────────────────────────────────────
     template <typename Result, typename MakeResult, typename RunSim>
-    inline Result runSim_chunked(int spins,
-        std::atomic<int>& progressCounter,
-        MakeResult makeResult,
-        RunSim runSim) {
-        Result result = makeResult(spins);   // caller-provided construction
+    inline Result RunMultiThreadSim(const long long spinCount, const uint64_t seed,
+                                    MakeResult makeResult, RunSim runSim,
+                                    int workerOverride = 0) {
+        const long long jobCount = (spinCount + JOB_SPINS - 1) / JOB_SPINS;
 
-        int milestoneSize = std::max(1, spins / 10);
-        int remaining = spins;
-        int done = 0;
-        int nextMilestone = milestoneSize;
-
-        while (remaining > 0) {
-            int batch = std::min(milestoneSize, remaining);
-            runSim(batch, result);   // accumulate directly — zero allocation
-
-            done += batch;
-            remaining -= batch;
-
-            if (done >= nextMilestone) {
-                progressCounter.fetch_add(1, std::memory_order_relaxed);
-                nextMilestone += milestoneSize;
-            }
-        }
-
-        progressCounter.fetch_add(1, std::memory_order_relaxed);
-        return result;
-    }
-
-    // ─────────────────────────────────────────────
-    // Multi-threaded simulation runner
-    // Uses std::thread + std::future (true parallelism).
-    // ─────────────────────────────────────────────
-    template <typename Result, typename MakeResult, typename RunSim>
-    inline Result RunMultiThreadSim(const long long spinCount , MakeResult makeResult,RunSim runSim) {
         int hwThreads = static_cast<int>(std::thread::hardware_concurrency());
-        int maxWorkers = std::max(1, static_cast<int>(std::floor(hwThreads * 0.8)));
-        //maxWorkers = 1;
-        long spinsPerWorker = spinCount / maxWorkers;
-        long remainder = spinCount % maxWorkers;
-        std::atomic<int> progressCounter{ 0 };
-        int totalReports = maxWorkers * 10;
+        int workers = std::max(1, static_cast<int>(std::floor(hwThreads * 0.8)));
+        if (workerOverride > 0) workers = workerOverride;      // for testing only
+        workers = static_cast<int>(std::max(1LL, std::min<long long>(workers, jobCount)));
 
-        // ── Launch workers ────────────────────────────────────────────
-        std::vector<std::future<Result>> futures;
-        futures.reserve(maxWorkers);
+        // One slot per job; each slot is written by exactly one thread.
+        std::vector<std::optional<Result>> jobResults(static_cast<size_t>(jobCount));
+        std::atomic<long long> nextJob{ 0 };
+        std::atomic<long long> spinsDone{ 0 };
 
-        for (int i = 0; i < maxWorkers; ++i) {
-            int chunk = spinsPerWorker + (i < remainder ? 1 : 0);
+        auto worker = [&]() {
+            for (long long j; (j = nextJob.fetch_add(1)) < jobCount; ) {
+                const long long spins = std::min(JOB_SPINS, spinCount - j * JOB_SPINS);
+                Rng::Xoshiro256ss rng(Rng::jobSeed(seed, static_cast<uint64_t>(j)));
 
-            // makeResult / runSim are captured by value so each worker owns an
-            // independent copy — no shared state, no races on the callables.
-            futures.push_back(std::async(std::launch::async,
-                [chunk, &progressCounter, makeResult, runSim]() -> Result {
+                Result r = makeResult(spins);
+                runSim(spins, r, rng);
 
-                    // Each thread has its own accumulator — no sharing
-                    Result result = makeResult(chunk);
+                jobResults[static_cast<size_t>(j)].emplace(std::move(r));
+                spinsDone.fetch_add(spins, std::memory_order_relaxed);
+            }
+        };
 
-                    int milestoneSize = std::max(1, chunk / 10);
-                    int remaining = chunk;
-                    int done = 0;
-                    int nextMilestone = milestoneSize;
-
-                    while (remaining > 0) {
-                        int batch = std::min(milestoneSize, remaining);
-
-                        // Accumulate directly into result — no temporaries
-                        runSim(batch, result);
-
-                        done += batch;
-                        remaining -= batch;
-
-                        if (done >= nextMilestone) {
-                            progressCounter.fetch_add(1, std::memory_order_relaxed);
-                            nextMilestone += milestoneSize;
-                        }
-                    }
-
-                    progressCounter.fetch_add(1, std::memory_order_relaxed);
-                    return result;
-                }));
-        }
+        // ── Launch workers (futures so exceptions reach the caller) ──
+        std::vector<std::future<void>> futures;
+        futures.reserve(workers);
+        for (int i = 0; i < workers; ++i)
+            futures.push_back(std::async(std::launch::async, worker));
 
         // ── Progress monitor ──────────────────────────────────────────
+        auto allDone = [&]() {
+            for (auto& f : futures)
+                if (f.wait_for(std::chrono::milliseconds(0)) != std::future_status::ready)
+                    return false;
+            return true;
+        };
+
         int lastPrinted = -1;
-        while (true) {
-            int completed = progressCounter.load(std::memory_order_relaxed);
-            if (completed >= totalReports) break;
-
-            int percent = static_cast<int>((static_cast<double>(completed) / totalReports) * 100);
-            int milestone = (percent / 10) * 10;
-
+        while (!allDone()) {
+            const long long done = spinsDone.load(std::memory_order_relaxed);
+            const int milestone = static_cast<int>(100.0 * done / spinCount) / 10 * 10;
             if (milestone > lastPrinted) {
                 lastPrinted = milestone;
-                long long done = static_cast<long long>(
-                    static_cast<double>(completed) / totalReports * spinCount);
                 print_progress(done, spinCount);
                 std::cout << "\n";
             }
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
+        for (auto& f : futures) f.get();       // rethrows any worker exception
 
         print_progress(spinCount, spinCount);
         std::cout << "\n";
 
-        // ── Merge all thread results into final — sequential, no race ─
+        // ── Merge in job order — fixed floating-point summation order ─
         Result finalSim = makeResult(spinCount);
-        for (auto& f : futures)
-            finalSim += f.get();
+        for (auto& r : jobResults)
+            finalSim += *r;
 
         return finalSim;
     }

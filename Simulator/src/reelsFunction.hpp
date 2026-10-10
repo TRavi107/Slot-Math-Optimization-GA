@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 #include <fstream>
 #include <sstream>
 #include <string>
@@ -6,8 +7,8 @@
 #include <stdexcept>
 #include <cctype>
 #include <cstdlib>
-#include <random>
 #include "Utility/MiniJson.hpp"
+#include "Utility/rng.hpp"
 #include "constants.hpp"
 // ─────────────────────────────────────────────
 // get_col_data
@@ -90,40 +91,20 @@ namespace ReelFunctions {
         }
     }
 
-    struct Xoshiro256ss {
-        uint64_t s[4];
-        static uint64_t splitmix(uint64_t& x) {
-            uint64_t z = (x += 0x9E3779B97F4A7C15ULL);
-            z = (z ^ (z >> 30)) * 0xBF58476D1CE4E5B9ULL;
-            z = (z ^ (z >> 27)) * 0x94D049BB133111EBULL;
-            return z ^ (z >> 31);
-        }
-        explicit Xoshiro256ss(uint64_t seed) { for (auto& v : s) v = splitmix(seed); }
-        static inline uint64_t rotl(uint64_t x, int k) { return (x << k) | (x >> (64 - k)); }
-        inline uint64_t next() {
-            const uint64_t result = rotl(s[1] * 5, 7) * 9;
-            const uint64_t t = s[1] << 17;
-            s[2] ^= s[0]; s[3] ^= s[1]; s[1] ^= s[2]; s[0] ^= s[3];
-            s[2] ^= t; s[3] = rotl(s[3], 45);
-            return result;
-        }
-        // uniform in [0, n), no division; bias is ~n/2^32, negligible for n = 50
-        inline uint32_t bounded(uint32_t n) {
-            return (uint32_t)(((next() >> 32) * (uint64_t)n) >> 32);
-        }
-    };
+    // Kept so existing code that names ReelFunctions::Xoshiro256ss still compiles.
+    using Xoshiro256ss = Rng::Xoshiro256ss;
 
     // generate_slot_matrix
     // Picks a random window of matrixRows symbols from each reel,
     // then transposes from [col][row] to [row][col].
+    // The RNG is passed in (no hidden thread_local / random_device),
+    // so the same seed always produces the same stops.
     // ─────────────────────────────────────────────
     inline void generate_slot_matrix(const std::vector<std::vector<GameSymbols>>& reelsVector,
                                  const int matrixSize[2],
-                                 std::vector<std::vector<GameSymbols>>& matrix)
+                                 std::vector<std::vector<GameSymbols>>& matrix,
+                                 Rng::Xoshiro256ss& rng)
     {
-        thread_local Xoshiro256ss rngTL(std::random_device{}());
-        Xoshiro256ss& rng = rngTL;               // one thread_local access per call
-
         const int rows = matrixSize[0], cols = matrixSize[1];
         for (int col = 0; col < cols; ++col) {
             const auto& reel = reelsVector[col];
@@ -137,13 +118,9 @@ namespace ReelFunctions {
     }
 
     inline GameSymbols get_random_from_Col(const int colIndex,
-        const std::vector<std::vector<GameSymbols>>& reelsVector) {
-        thread_local std::mt19937 rng(std::random_device{}());
-        const std::vector<GameSymbols>& reel = (reelsVector)[colIndex];
-
-        std::uniform_int_distribution<int> dist(0, reel.size() - 1);
-        
-
-        return reel[dist(rng)];
+        const std::vector<std::vector<GameSymbols>>& reelsVector,
+        Rng::Xoshiro256ss& rng) {
+        const std::vector<GameSymbols>& reel = reelsVector[colIndex];
+        return reel[rng.bounded((uint32_t)reel.size())];
     }
 }

@@ -2,12 +2,27 @@
 Slot reelset optimizer - entry point.
 
 Usage:
-    python main.py                   # uses config.yaml
+    python main.py                   # uses GA-config.yaml
     python main.py my_config.yaml    # uses another config file
 
 All settings live in the YAML config; nothing here needs editing for a normal run.
+
+MULTIPLE RUNS
+    run.runNumbers lists the runs to execute, e.g. [1, 2, 3] or "1-30".
+    The whole experiment sweep is repeated once per run number, and each run is
+    saved under its own seed_<n> - exactly as if it had been run on its own.
+    To re-create one run later, set runNumbers: [n] with the same config.
+
+REPRODUCIBILITY
+    Each run number is that run's master seed. Every random choice (initial
+    parents, selection, crossover, mutation) and every simulator call is seeded
+    from it, so the same run number + config reproduces seed_<n> exactly.
+    Each (gameMode, mutation, replacement, selection) combination has its own
+    random stream, so running a single combination gives the same result as
+    running it inside a full sweep.
 """
 import copy
+import dataclasses
 import json
 import os
 import sys
@@ -18,13 +33,47 @@ from Parents import Parent, findBest
 from Replacement import ReplacementType, ReplaceSingleWorstParent, GenerationalReplace
 from Selection import (SelectionTypes, RouletteSelection, tournamentSelection,
                        linear_rank_weights, SUS)
+from Seeding import derive_seed, make_rng
 from Utility import (CreateInitialPopulation, EvaluateParents, LoadInitialParents,
-                     save_sim_results, save_reelset_file, Evaluate)
+                     save_sim_results, save_reelset_file, Evaluate, start_run_entry)
 
 # ---------------- algorithm constants ----------------
 ELITE_COUNT = 2            # parents carried over unchanged in ElistismGenerational
 STEADY_STATE_PARENTS = 2   # parents selected per generation in SteadyState
 SUS_PRESSURE = 2           # selection pressure for linear rank weights (SUS)
+
+
+# ---------------- seeds ----------------
+def sim_seed_for(cfg):
+    """
+    One simulator seed for every GA evaluation in this run (common random numbers):
+    all reelsets see the same reel stops, so fitness differences come from the
+    reels, not from spin luck.
+    """
+    return derive_seed(cfg.runNumber, "sim", cfg.gameMode.name)
+
+
+def ga_seed_for(cfg, mutation_count, replacement, selection):
+    return derive_seed(cfg.runNumber, "ga", cfg.gameMode.name,
+                       mutation_count, replacement.name, selection.name)
+
+
+def final_check_seed_for(cfg, mutation_count, replacement, selection):
+    """Different from sim_seed, so the final check is an independent validation."""
+    return derive_seed(cfg.runNumber, "final_check", cfg.gameMode.name,
+                       mutation_count, replacement.name, selection.name)
+
+
+def run_meta(cfg):
+    return {
+        "masterSeed": cfg.runNumber,
+        "gameMode": cfg.gameMode.name,
+        "simSeed": str(sim_seed_for(cfg)),   # string: 64-bit safe in any JSON reader
+        "spins": cfg.spins,
+        "populationSize": cfg.populationSize,
+        "generations": cfg.generations,
+        "finalCheckSpins": cfg.finalCheckSpins,
+    }
 
 
 # ---------------- helpers ----------------
@@ -47,19 +96,20 @@ def generations_for(replacement, cfg):
     return max(1, cfg.generations // parents_per_generation(replacement, cfg.populationSize))
 
 
-def select_parents(parents, selection, count):
+def select_parents(parents, selection, count, rng):
     match selection:
         case SelectionTypes.TournamentSelection:
-            return tournamentSelection(parents, winners=count)
+            return tournamentSelection(parents, winners=count, rng=rng)
         case SelectionTypes.RouletteSelection:
-            return RouletteSelection(parents, count)
+            return RouletteSelection(parents, count, rng=rng)
         case SelectionTypes.SUS:
             weights = linear_rank_weights(parents, s=SUS_PRESSURE)
-            return SUS(parents, weights, count)
+            return SUS(parents, weights, count, rng=rng)
     raise ValueError(f"Unsupported selection type: {selection}")
 
 
-def run_generation(parents, selected, replacement, mutation_count, gen, cfg, fixed_base_reels):
+def run_generation(parents, selected, replacement, mutation_count, gen, cfg,
+                   fixed_base_reels, rng, sim_seed):
     """
     Produce and evaluate one generation. Returns (best_parent, mean_distance).
     fixed_base_reels: base reels every child uses in FreeGame mode (None in BaseGame mode).
@@ -68,13 +118,13 @@ def run_generation(parents, selected, replacement, mutation_count, gen, cfg, fix
         return ReplaceSingleWorstParent(
             parents, cfg.spins, cfg.simulatorPath, cfg.fitnessVariables, cfg.folder,
             selected[0], selected[1], cfg.symbols, mutation_count,
-            gen, cfg.gameMode, fixed_base_reels)
+            gen, cfg.gameMode, fixed_base_reels, rng, sim_seed)
 
     elite = ELITE_COUNT if replacement == ReplacementType.ElistismGenerational else 0
     return GenerationalReplace(
         parents, selected, elite, cfg.spins, cfg.simulatorPath,
         cfg.fitnessVariables, cfg.folder, cfg.symbols, mutation_count,
-        gen, cfg.gameMode, fixed_base_reels)
+        gen, cfg.gameMode, fixed_base_reels, rng, sim_seed)
 
 
 # ---------------- main steps ----------------
@@ -125,9 +175,12 @@ def _find_seed_parents(cfg):
 
 
 def _create_new_parents(cfg):
-    print(f"[parents] Creating {cfg.populationSize} new random parents in {cfg.parentsFolder}")
+    # seeded: the same runNumber always generates the same initial population
+    rng = make_rng(cfg.runNumber, "initial_population")
+    print(f"[parents] Creating {cfg.populationSize} new random parents in {cfg.parentsFolder} "
+          f"(seed {cfg.runNumber})")
     CreateInitialPopulation(cfg.parentsFolder, cfg.populationSize,
-                            cfg.symbols, cfg.reelSize, cfg.columnCount)
+                            cfg.symbols, cfg.reelSize, cfg.columnCount, rng)
     return LoadInitialParents(cfg.parentsFolder, cfg.populationSize, cfg.fitnessVariables)
 
 
@@ -237,8 +290,14 @@ def results_seed(cfg):
 def run_optimization(initial_parents, replacement, selection, mutation_count, cfg, fixed_base_reels):
     generations = generations_for(replacement, cfg)
     parent_count = parents_per_generation(replacement, cfg.populationSize)
+
+    ga_seed = ga_seed_for(cfg, mutation_count, replacement, selection)
+    rng = make_rng(cfg.runNumber, "ga", cfg.gameMode.name,
+                   mutation_count, replacement.name, selection.name)
+    sim_seed = sim_seed_for(cfg)
+
     print(f"\n>> {replacement.name} + {selection.name} | "
-          f"mutation {mutation_count} | {generations} generations")
+          f"mutation {mutation_count} | {generations} generations | GA seed {ga_seed}")
 
     parents = copy.deepcopy(initial_parents)
     gen_results = []
@@ -250,17 +309,24 @@ def run_optimization(initial_parents, replacement, selection, mutation_count, cf
     best_ever_gen = 0
 
     for gen in range(generations):
-        selected = select_parents(parents, selection, parent_count)
+        selected = select_parents(parents, selection, parent_count, rng)
         best_parent, mean_dist = run_generation(parents, selected, replacement,
-                                                mutation_count, gen, cfg, fixed_base_reels)
+                                                mutation_count, gen, cfg,
+                                                fixed_base_reels, rng, sim_seed)
         gen_results.append((best_parent.fitnessValue, mean_dist))
 
         if best_parent.fitnessValue < best_ever.fitnessValue:   # lower = better
             best_ever = copy.deepcopy(best_parent)
             best_ever_gen = gen + 1
 
+    combo_meta = {
+        "gaSeed": str(ga_seed),
+        "finalCheckSeed": str(final_check_seed_for(cfg, mutation_count, replacement, selection)),
+        "bestFoundInGeneration": best_ever_gen,
+    }
     save_sim_results(initial_parents, gen_results, best_ever, replacement, selection,
-                     cfg.resultFile, mutation_count, results_seed(cfg))
+                     cfg.resultFile, mutation_count, results_seed(cfg),
+                     run_meta=run_meta(cfg), combo_meta=combo_meta)
 
     last_best = findBest(parents).fitnessValue
     found = f"generation {best_ever_gen}" if best_ever_gen else "the initial population"
@@ -269,12 +335,13 @@ def run_optimization(initial_parents, replacement, selection, mutation_count, cf
     return best_ever
 
 
-def final_check(best_parent, cfg):
+def final_check(best_parent, cfg, replacement, selection, mutation_count):
     """Re-run the best reelset (full game) with many spins to confirm its stats."""
     path = f"{cfg.folder}/best.json"
     save_reelset_file(best_parent.baseReelSet, best_parent.freeReelSet, path)
-    print(f"Final check of best reelset with {cfg.finalCheckSpins:,} spins...")
-    out = Evaluate(cfg.finalCheckSpins, path, cfg.simulatorPath)
+    seed = final_check_seed_for(cfg, mutation_count, replacement, selection)
+    print(f"Final check of best reelset with {cfg.finalCheckSpins:,} spins (seed {seed})...")
+    out = Evaluate(cfg.finalCheckSpins, path, cfg.simulatorPath, seed)
     for label, key in [("Total RTP", "totalRTP"), ("Base RTP", "baseRTP"),
                        ("Base hit rate", "baseHitRate"), ("Free RTP", "freeRTP"),
                        ("Free hit rate", "freeHitRate"), ("Free trigger rate", "freeTriggerRate"),
@@ -293,37 +360,61 @@ def with_base_reels(parents, base_reels):
 def evaluate(parents, cfg, label):
     print(f"Evaluating {len(parents)} initial parents{label}...")
     EvaluateParents(parents, cfg.spins, cfg.simulatorPath, cfg.folder,
-                    cfg.gameMode.name == "BaseGame")   # BaseGame: simulate base game only
+                    cfg.gameMode.name == "BaseGame",      # BaseGame: simulate base game only
+                    sim_seed_for(cfg))
 
 
-def main():
-    config_path = sys.argv[1] if len(sys.argv) > 1 else "GA-config.yaml"
-    try:
-        cfg = LoadConfig(config_path)
-        initial_parents = load_initial_parents(cfg)
+def for_run(cfg, run_number):
+    """Copy of the config for one run: identical settings, this run number as the seed."""
+    return dataclasses.replace(cfg, runNumber=run_number)
 
-        free_game = cfg.gameMode.name == "FreeGame"
-        manual_base = None     # FreeGame + manual: one base for every combination
-        same_bases = {}        # FreeGame + same:   base per combination
-        if free_game and cfg.freeGameBaseSource == "manual":
-            manual_base = base_reels_from_file(cfg)
-            print(f"[free game] Base reels fixed from {cfg.baseReelFile} for all combinations")
-        elif free_game:
-            same_bases = base_reels_from_same_combos(cfg)
-            print(f"[free game] Base reels per combination from seed_{cfg.runNumber} "
-                  f"({len(same_bases)} found)")
-    except (ConfigError, FileNotFoundError) as e:
-        print(f"\nCONFIG ERROR: {e}\n")
-        sys.exit(1)
+
+def preflight(cfg):
+    """
+    Check every run can start before any spinning, so a 30-run batch can't fail
+    hours in because run 17 has no BaseGame results to read.
+    """
+    if cfg.gameMode.name != "FreeGame":
+        return
+    if cfg.freeGameBaseSource == "manual":
+        base_reels_from_file(cfg)
+        return
+    for n in cfg.runNumbers:
+        base_reels_from_same_combos(for_run(cfg, n))
+
+
+def run_one(cfg):
+    """
+    Run the full experiment sweep for cfg.runNumber.
+    Returns [(combination label, best fitness)] for the end-of-batch summary.
+    """
+    print(f"[seed] master seed (runNumber) = {cfg.runNumber}, "
+          f"simulator seed = {sim_seed_for(cfg)}")
+    initial_parents = load_initial_parents(cfg)
+
+    free_game = cfg.gameMode.name == "FreeGame"
+    manual_base = None     # FreeGame + manual: one base for every combination
+    same_bases = {}        # FreeGame + same:   base per combination
+    if free_game and cfg.freeGameBaseSource == "manual":
+        manual_base = base_reels_from_file(cfg)
+        print(f"[free game] Base reels fixed from {cfg.baseReelFile} for all combinations")
+    elif free_game:
+        same_bases = base_reels_from_same_combos(cfg)
+        print(f"[free game] Base reels per combination from seed_{cfg.runNumber} "
+              f"({len(same_bases)} found)")
+
+    if manual_base is not None:
+        initial_parents = with_base_reels(initial_parents, manual_base)
+
+    # record what this run starts from (overwrites any older run with this number)
+    start_run_entry(initial_parents, cfg.resultFile, results_seed(cfg), run_meta(cfg))
 
     # BaseGame and manual: the starting population is the same for every combination,
     # so evaluate it once. "same" evaluates per combination because the base changes.
     if not same_bases:
-        if manual_base is not None:
-            initial_parents = with_base_reels(initial_parents, manual_base)
         evaluate(initial_parents, cfg, "")
 
-    start = time.perf_counter()
+    summary = []
     for mutation_count in cfg.mutationCounts:
         for replacement in cfg.replacementTypes:
             for selection in cfg.selectionTypes:
@@ -338,10 +429,59 @@ def main():
                 best_parent = run_optimization(parents, replacement, selection,
                                                mutation_count, cfg, base)
                 if cfg.finalCheckSpins > 0:
-                    final_check(best_parent, cfg)
+                    final_check(best_parent, cfg, replacement, selection, mutation_count)
                 print(f"{replacement.name}_{selection.name} took "
                       f"{time.perf_counter() - sim_start:.1f}s")
 
+                label = f"m{mutation_count} {replacement.name}_{selection.name}"
+                summary.append((label, best_parent.fitnessValue))
+    return summary
+
+
+def print_summary(all_results):
+    """Best fitness per combination (rows) for every run (columns)."""
+    if len(all_results) < 2:
+        return
+    runs = list(all_results)
+    labels = [label for label, _ in all_results[runs[0]]]
+    width = max(len(l) for l in labels) + 2
+    print("\n================ Best fitness per run ================")
+    print(f"{'combination':<{width}}" + "".join(f"{'seed_' + str(r):>12}" for r in runs)
+          + f"{'mean':>12}")
+    for i, label in enumerate(labels):
+        values = [all_results[r][i][1] for r in runs]
+        print(f"{label:<{width}}" + "".join(f"{v:>12.4f}" for v in values)
+              + f"{sum(values) / len(values):>12.4f}")
+
+
+def main():
+    config_path = sys.argv[1] if len(sys.argv) > 1 else "GA-config.yaml"
+    try:
+        cfg = LoadConfig(config_path)
+        preflight(cfg)
+    except (ConfigError, FileNotFoundError) as e:
+        print(f"\nCONFIG ERROR: {e}\n")
+        sys.exit(1)
+
+    runs = cfg.runNumbers
+    print(f"[runs] {len(runs)} run(s): {runs}  ->  saved as "
+          f"{', '.join('seed_' + str(results_seed(for_run(cfg, n))) for n in runs)}")
+
+    all_results = {}
+    start = time.perf_counter()
+    for i, n in enumerate(runs, start=1):
+        print(f"\n################ Run {i}/{len(runs)}: runNumber {n} ################")
+        run_start = time.perf_counter()
+        try:
+            all_results[n] = run_one(for_run(cfg, n))
+        except (ConfigError, FileNotFoundError) as e:
+            print(f"\nCONFIG ERROR in run {n}: {e}\n"
+                  f"Completed runs are saved; re-run the rest with runNumbers: "
+                  f"{runs[i - 1:]}")
+            sys.exit(1)
+        print(f"\nRun {n} took {(time.perf_counter() - run_start) / 60:.1f} min")
+
+    print_summary(all_results)
     print(f"\nTotal time: {(time.perf_counter() - start) / 60:.1f} min")
 
 

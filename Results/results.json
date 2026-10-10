@@ -1,0 +1,587 @@
+{
+  "seed_1": {
+    "meta": {
+      "masterSeed": 1,
+      "gameMode": "BaseGame",
+      "simSeed": "857887280322271557",
+      "spins": 10000000,
+      "populationSize": 10,
+      "generations": 50,
+      "finalCheckSpins": 300000000
+    },
+    "initial_population": [
+      {
+        "BaseGameReel": [
+          ["BB", "FF", "FF", "BB", "AA", "BB", "WD", "BB", "DD", "WD", "AA", "GG", "DD", "DD", "DD", "EE", "WD", "WD", "WD", "DD", "AA", "FF", "CC", "FF", "GG", "AA", "CC", "GG", "DD", "BB", "EE", "SC", "GG", "GG", "WD", "GG", "BB", "AA", "DD", "AA", "FF", "BB", "SC", "GG", "GG", "AA", "FF", "EE", "WD", "AA"],
+          ["BB", "DD", "SC", "GG", "GG", "AA", "AA", "BB", "GG", "CC", "AA", "EE", "BB", "GG", "DD", "SC", "AA", "CC", "CC", "EE", "BB", "SC", "WD", "DD", "CC", "AA", "WD", "BB", "AA", "GG", "WD", "BB", "CC", "AA", "DD", "EE", "DD", "SC", "CC", "DD", "AA", "CC", "CC", "FF", "CC", "FF", "FF", "DD", "AA", "AA"],
+          ["WD", "WD", "GG", "SC", "BB", "AA", "CC", "BB", "CC", "CC", "DD", "DD", "GG", "WD", "FF", "EE", "BB", "BB", "DD", "WD", "SC", "DD", "AA", "AA", "CC", "AA", "EE", "BB", "EE", "AA", "GG", "FF", "WD", "FF", "DD", "GG", "GG", "CC", "AA", "EE", "AA", "WD", "SC", "WD", "SC", "FF", "DD", "CC", "DD", "BB"],
+          ["BB", "DD", "DD", "EE", "BB", "BB", "FF", "EE", "GG", "DD", "BB", "FF", "CC", "SC", "EE", "AA", "SC", "WD", "EE", "DD", "BB", "EE", "AA", "FF", "FF", "CC", "EE", "EE", "CC", "AA", "SC", "GG", "CC", "WD", "FF", "DD", "GG", "CC", "AA", "SC", "SC", "BB", "WD", "DD", "DD", "WD", "EE", "BB", "BB", "AA"],
+          ["WD", "CC", "WD", "CC", "FF", "GG", "SC", "WD", "BB", "DD", "BB", "BB", "EE", "AA", "EE", "BB", "AA", "BB", "EE", "AA", "FF", "WD", "AA", "GG", "AA", "EE", "CC", "AA", "DD", "BB", "FF", "GG", "AA", "FF", "SC", "GG", "WD", "SC", "CC", "DD", "BB", "BB", "DD", "BB", "CC", "BB", "SC", "FF", "SC", "EE"]
+        ],
+        "FreeGameReel": [
+          ["AA", "EE", "BB", "BB", "WD", "BB", "FF", "FF", "WD", "FF", "FF", "SC", "WD", "CC", "SC", "GG", "FF", "DD", "GG", "BB", "CC", "GG", "BB", "AA", "SC", "BB", "BB", "EE", "EE", "DD", "EE", "EE", "WD", "SC", "AA", "SC", "DD", "DD", "DD", "WD", "WD", "CC", "AA", "BB", "GG", "DD", "WD", "DD", "CC", "EE"],
+          ["FF", "BB", "EE", "SC", "CC", "EE", "AA", "EE", "GG", "SC", "GG", "CC", "AA", "DD", "AA", "GG", "EE", "FF", "BB", "DD", "GG", "SC", "SC", "GG", "DD", "SC", "SC", "DD", "FF", "AA", "WD", "WD", "EE", "CC", "GG", "FF", "WD", "BB", "EE", "SC", "AA", "EE", "EE", "GG", "SC", "CC", "WD", "FF", "SC", "EE"],
+          ["FF", "AA", "FF", "AA", "GG", "SC", "AA", "WD", "AA", "CC", "GG", "EE", "DD", "WD", "BB", "BB", "CC", "GG", "GG", "AA", "DD", "DD", "AA", "GG", "WD", "AA", "WD", "WD", "SC", "FF", "WD", "GG", "WD", "CC", "CC", "BB", "AA", "AA", "EE", "EE", "EE", "SC", "AA", "SC", "BB", "GG", "SC", "CC", "FF", "DD"],
+          ["FF", "DD", "SC", "WD", "FF", "EE", "SC", "DD", "EE", "GG", "WD", "CC", "FF", "BB", "EE", "DD", "WD", "EE", "AA", "EE", "DD", "AA", "FF", "GG", "AA", "BB", "SC", "GG", "AA", "EE", "SC", "WD", "SC", "BB", "CC", "FF", "BB", "EE", "CC", "DD", "FF", "FF", "DD", "WD", "WD", "AA", "GG", "GG", "CC", "WD"],
+          ["BB", "CC", "FF", "SC", "SC", "BB", "EE", "BB", "CC", "WD", "BB", "SC", "WD", "SC", "DD", "GG", "CC", "AA", "WD", "BB", "GG", "CC", "CC", "CC", "SC", "EE", "GG", "GG", "FF", "CC", "DD", "FF", "FF", "SC", "FF", "AA", "CC", "AA", "WD", "FF", "SC", "EE", "WD", "BB", "FF", "FF", "BB", "FF", "WD", "BB"]
+        ]
+      },
+      {
+        "BaseGameReel": [
+          ["GG", "BB", "DD", "FF", "BB", "CC", "FF", "CC", "SC", "CC", "AA", "BB", "CC", "WD", "CC", "CC", "EE", "FF", "AA", "AA", "SC", "DD", "CC", "GG", "EE", "EE", "FF", "EE", "CC", "FF", "CC", "DD", "SC", "BB", "SC", "WD", "FF", "AA", "DD", "EE", "BB", "EE", "EE", "FF", "FF", "DD", "CC", "GG", "GG", "WD"],
+          ["FF", "BB", "BB", "FF", "FF", "SC", "EE", "CC", "DD", "FF", "CC", "AA", "EE", "DD", "WD", "BB", "DD", "EE", "CC", "DD", "GG", "EE", "FF", "SC", "AA", "EE", "SC", "DD", "BB", "SC", "EE", "AA", "CC", "FF", "CC", "EE", "FF", "DD", "SC", "CC", "BB", "DD", "SC", "AA", "WD", "BB", "AA", "CC", "BB", "WD"],
+          ["FF", "CC", "GG", "DD", "SC", "WD", "BB", "DD", "GG", "AA", "WD", "GG", "AA", "AA", "EE", "WD", "AA", "WD", "FF", "AA", "GG", "AA", "EE", "SC", "BB", "SC", "EE", "EE", "WD", "CC", "GG", "AA", "BB", "WD", "DD", "FF", "DD", "EE", "AA", "AA", "SC", "FF", "BB", "FF", "BB", "WD", "BB", "BB", "FF", "DD"],
+          ["WD", "FF", "SC", "FF", "AA", "WD", "FF", "WD", "GG", "BB", "FF", "DD", "WD", "GG", "AA", "SC", "FF", "CC", "SC", "SC", "WD", "EE", "EE", "FF", "AA", "SC", "AA", "DD", "WD", "GG", "CC", "DD", "BB", "FF", "EE", "SC", "EE", "WD", "AA", "BB", "BB", "CC", "DD", "SC", "FF", "CC", "GG", "DD", "SC", "DD"],
+          ["SC", "AA", "SC", "CC", "BB", "CC", "DD", "AA", "DD", "SC", "WD", "BB", "GG", "DD", "SC", "SC", "CC", "BB", "GG", "WD", "GG", "FF", "WD", "AA", "GG", "AA", "FF", "BB", "BB", "EE", "AA", "DD", "BB", "CC", "BB", "FF", "CC", "GG", "CC", "CC", "GG", "EE", "CC", "GG", "FF", "SC", "GG", "AA", "CC", "WD"]
+        ],
+        "FreeGameReel": [
+          ["BB", "EE", "CC", "SC", "EE", "SC", "SC", "SC", "WD", "SC", "WD", "EE", "DD", "DD", "DD", "EE", "WD", "BB", "DD", "EE", "AA", "DD", "BB", "FF", "SC", "GG", "GG", "CC", "AA", "EE", "AA", "CC", "WD", "AA", "DD", "BB", "DD", "FF", "EE", "GG", "FF", "DD", "AA", "BB", "EE", "EE", "FF", "AA", "WD", "BB"],
+          ["WD", "CC", "FF", "GG", "WD", "GG", "AA", "AA", "CC", "WD", "EE", "CC", "SC", "AA", "BB", "CC", "AA", "FF", "DD", "CC", "SC", "SC", "BB", "DD", "WD", "CC", "DD", "BB", "BB", "GG", "FF", "FF", "CC", "SC", "DD", "EE", "BB", "EE", "EE", "CC", "WD", "AA", "GG", "FF", "AA", "CC", "WD", "BB", "CC", "DD"],
+          ["GG", "BB", "CC", "AA", "EE", "CC", "FF", "GG", "BB", "BB", "EE", "GG", "EE", "FF", "DD", "WD", "DD", "FF", "DD", "EE", "AA", "WD", "BB", "DD", "SC", "DD", "GG", "SC", "EE", "WD", "WD", "WD", "AA", "DD", "GG", "AA", "FF", "DD", "CC", "CC", "EE", "AA", "WD", "GG", "AA", "DD", "GG", "CC", "WD", "FF"],
+          ["FF", "CC", "CC", "DD", "DD", "BB", "FF", "BB", "CC", "FF", "WD", "EE", "CC", "GG", "GG", "FF", "FF", "FF", "SC", "GG", "FF", "BB", "SC", "EE", "CC", "WD", "EE", "EE", "BB", "WD", "BB", "EE", "SC", "WD", "WD", "BB", "WD", "EE", "WD", "CC", "BB", "AA", "DD", "CC", "BB", "WD", "GG", "AA", "GG", "WD"],
+          ["CC", "WD", "BB", "FF", "SC", "SC", "CC", "CC", "WD", "SC", "FF", "EE", "BB", "EE", "EE", "GG", "EE", "GG", "SC", "DD", "EE", "CC", "CC", "SC", "DD", "WD", "AA", "WD", "AA", "BB", "EE", "CC", "AA", "DD", "AA", "WD", "CC", "GG", "AA", "FF", "BB", "CC", "AA", "BB", "EE", "GG", "BB", "CC", "AA", "GG"]
+        ]
+      },
+      {
+        "BaseGameReel": [
+          ["FF", "GG", "FF", "WD", "AA", "GG", "DD", "CC", "CC", "GG", "SC", "WD", "FF", "DD", "DD", "EE", "AA", "AA", "GG", "CC", "CC", "SC", "DD", "SC", "SC", "WD", "AA", "WD", "WD", "DD", "BB", "AA", "BB", "DD", "WD", "EE", "EE", "FF", "DD", "SC", "SC", "EE", "FF", "GG", "CC", "BB", "WD", "EE", "SC", "AA"],
+          ["BB", "BB", "GG", "CC", "SC", "BB", "CC", "FF", "FF", "DD", "SC", "SC", "AA", "BB", "FF", "FF", "FF", "SC", "CC", "FF", "CC", "EE", "BB", "DD", "CC", "SC", "BB", "CC", "EE", "AA", "GG", "FF", "BB", "BB", "FF", "FF", "EE", "CC", "EE", "CC", "WD", "CC", "BB", "CC", "DD", "GG", "GG", "DD", "BB", "BB"],
+          ["BB", "GG", "DD", "DD", "SC", "CC", "EE", "SC", "BB", "WD", "DD", "BB", "AA", "GG", "SC", "SC", "EE", "BB", "BB", "FF", "CC", "DD", "CC", "WD", "SC", "FF", "AA", "GG", "SC", "GG", "CC", "WD", "FF", "AA", "CC", "WD", "SC", "DD", "EE", "AA", "EE", "DD", "CC", "SC", "FF", "DD", "BB", "DD", "DD", "CC"],
+          ["EE", "DD", "GG", "FF", "BB", "FF", "CC", "EE", "BB", "SC", "CC", "EE", "EE", "EE", "CC", "WD", "FF", "CC", "BB", "GG", "AA", "EE", "WD", "SC", "SC", "EE", "WD", "WD", "WD", "GG", "WD", "BB", "AA", "SC", "AA", "GG", "AA", "CC", "FF", "GG", "FF", "DD", "SC", "FF", "AA", "WD", "AA", "SC", "DD", "SC"],
+          ["WD", "GG", "EE", "FF", "GG", "AA", "AA", "EE", "SC", "SC", "FF", "WD", "EE", "WD", "CC", "DD", "SC", "BB", "AA", "EE", "EE", "GG", "WD", "AA", "GG", "CC", "BB", "DD", "SC", "DD", "SC", "BB", "AA", "GG", "CC", "GG", "SC", "CC", "SC", "DD", "GG", "SC", "BB", "DD", "BB", "FF", "BB", "GG", "SC", "FF"]
+        ],
+        "FreeGameReel": [
+          ["SC", "CC", "DD", "CC", "EE", "AA", "GG", "DD", "DD", "AA", "CC", "WD", "EE", "AA", "WD", "FF", "WD", "GG", "AA", "GG", "EE", "WD", "GG", "FF", "DD", "GG", "SC", "EE", "CC", "WD", "GG", "CC", "FF", "EE", "EE", "WD", "CC", "BB", "EE", "DD", "FF", "BB", "WD", "AA", "BB", "AA", "BB", "BB", "FF", "DD"],
+          ["SC", "AA", "EE", "WD", "SC", "AA", "GG", "EE", "DD", "FF", "SC", "WD", "FF", "BB", "SC", "DD", "GG", "EE", "EE", "DD", "CC", "BB", "BB", "DD", "AA", "FF", "GG", "DD", "AA", "DD", "WD", "GG", "BB", "SC", "DD", "BB", "EE", "WD", "EE", "WD", "BB", "DD", "AA", "CC", "CC", "FF", "FF", "FF", "GG", "DD"],
+          ["EE", "BB", "AA", "CC", "GG", "EE", "EE", "GG", "EE", "CC", "WD", "DD", "WD", "DD", "DD", "BB", "WD", "AA", "WD", "DD", "BB", "GG", "FF", "AA", "AA", "BB", "FF", "WD", "AA", "BB", "CC", "GG", "FF", "FF", "SC", "CC", "DD", "AA", "SC", "DD", "DD", "DD", "FF", "FF", "CC", "FF", "FF", "AA", "CC", "CC"],
+          ["WD", "FF", "EE", "AA", "GG", "WD", "WD", "FF", "DD", "CC", "GG", "DD", "BB", "DD", "AA", "SC", "AA", "FF", "DD", "SC", "EE", "BB", "EE", "FF", "SC", "FF", "WD", "AA", "SC", "AA", "EE", "AA", "DD", "GG", "GG", "DD", "SC", "EE", "BB", "SC", "BB", "EE", "DD", "DD", "DD", "EE", "WD", "CC", "GG", "SC"],
+          ["EE", "WD", "DD", "EE", "BB", "CC", "BB", "SC", "DD", "DD", "SC", "FF", "SC", "GG", "AA", "AA", "AA", "SC", "DD", "SC", "DD", "BB", "GG", "DD", "FF", "EE", "CC", "AA", "AA", "DD", "CC", "CC", "GG", "DD", "EE", "FF", "GG", "FF", "AA", "EE", "WD", "CC", "DD", "SC", "DD", "EE", "CC", "BB", "WD", "BB"]
+        ]
+      },
+      {
+        "BaseGameReel": [
+          ["AA", "CC", "WD", "SC", "SC", "EE", "DD", "FF", "BB", "CC", "WD", "BB", "CC", "FF", "EE", "WD", "BB", "SC", "CC", "CC", "DD", "WD", "GG", "AA", "EE", "AA", "BB", "DD", "WD", "FF", "FF", "BB", "AA", "FF", "BB", "DD", "WD", "BB", "BB", "CC", "SC", "WD", "GG", "WD", "WD", "CC", "WD", "DD", "BB", "EE"],
+          ["EE", "WD", "WD", "DD", "DD", "BB", "GG", "FF", "AA", "WD", "CC", "AA", "GG", "SC", "CC", "FF", "SC", "WD", "GG", "BB", "GG", "SC", "GG", "FF", "BB", "CC", "CC", "GG", "GG", "EE", "WD", "CC", "AA", "EE", "AA", "CC", "AA", "SC", "BB", "EE", "WD", "CC", "WD", "BB", "SC", "AA", "FF", "FF", "DD", "WD"],
+          ["EE", "GG", "DD", "GG", "GG", "WD", "EE", "WD", "GG", "BB", "AA", "DD", "DD", "WD", "SC", "CC", "GG", "FF", "AA", "WD", "AA", "AA", "BB", "DD", "GG", "BB", "CC", "SC", "EE", "GG", "BB", "WD", "AA", "CC", "AA", "BB", "FF", "FF", "SC", "AA", "WD", "GG", "BB", "CC", "BB", "AA", "EE", "DD", "EE", "GG"],
+          ["CC", "EE", "CC", "SC", "AA", "AA", "CC", "FF", "SC", "BB", "AA", "AA", "GG", "BB", "SC", "CC", "GG", "FF", "DD", "EE", "DD", "SC", "SC", "DD", "DD", "DD", "GG", "WD", "GG", "CC", "FF", "WD", "SC", "WD", "EE", "FF", "CC", "SC", "EE", "BB", "AA", "CC", "DD", "AA", "FF", "FF", "CC", "CC", "GG", "DD"],
+          ["CC", "CC", "BB", "WD", "WD", "SC", "GG", "EE", "DD", "EE", "DD", "DD", "DD", "GG", "BB", "WD", "EE", "SC", "EE", "FF", "EE", "EE", "DD", "CC", "SC", "GG", "FF", "BB", "FF", "FF", "DD", "WD", "EE", "CC", "EE", "CC", "BB", "SC", "BB", "FF", "AA", "BB", "SC", "AA", "BB", "CC", "GG", "WD", "FF", "BB"]
+        ],
+        "FreeGameReel": [
+          ["EE", "FF", "EE", "FF", "GG", "SC", "EE", "SC", "EE", "EE", "CC", "GG", "WD", "CC", "FF", "FF", "WD", "SC", "CC", "SC", "BB", "BB", "BB", "GG", "DD", "DD", "CC", "SC", "GG", "BB", "WD", "BB", "CC", "CC", "EE", "GG", "EE", "AA", "GG", "CC", "DD", "BB", "SC", "WD", "WD", "FF", "CC", "EE", "WD", "WD"],
+          ["WD", "FF", "DD", "EE", "FF", "CC", "WD", "GG", "WD", "CC", "EE", "AA", "DD", "FF", "SC", "SC", "SC", "CC", "GG", "BB", "BB", "CC", "CC", "BB", "SC", "GG", "GG", "WD", "DD", "GG", "EE", "WD", "SC", "DD", "DD", "GG", "AA", "FF", "AA", "AA", "WD", "GG", "GG", "WD", "BB", "DD", "BB", "AA", "BB", "WD"],
+          ["GG", "FF", "WD", "WD", "EE", "FF", "GG", "EE", "DD", "CC", "EE", "WD", "GG", "GG", "AA", "BB", "AA", "CC", "DD", "BB", "DD", "SC", "BB", "BB", "WD", "FF", "AA", "BB", "GG", "BB", "GG", "SC", "SC", "CC", "CC", "AA", "AA", "SC", "EE", "CC", "SC", "GG", "WD", "DD", "SC", "GG", "AA", "EE", "EE", "FF"],
+          ["WD", "FF", "WD", "EE", "DD", "WD", "GG", "BB", "GG", "AA", "CC", "EE", "BB", "GG", "WD", "SC", "FF", "FF", "GG", "FF", "BB", "AA", "CC", "FF", "FF", "AA", "SC", "GG", "BB", "BB", "EE", "GG", "BB", "FF", "BB", "SC", "AA", "GG", "AA", "FF", "EE", "EE", "CC", "CC", "BB", "CC", "CC", "EE", "BB", "WD"],
+          ["AA", "AA", "CC", "EE", "CC", "CC", "DD", "GG", "WD", "SC", "WD", "AA", "CC", "AA", "BB", "DD", "AA", "GG", "BB", "EE", "WD", "AA", "BB", "EE", "SC", "AA", "WD", "SC", "SC", "AA", "GG", "FF", "CC", "EE", "GG", "GG", "GG", "GG", "CC", "GG", "WD", "SC", "FF", "GG", "BB", "GG", "WD", "DD", "GG", "SC"]
+        ]
+      },
+      {
+        "BaseGameReel": [
+          ["SC", "EE", "GG", "CC", "WD", "EE", "WD", "DD", "CC", "DD", "CC", "CC", "FF", "CC", "GG", "EE", "SC", "DD", "SC", "FF", "DD", "DD", "GG", "BB", "BB", "EE", "SC", "SC", "AA", "WD", "DD", "DD", "FF", "FF", "AA", "AA", "BB", "EE", "FF", "SC", "BB", "GG", "WD", "DD", "BB", "DD", "CC", "SC", "BB", "CC"],
+          ["GG", "GG", "WD", "WD", "SC", "GG", "EE", "WD", "CC", "EE", "SC", "AA", "BB", "BB", "SC", "GG", "GG", "CC", "SC", "FF", "DD", "WD", "WD", "DD", "BB", "WD", "SC", "DD", "GG", "BB", "FF", "DD", "EE", "SC", "DD", "FF", "AA", "DD", "SC", "EE", "BB", "CC", "WD", "EE", "DD", "GG", "FF", "AA", "DD", "AA"],
+          ["FF", "AA", "SC", "BB", "AA", "WD", "SC", "BB", "BB", "FF", "FF", "FF", "DD", "CC", "EE", "AA", "GG", "SC", "CC", "BB", "EE", "CC", "CC", "SC", "WD", "CC", "BB", "DD", "CC", "FF", "EE", "EE", "FF", "DD", "WD", "WD", "EE", "EE", "DD", "FF", "SC", "GG", "CC", "EE", "GG", "SC", "EE", "CC", "GG", "WD"],
+          ["GG", "WD", "DD", "CC", "DD", "FF", "WD", "EE", "FF", "BB", "SC", "GG", "AA", "AA", "FF", "CC", "AA", "SC", "WD", "AA", "AA", "AA", "AA", "SC", "CC", "DD", "GG", "DD", "GG", "FF", "FF", "SC", "SC", "EE", "FF", "BB", "AA", "EE", "SC", "GG", "EE", "FF", "DD", "CC", "CC", "SC", "AA", "DD", "BB", "DD"],
+          ["EE", "AA", "CC", "WD", "CC", "AA", "GG", "FF", "DD", "AA", "SC", "EE", "AA", "SC", "GG", "BB", "AA", "DD", "GG", "CC", "DD", "CC", "SC", "EE", "GG", "WD", "AA", "EE", "WD", "DD", "EE", "CC", "WD", "AA", "WD", "DD", "SC", "AA", "EE", "WD", "FF", "FF", "FF", "SC", "EE", "AA", "BB", "BB", "EE", "BB"]
+        ],
+        "FreeGameReel": [
+          ["GG", "CC", "EE", "GG", "FF", "WD", "BB", "SC", "EE", "SC", "FF", "FF", "EE", "SC", "EE", "BB", "CC", "GG", "CC", "SC", "BB", "AA", "DD", "FF", "DD", "GG", "GG", "AA", "SC", "AA", "CC", "DD", "AA", "AA", "BB", "WD", "DD", "WD", "CC", "FF", "CC", "DD", "FF", "EE", "WD", "AA", "BB", "AA", "FF", "GG"],
+          ["WD", "BB", "GG", "AA", "AA", "GG", "CC", "DD", "WD", "CC", "CC", "BB", "AA", "EE", "SC", "DD", "FF", "AA", "SC", "GG", "AA", "EE", "SC", "DD", "GG", "FF", "EE", "DD", "CC", "EE", "DD", "GG", "AA", "AA", "CC", "EE", "WD", "SC", "CC", "WD", "CC", "WD", "DD", "WD", "WD", "CC", "GG", "WD", "BB", "FF"],
+          ["GG", "AA", "CC", "GG", "FF", "BB", "CC", "AA", "WD", "FF", "DD", "GG", "AA", "SC", "GG", "BB", "GG", "CC", "EE", "WD", "SC", "BB", "FF", "AA", "EE", "EE", "FF", "CC", "GG", "EE", "GG", "AA", "FF", "AA", "DD", "CC", "AA", "CC", "AA", "WD", "WD", "CC", "BB", "BB", "SC", "BB", "FF", "BB", "FF", "SC"],
+          ["BB", "GG", "FF", "CC", "AA", "EE", "GG", "DD", "DD", "GG", "AA", "DD", "SC", "EE", "AA", "FF", "EE", "FF", "BB", "AA", "SC", "GG", "EE", "GG", "WD", "DD", "WD", "DD", "CC", "WD", "CC", "EE", "WD", "EE", "WD", "BB", "SC", "SC", "BB", "SC", "DD", "BB", "BB", "SC", "FF", "CC", "GG", "GG", "GG", "DD"],
+          ["GG", "EE", "SC", "DD", "SC", "BB", "GG", "SC", "EE", "CC", "SC", "WD", "DD", "DD", "EE", "AA", "AA", "CC", "FF", "DD", "CC", "AA", "BB", "EE", "FF", "CC", "AA", "SC", "GG", "DD", "SC", "GG", "WD", "AA", "FF", "FF", "EE", "BB", "FF", "DD", "SC", "FF", "SC", "BB", "GG", "WD", "BB", "FF", "FF", "AA"]
+        ]
+      },
+      {
+        "BaseGameReel": [
+          ["EE", "EE", "FF", "WD", "GG", "CC", "GG", "EE", "AA", "DD", "AA", "BB", "GG", "FF", "EE", "GG", "DD", "DD", "AA", "WD", "CC", "FF", "WD", "AA", "CC", "WD", "BB", "FF", "DD", "GG", "DD", "SC", "DD", "SC", "AA", "BB", "WD", "DD", "SC", "AA", "EE", "EE", "DD", "AA", "AA", "SC", "AA", "AA", "AA", "FF"],
+          ["CC", "WD", "FF", "CC", "FF", "EE", "EE", "CC", "WD", "EE", "SC", "WD", "WD", "FF", "BB", "AA", "DD", "CC", "CC", "BB", "AA", "CC", "DD", "GG", "DD", "AA", "SC", "SC", "SC", "SC", "FF", "EE", "FF", "SC", "CC", "FF", "SC", "BB", "CC", "EE", "CC", "DD", "SC", "GG", "SC", "WD", "BB", "FF", "WD", "EE"],
+          ["BB", "WD", "SC", "WD", "FF", "GG", "AA", "CC", "BB", "SC", "SC", "AA", "SC", "GG", "WD", "WD", "GG", "GG", "AA", "GG", "EE", "FF", "CC", "EE", "WD", "CC", "AA", "GG", "FF", "CC", "GG", "AA", "BB", "EE", "DD", "CC", "CC", "SC", "BB", "SC", "WD", "FF", "BB", "CC", "CC", "DD", "FF", "BB", "DD", "EE"],
+          ["FF", "BB", "CC", "AA", "CC", "CC", "BB", "DD", "DD", "SC", "AA", "FF", "FF", "EE", "DD", "EE", "AA", "GG", "FF", "DD", "EE", "GG", "WD", "SC", "FF", "GG", "WD", "BB", "FF", "GG", "BB", "WD", "WD", "AA", "FF", "WD", "FF", "GG", "GG", "EE", "AA", "AA", "SC", "BB", "CC", "FF", "WD", "SC", "DD", "DD"],
+          ["EE", "SC", "SC", "AA", "CC", "BB", "DD", "WD", "AA", "BB", "SC", "SC", "EE", "FF", "BB", "CC", "SC", "BB", "DD", "WD", "SC", "DD", "CC", "AA", "BB", "GG", "EE", "BB", "WD", "FF", "EE", "GG", "SC", "FF", "AA", "AA", "FF", "BB", "CC", "BB", "GG", "EE", "WD", "SC", "SC", "DD", "BB", "SC", "BB", "CC"]
+        ],
+        "FreeGameReel": [
+          ["EE", "AA", "DD", "BB", "WD", "WD", "BB", "GG", "DD", "WD", "AA", "BB", "BB", "DD", "GG", "SC", "SC", "CC", "AA", "CC", "BB", "FF", "BB", "CC", "BB", "EE", "SC", "DD", "SC", "FF", "AA", "AA", "WD", "FF", "GG", "BB", "CC", "CC", "CC", "DD", "EE", "FF", "AA", "FF", "BB", "BB", "GG", "WD", "EE", "EE"],
+          ["CC", "EE", "EE", "DD", "WD", "AA", "EE", "SC", "SC", "SC", "WD", "CC", "EE", "AA", "WD", "WD", "GG", "GG", "GG", "SC", "AA", "WD", "WD", "GG", "BB", "EE", "DD", "DD", "BB", "GG", "FF", "CC", "AA", "WD", "DD", "WD", "AA", "AA", "SC", "CC", "FF", "WD", "SC", "AA", "FF", "GG", "AA", "CC", "DD", "AA"],
+          ["SC", "AA", "CC", "WD", "CC", "SC", "EE", "CC", "SC", "EE", "EE", "SC", "DD", "SC", "WD", "GG", "CC", "WD", "CC", "GG", "BB", "AA", "AA", "AA", "GG", "EE", "WD", "DD", "BB", "AA", "FF", "AA", "DD", "EE", "FF", "DD", "WD", "GG", "AA", "BB", "AA", "GG", "SC", "AA", "FF", "EE", "WD", "SC", "BB", "FF"],
+          ["CC", "GG", "EE", "DD", "FF", "CC", "DD", "DD", "WD", "AA", "SC", "FF", "SC", "CC", "SC", "EE", "AA", "AA", "SC", "SC", "CC", "DD", "CC", "GG", "EE", "AA", "WD", "GG", "WD", "FF", "AA", "SC", "WD", "CC", "BB", "AA", "SC", "EE", "BB", "CC", "FF", "FF", "AA", "EE", "EE", "BB", "DD", "GG", "WD", "DD"],
+          ["DD", "EE", "GG", "FF", "FF", "SC", "WD", "BB", "GG", "GG", "FF", "EE", "FF", "SC", "AA", "CC", "CC", "CC", "FF", "AA", "WD", "SC", "AA", "GG", "FF", "AA", "FF", "EE", "BB", "GG", "BB", "SC", "CC", "SC", "EE", "GG", "SC", "SC", "SC", "DD", "BB", "FF", "AA", "WD", "WD", "CC", "SC", "FF", "DD", "DD"]
+        ]
+      },
+      {
+        "BaseGameReel": [
+          ["DD", "WD", "DD", "WD", "DD", "SC", "SC", "AA", "GG", "CC", "EE", "BB", "CC", "WD", "CC", "FF", "AA", "BB", "FF", "AA", "DD", "WD", "GG", "WD", "CC", "AA", "GG", "EE", "FF", "GG", "BB", "CC", "CC", "AA", "WD", "DD", "CC", "CC", "WD", "GG", "DD", "CC", "CC", "AA", "SC", "CC", "SC", "GG", "SC", "WD"],
+          ["WD", "EE", "SC", "WD", "EE", "EE", "DD", "WD", "EE", "EE", "DD", "CC", "WD", "SC", "EE", "GG", "GG", "CC", "GG", "CC", "SC", "WD", "WD", "DD", "SC", "AA", "BB", "AA", "SC", "CC", "FF", "GG", "FF", "FF", "DD", "CC", "DD", "WD", "FF", "EE", "CC", "DD", "CC", "DD", "BB", "CC", "FF", "CC", "AA", "DD"],
+          ["AA", "WD", "EE", "SC", "GG", "CC", "BB", "GG", "WD", "DD", "GG", "BB", "EE", "GG", "CC", "WD", "BB", "EE", "WD", "FF", "DD", "SC", "GG", "EE", "EE", "FF", "GG", "AA", "FF", "WD", "GG", "BB", "EE", "AA", "FF", "WD", "BB", "FF", "BB", "WD", "AA", "SC", "BB", "SC", "WD", "DD", "FF", "WD", "CC", "AA"],
+          ["WD", "BB", "CC", "SC", "WD", "SC", "DD", "CC", "AA", "EE", "GG", "GG", "DD", "DD", "BB", "EE", "GG", "FF", "SC", "BB", "DD", "WD", "SC", "DD", "DD", "CC", "SC", "CC", "SC", "CC", "AA", "SC", "DD", "SC", "SC", "BB", "CC", "CC", "EE", "CC", "BB", "SC", "BB", "WD", "SC", "SC", "BB", "CC", "AA", "EE"],
+          ["BB", "BB", "SC", "BB", "SC", "DD", "CC", "GG", "BB", "CC", "SC", "FF", "SC", "AA", "WD", "WD", "DD", "WD", "EE", "AA", "BB", "EE", "SC", "AA", "BB", "FF", "BB", "WD", "EE", "FF", "CC", "SC", "CC", "DD", "CC", "EE", "SC", "SC", "CC", "WD", "FF", "GG", "WD", "EE", "GG", "WD", "AA", "DD", "FF", "EE"]
+        ],
+        "FreeGameReel": [
+          ["EE", "GG", "SC", "BB", "SC", "FF", "WD", "CC", "SC", "FF", "FF", "SC", "SC", "DD", "GG", "AA", "DD", "FF", "BB", "DD", "CC", "AA", "BB", "WD", "FF", "DD", "AA", "DD", "EE", "AA", "GG", "FF", "SC", "EE", "CC", "AA", "SC", "GG", "FF", "EE", "DD", "CC", "CC", "DD", "CC", "FF", "WD", "FF", "SC", "EE"],
+          ["CC", "EE", "EE", "SC", "AA", "GG", "BB", "FF", "GG", "FF", "CC", "WD", "WD", "EE", "WD", "EE", "FF", "EE", "EE", "AA", "WD", "DD", "SC", "BB", "SC", "FF", "SC", "DD", "DD", "SC", "SC", "SC", "WD", "GG", "GG", "AA", "WD", "AA", "GG", "CC", "EE", "SC", "CC", "CC", "EE", "FF", "FF", "CC", "EE", "SC"],
+          ["AA", "GG", "AA", "SC", "BB", "EE", "DD", "EE", "BB", "AA", "DD", "SC", "AA", "WD", "SC", "EE", "DD", "SC", "AA", "FF", "DD", "EE", "AA", "DD", "DD", "GG", "BB", "SC", "BB", "CC", "BB", "CC", "FF", "AA", "CC", "AA", "WD", "GG", "DD", "FF", "EE", "DD", "DD", "CC", "WD", "WD", "EE", "BB", "CC", "AA"],
+          ["EE", "CC", "SC", "GG", "DD", "WD", "SC", "CC", "CC", "BB", "CC", "BB", "BB", "EE", "FF", "SC", "FF", "CC", "GG", "DD", "CC", "DD", "SC", "BB", "FF", "SC", "AA", "FF", "DD", "SC", "CC", "EE", "DD", "DD", "EE", "WD", "FF", "EE", "DD", "FF", "GG", "FF", "FF", "AA", "FF", "SC", "SC", "SC", "EE", "DD"],
+          ["SC", "CC", "EE", "CC", "BB", "SC", "BB", "GG", "FF", "GG", "AA", "GG", "EE", "FF", "SC", "FF", "EE", "DD", "BB", "BB", "DD", "SC", "SC", "EE", "WD", "FF", "WD", "CC", "SC", "SC", "BB", "GG", "AA", "WD", "WD", "GG", "GG", "AA", "FF", "WD", "CC", "DD", "WD", "BB", "EE", "DD", "EE", "DD", "SC", "CC"]
+        ]
+      },
+      {
+        "BaseGameReel": [
+          ["FF", "BB", "CC", "WD", "BB", "WD", "BB", "SC", "FF", "WD", "AA", "GG", "WD", "GG", "DD", "AA", "WD", "SC", "WD", "DD", "GG", "GG", "SC", "DD", "FF", "GG", "EE", "AA", "GG", "DD", "CC", "CC", "FF", "FF", "FF", "EE", "AA", "EE", "EE", "AA", "EE", "AA", "FF", "EE", "GG", "CC", "SC", "DD", "EE", "CC"],
+          ["AA", "WD", "SC", "BB", "AA", "DD", "DD", "SC", "AA", "GG", "DD", "WD", "DD", "AA", "GG", "FF", "EE", "WD", "WD", "DD", "AA", "AA", "CC", "SC", "GG", "EE", "BB", "AA", "BB", "BB", "EE", "SC", "BB", "AA", "SC", "EE", "AA", "BB", "FF", "BB", "GG", "DD", "BB", "WD", "GG", "EE", "CC", "GG", "SC", "DD"],
+          ["CC", "DD", "WD", "DD", "BB", "FF", "BB", "GG", "SC", "AA", "SC", "BB", "DD", "DD", "SC", "AA", "GG", "FF", "SC", "AA", "BB", "EE", "SC", "FF", "SC", "FF", "WD", "GG", "SC", "DD", "AA", "FF", "GG", "SC", "CC", "DD", "DD", "EE", "DD", "FF", "CC", "GG", "GG", "AA", "FF", "GG", "DD", "BB", "FF", "DD"],
+          ["GG", "DD", "FF", "SC", "GG", "GG", "BB", "EE", "SC", "DD", "FF", "EE", "CC", "WD", "WD", "AA", "WD", "DD", "GG", "DD", "BB", "DD", "WD", "SC", "SC", "SC", "WD", "CC", "AA", "AA", "BB", "SC", "EE", "CC", "BB", "DD", "DD", "AA", "SC", "FF", "WD", "CC", "AA", "FF", "SC", "GG", "AA", "SC", "AA", "DD"],
+          ["GG", "SC", "BB", "AA", "GG", "SC", "CC", "DD", "WD", "CC", "BB", "EE", "WD", "BB", "FF", "GG", "AA", "EE", "BB", "AA", "AA", "AA", "SC", "EE", "EE", "WD", "CC", "FF", "GG", "EE", "AA", "WD", "FF", "FF", "FF", "BB", "DD", "DD", "WD", "GG", "GG", "CC", "FF", "DD", "WD", "CC", "WD", "AA", "SC", "WD"]
+        ],
+        "FreeGameReel": [
+          ["FF", "EE", "CC", "AA", "GG", "AA", "FF", "DD", "FF", "GG", "GG", "EE", "AA", "FF", "FF", "DD", "AA", "BB", "FF", "AA", "EE", "BB", "AA", "FF", "GG", "AA", "AA", "EE", "SC", "WD", "GG", "CC", "FF", "DD", "SC", "AA", "AA", "BB", "BB", "GG", "WD", "GG", "WD", "GG", "WD", "SC", "WD", "GG", "AA", "AA"],
+          ["SC", "EE", "CC", "GG", "DD", "BB", "DD", "BB", "BB", "SC", "SC", "CC", "EE", "SC", "DD", "BB", "AA", "FF", "FF", "SC", "DD", "AA", "BB", "CC", "FF", "WD", "WD", "SC", "GG", "WD", "FF", "CC", "DD", "FF", "SC", "GG", "WD", "AA", "AA", "FF", "CC", "EE", "BB", "FF", "SC", "DD", "BB", "WD", "CC", "GG"],
+          ["CC", "FF", "FF", "DD", "WD", "AA", "FF", "EE", "FF", "BB", "FF", "FF", "GG", "BB", "FF", "WD", "SC", "WD", "EE", "AA", "FF", "CC", "AA", "CC", "CC", "BB", "SC", "EE", "BB", "CC", "GG", "CC", "GG", "DD", "AA", "WD", "CC", "SC", "WD", "FF", "AA", "WD", "BB", "BB", "DD", "GG", "AA", "WD", "DD", "CC"],
+          ["FF", "GG", "CC", "FF", "SC", "AA", "EE", "WD", "AA", "GG", "FF", "BB", "DD", "WD", "FF", "EE", "WD", "GG", "AA", "GG", "DD", "CC", "EE", "GG", "GG", "SC", "BB", "EE", "CC", "WD", "EE", "FF", "SC", "DD", "CC", "SC", "CC", "DD", "AA", "FF", "EE", "DD", "WD", "CC", "FF", "SC", "SC", "AA", "GG", "SC"],
+          ["DD", "DD", "GG", "SC", "AA", "EE", "BB", "FF", "AA", "DD", "WD", "GG", "EE", "AA", "GG", "SC", "EE", "DD", "WD", "BB", "CC", "SC", "CC", "BB", "DD", "GG", "DD", "AA", "AA", "AA", "GG", "DD", "AA", "EE", "CC", "WD", "FF", "DD", "GG", "AA", "EE", "BB", "AA", "GG", "WD", "SC", "EE", "WD", "CC", "FF"]
+        ]
+      },
+      {
+        "BaseGameReel": [
+          ["DD", "DD", "DD", "GG", "DD", "BB", "BB", "AA", "AA", "FF", "BB", "BB", "EE", "WD", "BB", "WD", "SC", "SC", "DD", "GG", "SC", "GG", "AA", "FF", "BB", "FF", "EE", "EE", "CC", "EE", "GG", "AA", "FF", "AA", "GG", "FF", "GG", "BB", "SC", "SC", "SC", "WD", "SC", "CC", "BB", "AA", "SC", "DD", "WD", "AA"],
+          ["CC", "AA", "SC", "EE", "SC", "FF", "EE", "GG", "AA", "DD", "WD", "SC", "SC", "FF", "CC", "FF", "WD", "GG", "EE", "GG", "CC", "FF", "CC", "CC", "BB", "WD", "FF", "BB", "FF", "EE", "BB", "DD", "BB", "GG", "BB", "DD", "AA", "GG", "WD", "CC", "CC", "CC", "AA", "CC", "WD", "SC", "GG", "EE", "DD", "GG"],
+          ["FF", "FF", "SC", "SC", "AA", "FF", "EE", "WD", "DD", "AA", "SC", "GG", "CC", "EE", "SC", "WD", "AA", "WD", "WD", "DD", "GG", "BB", "FF", "CC", "EE", "GG", "GG", "EE", "BB", "WD", "WD", "EE", "EE", "BB", "AA", "FF", "CC", "SC", "EE", "DD", "GG", "EE", "WD", "WD", "GG", "BB", "AA", "DD", "WD", "BB"],
+          ["AA", "AA", "AA", "FF", "GG", "SC", "WD", "FF", "EE", "EE", "FF", "FF", "DD", "EE", "DD", "AA", "GG", "EE", "GG", "FF", "GG", "WD", "FF", "DD", "DD", "CC", "EE", "DD", "CC", "EE", "GG", "FF", "WD", "BB", "DD", "SC", "BB", "EE", "EE", "FF", "EE", "CC", "FF", "FF", "GG", "BB", "AA", "WD", "EE", "FF"],
+          ["SC", "WD", "EE", "DD", "SC", "SC", "GG", "AA", "GG", "WD", "GG", "EE", "BB", "WD", "WD", "WD", "GG", "AA", "SC", "CC", "SC", "SC", "DD", "WD", "AA", "GG", "WD", "BB", "DD", "FF", "EE", "SC", "AA", "CC", "SC", "FF", "GG", "EE", "AA", "EE", "SC", "FF", "AA", "FF", "DD", "WD", "GG", "WD", "SC", "DD"]
+        ],
+        "FreeGameReel": [
+          ["WD", "CC", "WD", "GG", "GG", "FF", "FF", "AA", "CC", "WD", "DD", "AA", "CC", "DD", "SC", "CC", "EE", "FF", "GG", "BB", "FF", "FF", "FF", "CC", "BB", "SC", "DD", "FF", "EE", "EE", "SC", "SC", "SC", "AA", "SC", "WD", "WD", "SC", "EE", "CC", "BB", "DD", "EE", "CC", "SC", "WD", "CC", "DD", "GG", "BB"],
+          ["GG", "BB", "DD", "SC", "GG", "FF", "AA", "DD", "FF", "AA", "WD", "DD", "AA", "FF", "WD", "EE", "GG", "AA", "FF", "FF", "WD", "GG", "BB", "DD", "WD", "GG", "DD", "BB", "CC", "AA", "DD", "CC", "EE", "DD", "AA", "EE", "WD", "FF", "EE", "EE", "SC", "BB", "BB", "DD", "FF", "FF", "SC", "FF", "WD", "CC"],
+          ["SC", "DD", "FF", "SC", "WD", "DD", "AA", "BB", "AA", "CC", "GG", "SC", "WD", "EE", "CC", "GG", "GG", "SC", "CC", "DD", "CC", "FF", "BB", "CC", "SC", "BB", "SC", "EE", "CC", "AA", "SC", "GG", "SC", "DD", "SC", "WD", "WD", "BB", "BB", "EE", "CC", "AA", "FF", "GG", "DD", "AA", "DD", "CC", "CC", "GG"],
+          ["AA", "GG", "DD", "WD", "GG", "DD", "WD", "GG", "GG", "CC", "SC", "GG", "CC", "CC", "BB", "DD", "BB", "AA", "BB", "DD", "FF", "GG", "WD", "FF", "DD", "FF", "DD", "FF", "EE", "FF", "GG", "SC", "BB", "FF", "CC", "WD", "SC", "EE", "EE", "FF", "WD", "EE", "WD", "FF", "BB", "AA", "CC", "DD", "EE", "SC"],
+          ["GG", "BB", "GG", "CC", "AA", "EE", "FF", "AA", "FF", "SC", "BB", "FF", "SC", "AA", "DD", "BB", "EE", "WD", "DD", "SC", "CC", "GG", "GG", "DD", "SC", "BB", "BB", "WD", "AA", "CC", "FF", "GG", "BB", "BB", "SC", "WD", "SC", "EE", "AA", "AA", "GG", "BB", "EE", "BB", "EE", "EE", "WD", "WD", "EE", "SC"]
+        ]
+      },
+      {
+        "BaseGameReel": [
+          ["FF", "CC", "SC", "AA", "AA", "SC", "GG", "DD", "WD", "AA", "FF", "DD", "FF", "WD", "EE", "AA", "DD", "FF", "AA", "EE", "BB", "FF", "AA", "EE", "DD", "FF", "BB", "AA", "AA", "SC", "CC", "DD", "WD", "EE", "CC", "DD", "AA", "BB", "DD", "GG", "DD", "WD", "FF", "SC", "SC", "WD", "GG", "CC", "EE", "FF"],
+          ["FF", "DD", "WD", "DD", "AA", "GG", "AA", "SC", "AA", "AA", "CC", "AA", "BB", "CC", "DD", "BB", "CC", "GG", "AA", "AA", "FF", "EE", "CC", "CC", "SC", "SC", "SC", "DD", "EE", "GG", "SC", "AA", "FF", "AA", "AA", "CC", "EE", "SC", "WD", "GG", "FF", "GG", "WD", "CC", "DD", "FF", "CC", "FF", "FF", "EE"],
+          ["DD", "BB", "AA", "BB", "FF", "AA", "BB", "SC", "WD", "GG", "FF", "BB", "BB", "EE", "CC", "DD", "FF", "GG", "BB", "DD", "CC", "EE", "SC", "BB", "GG", "AA", "SC", "DD", "GG", "CC", "DD", "GG", "CC", "FF", "SC", "FF", "AA", "EE", "WD", "EE", "FF", "WD", "FF", "WD", "BB", "AA", "AA", "AA", "FF", "SC"],
+          ["AA", "FF", "WD", "GG", "EE", "WD", "DD", "DD", "EE", "GG", "EE", "WD", "WD", "WD", "GG", "DD", "GG", "FF", "FF", "CC", "BB", "CC", "DD", "AA", "FF", "FF", "DD", "CC", "DD", "AA", "WD", "DD", "SC", "EE", "SC", "GG", "GG", "DD", "FF", "BB", "BB", "FF", "DD", "DD", "SC", "AA", "SC", "BB", "WD", "CC"],
+          ["WD", "DD", "CC", "FF", "DD", "AA", "CC", "WD", "SC", "FF", "SC", "GG", "SC", "AA", "SC", "BB", "CC", "FF", "WD", "BB", "CC", "EE", "FF", "EE", "DD", "SC", "FF", "CC", "GG", "BB", "AA", "WD", "AA", "EE", "WD", "EE", "GG", "WD", "CC", "EE", "GG", "WD", "GG", "CC", "SC", "DD", "CC", "CC", "SC", "DD"]
+        ],
+        "FreeGameReel": [
+          ["SC", "GG", "GG", "EE", "WD", "BB", "BB", "AA", "EE", "CC", "FF", "SC", "GG", "WD", "AA", "GG", "EE", "EE", "AA", "BB", "EE", "EE", "AA", "WD", "DD", "DD", "GG", "GG", "SC", "SC", "SC", "FF", "CC", "SC", "DD", "CC", "AA", "EE", "EE", "DD", "BB", "WD", "WD", "BB", "GG", "AA", "EE", "AA", "WD", "WD"],
+          ["WD", "CC", "SC", "GG", "SC", "AA", "GG", "EE", "BB", "GG", "GG", "FF", "WD", "FF", "AA", "AA", "CC", "SC", "WD", "AA", "DD", "EE", "SC", "GG", "SC", "AA", "FF", "WD", "DD", "FF", "FF", "WD", "EE", "CC", "FF", "WD", "FF", "GG", "SC", "CC", "BB", "EE", "BB", "SC", "DD", "DD", "CC", "DD", "CC", "CC"],
+          ["SC", "GG", "GG", "GG", "BB", "BB", "BB", "SC", "EE", "WD", "GG", "SC", "WD", "CC", "AA", "AA", "FF", "BB", "WD", "DD", "CC", "SC", "BB", "AA", "GG", "DD", "FF", "EE", "FF", "WD", "SC", "BB", "SC", "FF", "SC", "DD", "CC", "BB", "AA", "CC", "WD", "GG", "BB", "SC", "WD", "BB", "DD", "FF", "GG", "FF"],
+          ["GG", "GG", "GG", "FF", "WD", "FF", "CC", "DD", "BB", "SC", "GG", "CC", "BB", "CC", "SC", "GG", "CC", "FF", "CC", "AA", "EE", "WD", "BB", "GG", "BB", "GG", "SC", "SC", "DD", "AA", "EE", "CC", "DD", "FF", "AA", "AA", "GG", "CC", "FF", "GG", "AA", "CC", "FF", "BB", "FF", "AA", "GG", "AA", "EE", "BB"],
+          ["SC", "DD", "EE", "CC", "AA", "EE", "CC", "DD", "GG", "WD", "DD", "DD", "WD", "BB", "WD", "CC", "DD", "FF", "FF", "GG", "FF", "AA", "GG", "FF", "AA", "BB", "DD", "CC", "GG", "WD", "WD", "SC", "AA", "SC", "FF", "GG", "AA", "WD", "DD", "AA", "BB", "CC", "GG", "WD", "SC", "GG", "SC", "DD", "EE", "FF"]
+        ]
+      }
+    ],
+    "results": {
+      "mutation_5": {
+        "Generational_RouletteSelection": {
+          "results": [
+            [105.54893815080817, 205.4761330014056],
+            [87.38781860846031, 165.09707580345986],
+            [76.83324983860477, 121.59738608545861],
+            [74.649974586841, 86.64689641802772],
+            [66.78032799792052, 77.7929284686542]
+          ],
+          "reelset": {
+            "BaseGameReel": [
+              ["BB", "FF", "FF", "BB", "AA", "AA", "WD", "BB", "DD", "WD", "AA", "GG", "DD", "DD", "DD", "EE", "WD", "WD", "WD", "DD", "AA", "FF", "CC", "FF", "GG", "AA", "CC", "GG", "DD", "BB", "CC", "DD", "WD", "EE", "FF", "DD", "AA", "BB", "CC", "GG", "DD", "EE", "EE", "FF", "FF", "DD", "CC", "GG", "GG", "WD"],
+              ["BB", "DD", "SC", "GG", "GG", "AA", "AA", "DD", "GG", "CC", "AA", "EE", "BB", "CC", "DD", "SC", "SC", "CC", "CC", "EE", "BB", "SC", "WD", "DD", "CC", "WD", "SC", "DD", "GG", "BB", "FF", "DD", "EE", "SC", "DD", "FF", "AA", "DD", "SC", "DD", "AA", "CC", "CC", "FF", "CC", "FF", "AA", "CC", "BB", "WD"],
+              ["WD", "WD", "GG", "SC", "BB", "AA", "CC", "BB", "CC", "CC", "DD", "DD", "GG", "WD", "FF", "EE", "BB", "BB", "DD", "WD", "FF", "DD", "CC", "AA", "WD", "CC", "BB", "DD", "CC", "FF", "EE", "EE", "FF", "DD", "WD", "WD", "EE", "SC", "AA", "EE", "AA", "WD", "SC", "WD", "SC", "FF", "DD", "CC", "FF", "DD"],
+              ["BB", "WD", "DD", "CC", "DD", "FF", "WD", "EE", "FF", "BB", "SC", "GG", "AA", "AA", "FF", "CC", "AA", "EE", "WD", "AA", "AA", "AA", "AA", "SC", "CC", "DD", "GG", "DD", "GG", "FF", "CC", "DD", "BB", "FF", "EE", "SC", "EE", "WD", "AA", "BB", "BB", "CC", "AA", "SC", "FF", "CC", "GG", "DD", "SC", "DD"],
+              ["EE", "CC", "WD", "CC", "FF", "GG", "SC", "WD", "DD", "DD", "BB", "BB", "EE", "AA", "EE", "BB", "AA", "BB", "EE", "AA", "FF", "WD", "AA", "GG", "AA", "EE", "CC", "AA", "WD", "DD", "EE", "CC", "WD", "AA", "WD", "DD", "SC", "AA", "CC", "BB", "GG", "EE", "CC", "GG", "FF", "SC", "GG", "AA", "CC", "WD"]
+            ],
+            "FreeGameReel": [
+              ["AA", "EE", "BB", "BB", "WD", "BB", "FF", "FF", "WD", "FF", "FF", "SC", "WD", "CC", "SC", "GG", "FF", "DD", "GG", "BB", "CC", "GG", "BB", "AA", "SC", "BB", "BB", "EE", "EE", "DD", "EE", "EE", "WD", "SC", "AA", "SC", "DD", "DD", "DD", "WD", "WD", "CC", "AA", "BB", "GG", "DD", "WD", "DD", "CC", "EE"],
+              ["FF", "BB", "EE", "SC", "CC", "EE", "AA", "EE", "GG", "SC", "GG", "CC", "AA", "DD", "AA", "GG", "EE", "FF", "BB", "DD", "GG", "SC", "SC", "GG", "DD", "SC", "SC", "DD", "FF", "AA", "WD", "WD", "EE", "CC", "GG", "FF", "WD", "BB", "EE", "SC", "AA", "EE", "EE", "GG", "SC", "CC", "WD", "FF", "SC", "EE"],
+              ["FF", "AA", "FF", "AA", "GG", "SC", "AA", "WD", "AA", "CC", "GG", "EE", "DD", "WD", "BB", "BB", "CC", "GG", "GG", "AA", "DD", "DD", "AA", "GG", "WD", "AA", "WD", "WD", "SC", "FF", "WD", "GG", "WD", "CC", "CC", "BB", "AA", "AA", "EE", "EE", "EE", "SC", "AA", "SC", "BB", "GG", "SC", "CC", "FF", "DD"],
+              ["FF", "DD", "SC", "WD", "FF", "EE", "SC", "DD", "EE", "GG", "WD", "CC", "FF", "BB", "EE", "DD", "WD", "EE", "AA", "EE", "DD", "AA", "FF", "GG", "AA", "BB", "SC", "GG", "AA", "EE", "SC", "WD", "SC", "BB", "CC", "FF", "BB", "EE", "CC", "DD", "FF", "FF", "DD", "WD", "WD", "AA", "GG", "GG", "CC", "WD"],
+              ["BB", "CC", "FF", "SC", "SC", "BB", "EE", "BB", "CC", "WD", "BB", "SC", "WD", "SC", "DD", "GG", "CC", "AA", "WD", "BB", "GG", "CC", "CC", "CC", "SC", "EE", "GG", "GG", "FF", "CC", "DD", "FF", "FF", "SC", "FF", "AA", "CC", "AA", "WD", "FF", "SC", "EE", "WD", "BB", "FF", "FF", "BB", "FF", "WD", "BB"]
+            ]
+          },
+          "meta": {
+            "gaSeed": "13330936894913225263",
+            "finalCheckSeed": "12986021523950369780",
+            "bestFoundInGeneration": 5
+          }
+        },
+        "Generational_TournamentSelection": {
+          "results": [
+            [58.888362834539784, 170.278926242586],
+            [78.13580512611185, 126.49125378203118],
+            [55.42014970054109, 110.246952687331],
+            [54.00467940267937, 69.57658165871149],
+            [51.39414936060406, 57.27608698046273]
+          ],
+          "reelset": {
+            "BaseGameReel": [
+              ["BB", "FF", "FF", "BB", "AA", "BB", "WD", "BB", "DD", "WD", "AA", "GG", "DD", "DD", "DD", "DD", "WD", "WD", "WD", "DD", "AA", "FF", "CC", "GG", "GG", "AA", "CC", "GG", "DD", "BB", "EE", "SC", "GG", "GG", "DD", "GG", "BB", "AA", "DD", "AA", "FF", "BB", "SC", "GG", "GG", "AA", "FF", "EE", "BB", "EE"],
+              ["BB", "DD", "BB", "DD", "DD", "BB", "GG", "FF", "AA", "WD", "CC", "CC", "GG", "SC", "GG", "FF", "SC", "WD", "GG", "BB", "GG", "SC", "GG", "FF", "BB", "CC", "SC", "GG", "GG", "EE", "WD", "CC", "AA", "EE", "AA", "CC", "AA", "SC", "BB", "WD", "WD", "CC", "WD", "BB", "SC", "AA", "FF", "GG", "DD", "WD"],
+              ["WD", "WD", "GG", "SC", "BB", "AA", "CC", "BB", "FF", "BB", "AA", "DD", "WD", "WD", "SC", "CC", "GG", "BB", "AA", "WD", "AA", "AA", "BB", "DD", "GG", "BB", "EE", "BB", "FF", "AA", "GG", "FF", "WD", "FF", "DD", "GG", "GG", "CC", "AA", "EE", "AA", "WD", "SC", "WD", "BB", "AA", "EE", "DD", "EE", "GG"],
+              ["BB", "DD", "DD", "EE", "BB", "BB", "FF", "EE", "CC", "DD", "BB", "FF", "CC", "SC", "EE", "AA", "SC", "WD", "EE", "DD", "BB", "EE", "AA", "FF", "FF", "CC", "EE", "EE", "CC", "AA", "SC", "GG", "EE", "WD", "FF", "DD", "GG", "CC", "FF", "SC", "AA", "CC", "DD", "AA", "FF", "BB", "CC", "GG", "GG", "DD"],
+              ["WD", "CC", "WD", "CC", "FF", "GG", "SC", "WD", "BB", "AA", "BB", "BB", "EE", "AA", "EE", "BB", "AA", "BB", "EE", "AA", "FF", "CC", "DD", "CC", "BB", "GG", "FF", "BB", "FF", "FF", "DD", "WD", "EE", "CC", "EE", "CC", "BB", "SC", "BB", "FF", "AA", "BB", "SC", "AA", "BB", "CC", "GG", "GG", "FF", "BB"]
+            ],
+            "FreeGameReel": [
+              ["AA", "EE", "BB", "BB", "WD", "BB", "FF", "FF", "WD", "FF", "FF", "SC", "WD", "CC", "SC", "GG", "FF", "DD", "GG", "BB", "CC", "GG", "BB", "AA", "SC", "BB", "BB", "EE", "EE", "DD", "EE", "EE", "WD", "SC", "AA", "SC", "DD", "DD", "DD", "WD", "WD", "CC", "AA", "BB", "GG", "DD", "WD", "DD", "CC", "EE"],
+              ["FF", "BB", "EE", "SC", "CC", "EE", "AA", "EE", "GG", "SC", "GG", "CC", "AA", "DD", "AA", "GG", "EE", "FF", "BB", "DD", "GG", "SC", "SC", "GG", "DD", "SC", "SC", "DD", "FF", "AA", "WD", "WD", "EE", "CC", "GG", "FF", "WD", "BB", "EE", "SC", "AA", "EE", "EE", "GG", "SC", "CC", "WD", "FF", "SC", "EE"],
+              ["FF", "AA", "FF", "AA", "GG", "SC", "AA", "WD", "AA", "CC", "GG", "EE", "DD", "WD", "BB", "BB", "CC", "GG", "GG", "AA", "DD", "DD", "AA", "GG", "WD", "AA", "WD", "WD", "SC", "FF", "WD", "GG", "WD", "CC", "CC", "BB", "AA", "AA", "EE", "EE", "EE", "SC", "AA", "SC", "BB", "GG", "SC", "CC", "FF", "DD"],
+              ["FF", "DD", "SC", "WD", "FF", "EE", "SC", "DD", "EE", "GG", "WD", "CC", "FF", "BB", "EE", "DD", "WD", "EE", "AA", "EE", "DD", "AA", "FF", "GG", "AA", "BB", "SC", "GG", "AA", "EE", "SC", "WD", "SC", "BB", "CC", "FF", "BB", "EE", "CC", "DD", "FF", "FF", "DD", "WD", "WD", "AA", "GG", "GG", "CC", "WD"],
+              ["BB", "CC", "FF", "SC", "SC", "BB", "EE", "BB", "CC", "WD", "BB", "SC", "WD", "SC", "DD", "GG", "CC", "AA", "WD", "BB", "GG", "CC", "CC", "CC", "SC", "EE", "GG", "GG", "FF", "CC", "DD", "FF", "FF", "SC", "FF", "AA", "CC", "AA", "WD", "FF", "SC", "EE", "WD", "BB", "FF", "FF", "BB", "FF", "WD", "BB"]
+            ]
+          },
+          "meta": {
+            "gaSeed": "16197624122671813353",
+            "finalCheckSeed": "7571748040804630279",
+            "bestFoundInGeneration": 5
+          }
+        },
+        "Generational_SUS": {
+          "results": [
+            [53.2337584505631, 184.39924525747975],
+            [45.3175137637401, 119.02327513267646],
+            [43.42257516123974, 89.3493750488817],
+            [43.18353226368318, 68.54590329352439],
+            [38.73174004442262, 59.98295603479163]
+          ],
+          "reelset": {
+            "BaseGameReel": [
+              ["DD", "DD", "DD", "GG", "DD", "EE", "DD", "FF", "BB", "CC", "WD", "BB", "CC", "FF", "EE", "WD", "BB", "DD", "CC", "CC", "DD", "WD", "GG", "AA", "EE", "AA", "WD", "DD", "WD", "FF", "FF", "BB", "AA", "GG", "BB", "BB", "WD", "BB", "BB", "CC", "SC", "WD", "GG", "BB", "FF", "CC", "WD", "GG", "GG", "WD"],
+              ["BB", "AA", "SC", "EE", "GG", "AA", "EE", "CC", "DD", "FF", "CC", "AA", "EE", "DD", "WD", "BB", "DD", "EE", "CC", "DD", "GG", "EE", "FF", "SC", "BB", "CC", "CC", "GG", "CC", "EE", "WD", "CC", "AA", "EE", "AA", "CC", "AA", "DD", "SC", "CC", "BB", "DD", "SC", "GG", "WD", "BB", "AA", "AA", "EE", "WD"],
+              ["FF", "FF", "SC", "GG", "GG", "AA", "CC", "BB", "CC", "CC", "DD", "DD", "GG", "WD", "FF", "EE", "BB", "BB", "DD", "WD", "SC", "DD", "AA", "DD", "CC", "AA", "EE", "BB", "EE", "AA", "GG", "FF", "WD", "FF", "DD", "GG", "GG", "CC", "FF", "EE", "AA", "WD", "EE", "WD", "BB", "WD", "BB", "BB", "FF", "CC"],
+              ["AA", "AA", "AA", "FF", "GG", "SC", "WD", "FF", "EE", "EE", "FF", "FF", "DD", "EE", "BB", "AA", "GG", "GG", "AA", "FF", "GG", "WD", "SC", "AA", "DD", "CC", "EE", "DD", "EE", "EE", "GG", "FF", "WD", "BB", "DD", "SC", "BB", "EE", "EE", "DD", "AA", "CC", "DD", "GG", "FF", "CC", "GG", "DD", "SC", "DD"],
+              ["SC", "WD", "WD", "CC", "GG", "GG", "SC", "WD", "BB", "DD", "BB", "BB", "EE", "AA", "EE", "BB", "FF", "BB", "EE", "AA", "FF", "WD", "AA", "GG", "AA", "EE", "CC", "AA", "BB", "EE", "AA", "DD", "BB", "CC", "BB", "FF", "CC", "GG", "EE", "BB", "WD", "EE", "CC", "GG", "FF", "SC", "GG", "AA", "CC", "WD"]
+            ],
+            "FreeGameReel": [
+              ["WD", "CC", "WD", "GG", "GG", "FF", "FF", "AA", "CC", "WD", "DD", "AA", "CC", "DD", "SC", "CC", "EE", "FF", "GG", "BB", "FF", "FF", "FF", "CC", "BB", "SC", "DD", "FF", "EE", "EE", "SC", "SC", "SC", "AA", "SC", "WD", "WD", "SC", "EE", "CC", "BB", "DD", "EE", "CC", "SC", "WD", "CC", "DD", "GG", "BB"],
+              ["GG", "BB", "DD", "SC", "GG", "FF", "AA", "DD", "FF", "AA", "WD", "DD", "AA", "FF", "WD", "EE", "GG", "AA", "FF", "FF", "WD", "GG", "BB", "DD", "WD", "GG", "DD", "BB", "CC", "AA", "DD", "CC", "EE", "DD", "AA", "EE", "WD", "FF", "EE", "EE", "SC", "BB", "BB", "DD", "FF", "FF", "SC", "FF", "WD", "CC"],
+              ["SC", "DD", "FF", "SC", "WD", "DD", "AA", "BB", "AA", "CC", "GG", "SC", "WD", "EE", "CC", "GG", "GG", "SC", "CC", "DD", "CC", "FF", "BB", "CC", "SC", "BB", "SC", "EE", "CC", "AA", "SC", "GG", "SC", "DD", "SC", "WD", "WD", "BB", "BB", "EE", "CC", "AA", "FF", "GG", "DD", "AA", "DD", "CC", "CC", "GG"],
+              ["AA", "GG", "DD", "WD", "GG", "DD", "WD", "GG", "GG", "CC", "SC", "GG", "CC", "CC", "BB", "DD", "BB", "AA", "BB", "DD", "FF", "GG", "WD", "FF", "DD", "FF", "DD", "FF", "EE", "FF", "GG", "SC", "BB", "FF", "CC", "WD", "SC", "EE", "EE", "FF", "WD", "EE", "WD", "FF", "BB", "AA", "CC", "DD", "EE", "SC"],
+              ["GG", "BB", "GG", "CC", "AA", "EE", "FF", "AA", "FF", "SC", "BB", "FF", "SC", "AA", "DD", "BB", "EE", "WD", "DD", "SC", "CC", "GG", "GG", "DD", "SC", "BB", "BB", "WD", "AA", "CC", "FF", "GG", "BB", "BB", "SC", "WD", "SC", "EE", "AA", "AA", "GG", "BB", "EE", "BB", "EE", "EE", "WD", "WD", "EE", "SC"]
+            ]
+          },
+          "meta": {
+            "gaSeed": "4441999593922707961",
+            "finalCheckSeed": "8666267665889989078",
+            "bestFoundInGeneration": 5
+          }
+        },
+        "SteadyState_RouletteSelection": {
+          "results": [
+            [92.63796292874332, 256.44712547061147],
+            [92.63796292874332, 228.08888916845908],
+            [92.63796292874332, 195.96885637522448],
+            [86.2556382502511, 170.13426513238028],
+            [86.2556382502511, 160.02167218027512],
+            [86.2556382502511, 155.2616189367797],
+            [86.2556382502511, 149.9753064953097],
+            [86.2556382502511, 147.90932009067976],
+            [86.2556382502511, 146.7899867214725],
+            [86.2556382502511, 145.85083120178038],
+            [86.2556382502511, 142.7161805363482],
+            [86.2556382502511, 135.31830150344132],
+            [86.2556382502511, 134.19172007684793],
+            [61.366069072775396, 123.20827848735655],
+            [61.366069072775396, 120.86435921140776],
+            [61.366069072775396, 112.23256027316526],
+            [61.366069072775396, 105.92356494689375],
+            [61.366069072775396, 98.01744650522215],
+            [61.366069072775396, 94.20730302090375],
+            [61.366069072775396, 87.29337456761517],
+            [61.366069072775396, 87.29337456761517],
+            [61.366069072775396, 83.05857926099102],
+            [61.366069072775396, 80.11006805568813],
+            [60.34655413542303, 75.70412186191852],
+            [60.34655413542303, 74.00755509174567],
+            [60.34655413542303, 72.16344347759477],
+            [60.34655413542303, 71.21006734493622],
+            [60.34655413542303, 69.70933022698894],
+            [60.34655413542303, 68.42822519382136],
+            [60.34655413542303, 67.09384532007512],
+            [52.30022905569699, 65.05074261341898],
+            [39.91891761344737, 61.7928599942671],
+            [34.55850736950679, 58.0914927951262],
+            [34.55850736950679, 55.252042194162506],
+            [34.552232972886024, 51.67379263651409],
+            [34.552232972886024, 49.898338024012006],
+            [34.552232972886024, 49.53575670819833],
+            [34.552232972886024, 48.37069591309195],
+            [34.54032921323183, 45.688121927137594],
+            [34.54032921323183, 43.2427260687479],
+            [34.54032921323183, 41.57784372510277],
+            [34.54032921323183, 40.32744543217768],
+            [28.9152313845364, 38.151179716782465],
+            [28.9152313845364, 38.151179716782465],
+            [28.9152313845364, 37.35831787915559],
+            [28.9152313845364, 36.43545830081579],
+            [28.9152313845364, 35.31396284351818],
+            [28.9152313845364, 35.31396284351818],
+            [28.9152313845364, 35.31396284351818],
+            [28.9152313845364, 35.287921886420484]
+          ],
+          "reelset": {
+            "BaseGameReel": [
+              ["FF", "CC", "SC", "AA", "AA", "GG", "WD", "BB", "DD", "AA", "CC", "GG", "DD", "SC", "DD", "EE", "WD", "CC", "CC", "CC", "DD", "WD", "GG", "AA", "EE", "AA", "BB", "DD", "GG", "FF", "FF", "SC", "GG", "GG", "WD", "GG", "DD", "AA", "DD", "AA", "FF", "BB", "SC", "GG", "GG", "CC", "WD", "DD", "BB", "EE"],
+              ["FF", "DD", "AA", "DD", "AA", "GG", "CC", "SC", "AA", "BB", "CC", "AA", "BB", "CC", "DD", "BB", "CC", "GG", "GG", "BB", "GG", "SC", "GG", "FF", "BB", "CC", "CC", "GG", "GG", "EE", "WD", "GG", "AA", "EE", "AA", "CC", "AA", "CC", "BB", "EE", "SC", "CC", "CC", "BB", "SC", "AA", "FF", "FF", "DD", "EE"],
+              ["DD", "BB", "AA", "BB", "FF", "AA", "BB", "BB", "WD", "GG", "DD", "DD", "GG", "CC", "FF", "AA", "DD", "FF", "AA", "FF", "AA", "CC", "BB", "DD", "GG", "BB", "CC", "SC", "EE", "GG", "BB", "WD", "AA", "CC", "AA", "BB", "FF", "FF", "SC", "AA", "WD", "GG", "BB", "CC", "BB", "AA", "AA", "DD", "EE", "GG"],
+              ["AA", "DD", "DD", "EE", "BB", "GG", "FF", "EE", "GG", "DD", "BB", "FF", "CC", "SC", "EE", "AA", "SC", "WD", "EE", "DD", "BB", "EE", "AA", "FF", "FF", "CC", "EE", "EE", "CC", "AA", "SC", "GG", "BB", "FF", "EE", "FF", "AA", "SC", "EE", "BB", "AA", "CC", "DD", "AA", "FF", "AA", "CC", "DD", "GG", "DD"],
+              ["WD", "DD", "CC", "CC", "FF", "GG", "GG", "EE", "DD", "EE", "DD", "DD", "DD", "AA", "GG", "BB", "CC", "BB", "DD", "FF", "EE", "BB", "DD", "CC", "SC", "GG", "FF", "BB", "FF", "FF", "DD", "WD", "EE", "CC", "EE", "CC", "BB", "SC", "BB", "FF", "AA", "BB", "SC", "AA", "BB", "CC", "EE", "WD", "FF", "EE"]
+            ],
+            "FreeGameReel": [
+              ["SC", "GG", "GG", "EE", "WD", "BB", "BB", "AA", "EE", "CC", "FF", "SC", "GG", "WD", "AA", "GG", "EE", "EE", "AA", "BB", "EE", "EE", "AA", "WD", "DD", "DD", "GG", "GG", "SC", "SC", "SC", "FF", "CC", "SC", "DD", "CC", "AA", "EE", "EE", "DD", "BB", "WD", "WD", "BB", "GG", "AA", "EE", "AA", "WD", "WD"],
+              ["WD", "CC", "SC", "GG", "SC", "AA", "GG", "EE", "BB", "GG", "GG", "FF", "WD", "FF", "AA", "AA", "CC", "SC", "WD", "AA", "DD", "EE", "SC", "GG", "SC", "AA", "FF", "WD", "DD", "FF", "FF", "WD", "EE", "CC", "FF", "WD", "FF", "GG", "SC", "CC", "BB", "EE", "BB", "SC", "DD", "DD", "CC", "DD", "CC", "CC"],
+              ["SC", "GG", "GG", "GG", "BB", "BB", "BB", "SC", "EE", "WD", "GG", "SC", "WD", "CC", "AA", "AA", "FF", "BB", "WD", "DD", "CC", "SC", "BB", "AA", "GG", "DD", "FF", "EE", "FF", "WD", "SC", "BB", "SC", "FF", "SC", "DD", "CC", "BB", "AA", "CC", "WD", "GG", "BB", "SC", "WD", "BB", "DD", "FF", "GG", "FF"],
+              ["GG", "GG", "GG", "FF", "WD", "FF", "CC", "DD", "BB", "SC", "GG", "CC", "BB", "CC", "SC", "GG", "CC", "FF", "CC", "AA", "EE", "WD", "BB", "GG", "BB", "GG", "SC", "SC", "DD", "AA", "EE", "CC", "DD", "FF", "AA", "AA", "GG", "CC", "FF", "GG", "AA", "CC", "FF", "BB", "FF", "AA", "GG", "AA", "EE", "BB"],
+              ["SC", "DD", "EE", "CC", "AA", "EE", "CC", "DD", "GG", "WD", "DD", "DD", "WD", "BB", "WD", "CC", "DD", "FF", "FF", "GG", "FF", "AA", "GG", "FF", "AA", "BB", "DD", "CC", "GG", "WD", "WD", "SC", "AA", "SC", "FF", "GG", "AA", "WD", "DD", "AA", "BB", "CC", "GG", "WD", "SC", "GG", "SC", "DD", "EE", "FF"]
+            ]
+          },
+          "meta": {
+            "gaSeed": "725396080369489590",
+            "finalCheckSeed": "16475974886590650668",
+            "bestFoundInGeneration": 43
+          }
+        },
+        "SteadyState_TournamentSelection": {
+          "results": [
+            [92.63796292874332, 256.62091647355317],
+            [92.63796292874332, 228.26380620463812],
+            [37.62364590499743, 188.5141247591875],
+            [37.62364590499743, 165.62444401825684],
+            [37.62364590499743, 148.49818704337056],
+            [37.62364590499743, 133.65411672887598],
+            [37.62364590499743, 118.76729264970197],
+            [37.62364590499743, 108.00456226906678],
+            [37.62364590499743, 101.89424937141898],
+            [37.62364590499743, 100.41467925746028],
+            [37.62364590499743, 92.72780528586307],
+            [37.62364590499743, 86.43131947290236],
+            [37.62364590499743, 79.28293240015736],
+            [35.09381717820232, 72.95707536115783],
+            [35.09381717820232, 68.04975108318412],
+            [35.09381717820232, 63.29119979296237],
+            [35.09381717820232, 57.91797472729477],
+            [35.09381717820232, 52.27482549051492],
+            [35.09381717820232, 49.11253072487052],
+            [35.09381717820232, 45.620607194454664],
+            [35.09381717820232, 43.58568979152219],
+            [35.09381717820232, 41.26764608694549],
+            [35.09381717820232, 40.25562079231039],
+            [35.09381717820232, 39.54563464067875],
+            [35.09381717820232, 38.67570614856245],
+            [34.93057374544791, 37.74667626891358],
+            [34.93057374544791, 37.17202749060784],
+            [34.93057374544791, 37.17202749060784],
+            [34.47099247606506, 36.56987148079737],
+            [34.47099247606506, 36.37858031112357],
+            [34.121293742009, 35.97601246483086],
+            [34.121293742009, 35.91228996030328],
+            [34.121293742009, 35.65529710728944],
+            [33.236271672280544, 35.259188956391846],
+            [33.236271672280544, 35.097914263027405],
+            [31.552788581950537, 34.58328105106661],
+            [31.552788581950537, 34.47995305914219],
+            [31.552788581950537, 34.151334156309574],
+            [31.552788581950537, 34.151334156309574],
+            [31.552788581950537, 33.87799674848816],
+            [31.552788581950537, 33.55269111342078],
+            [29.942965172162516, 33.0376059128168],
+            [29.942965172162516, 33.0376059128168],
+            [29.942965172162516, 33.0376059128168],
+            [29.942965172162516, 32.560585737540244],
+            [28.1118781525386, 31.878716178249313],
+            [28.1118781525386, 31.715824610845726],
+            [28.1118781525386, 31.715824610845726],
+            [28.1118781525386, 31.56353818262709],
+            [28.1118781525386, 31.428613767138888]
+          ],
+          "reelset": {
+            "BaseGameReel": [
+              ["FF", "FF", "FF", "BB", "AA", "BB", "EE", "BB", "DD", "WD", "AA", "GG", "DD", "SC", "DD", "EE", "WD", "AA", "WD", "DD", "AA", "FF", "CC", "FF", "GG", "AA", "CC", "GG", "DD", "BB", "EE", "SC", "GG", "GG", "DD", "GG", "BB", "AA", "DD", "AA", "FF", "FF", "SC", "GG", "GG", "AA", "FF", "EE", "BB", "EE"],
+              ["BB", "DD", "SC", "GG", "GG", "AA", "AA", "SC", "GG", "CC", "AA", "EE", "BB", "GG", "DD", "SC", "AA", "CC", "CC", "EE", "BB", "SC", "WD", "BB", "CC", "AA", "CC", "BB", "AA", "FF", "WD", "BB", "CC", "AA", "DD", "EE", "DD", "SC", "CC", "DD", "GG", "SC", "CC", "FF", "CC", "FF", "FF", "DD", "DD", "WD"],
+              ["WD", "WD", "GG", "DD", "BB", "AA", "CC", "BB", "CC", "CC", "DD", "DD", "GG", "WD", "FF", "EE", "BB", "GG", "DD", "WD", "WD", "DD", "AA", "AA", "CC", "AA", "EE", "BB", "EE", "AA", "GG", "FF", "WD", "FF", "AA", "BB", "CC", "FF", "GG", "BB", "WD", "GG", "BB", "CC", "BB", "AA", "EE", "DD", "EE", "GG"],
+              ["BB", "DD", "BB", "EE", "BB", "BB", "FF", "EE", "GG", "DD", "BB", "FF", "CC", "SC", "EE", "CC", "SC", "WD", "WD", "DD", "BB", "EE", "AA", "FF", "FF", "CC", "WD", "EE", "CC", "AA", "SC", "BB", "AA", "BB", "FF", "DD", "GG", "SC", "EE", "BB", "WD", "CC", "DD", "AA", "FF", "FF", "CC", "FF", "GG", "DD"],
+              ["WD", "CC", "WD", "EE", "FF", "GG", "SC", "WD", "BB", "DD", "BB", "BB", "EE", "AA", "EE", "BB", "AA", "BB", "EE", "FF", "GG", "WD", "WD", "GG", "AA", "GG", "BB", "BB", "FF", "BB", "DD", "WD", "EE", "CC", "EE", "CC", "BB", "SC", "BB", "FF", "GG", "BB", "SC", "AA", "BB", "CC", "GG", "WD", "FF", "BB"]
+            ],
+            "FreeGameReel": [
+              ["AA", "EE", "BB", "BB", "WD", "BB", "FF", "FF", "WD", "FF", "FF", "SC", "WD", "CC", "SC", "GG", "FF", "DD", "GG", "BB", "CC", "GG", "BB", "AA", "SC", "BB", "BB", "EE", "EE", "DD", "EE", "EE", "WD", "SC", "AA", "SC", "DD", "DD", "DD", "WD", "WD", "CC", "AA", "BB", "GG", "DD", "WD", "DD", "CC", "EE"],
+              ["FF", "BB", "EE", "SC", "CC", "EE", "AA", "EE", "GG", "SC", "GG", "CC", "AA", "DD", "AA", "GG", "EE", "FF", "BB", "DD", "GG", "SC", "SC", "GG", "DD", "SC", "SC", "DD", "FF", "AA", "WD", "WD", "EE", "CC", "GG", "FF", "WD", "BB", "EE", "SC", "AA", "EE", "EE", "GG", "SC", "CC", "WD", "FF", "SC", "EE"],
+              ["FF", "AA", "FF", "AA", "GG", "SC", "AA", "WD", "AA", "CC", "GG", "EE", "DD", "WD", "BB", "BB", "CC", "GG", "GG", "AA", "DD", "DD", "AA", "GG", "WD", "AA", "WD", "WD", "SC", "FF", "WD", "GG", "WD", "CC", "CC", "BB", "AA", "AA", "EE", "EE", "EE", "SC", "AA", "SC", "BB", "GG", "SC", "CC", "FF", "DD"],
+              ["FF", "DD", "SC", "WD", "FF", "EE", "SC", "DD", "EE", "GG", "WD", "CC", "FF", "BB", "EE", "DD", "WD", "EE", "AA", "EE", "DD", "AA", "FF", "GG", "AA", "BB", "SC", "GG", "AA", "EE", "SC", "WD", "SC", "BB", "CC", "FF", "BB", "EE", "CC", "DD", "FF", "FF", "DD", "WD", "WD", "AA", "GG", "GG", "CC", "WD"],
+              ["BB", "CC", "FF", "SC", "SC", "BB", "EE", "BB", "CC", "WD", "BB", "SC", "WD", "SC", "DD", "GG", "CC", "AA", "WD", "BB", "GG", "CC", "CC", "CC", "SC", "EE", "GG", "GG", "FF", "CC", "DD", "FF", "FF", "SC", "FF", "AA", "CC", "AA", "WD", "FF", "SC", "EE", "WD", "BB", "FF", "FF", "BB", "FF", "WD", "BB"]
+            ]
+          },
+          "meta": {
+            "gaSeed": "4004210351627491805",
+            "finalCheckSeed": "7272031260967563626",
+            "bestFoundInGeneration": 46
+          }
+        },
+        "SteadyState_SUS": {
+          "results": [
+            [92.63796292874332, 279.05341405235873],
+            [92.63796292874332, 251.63530632432003],
+            [92.63796292874332, 251.63530632432003],
+            [92.63796292874332, 242.3072186175122],
+            [92.63796292874332, 215.47200499524678],
+            [92.63796292874332, 198.06817573082756],
+            [92.63796292874332, 187.84138724610344],
+            [92.63796292874332, 180.9692248115885],
+            [92.63796292874332, 180.9692248115885],
+            [92.63796292874332, 166.8367865082766],
+            [92.63796292874332, 154.45659443753874],
+            [92.63796292874332, 142.04261023456098],
+            [92.63796292874332, 136.06658105291618],
+            [92.63796292874332, 126.08557301721733],
+            [92.63796292874332, 126.08557301721733],
+            [92.63796292874332, 126.08557301721733],
+            [40.067249625521754, 113.03597217631943],
+            [40.067249625521754, 113.03597217631943],
+            [40.067249625521754, 107.20234687358325],
+            [40.067249625521754, 102.06935397895049],
+            [40.067249625521754, 95.94275219792021],
+            [40.067249625521754, 89.11588949665142],
+            [40.067249625521754, 87.52983340677366],
+            [40.067249625521754, 83.54627448976662],
+            [40.067249625521754, 80.53367766133877],
+            [40.067249625521754, 75.21875805326549],
+            [40.067249625521754, 69.88298405607517],
+            [40.067249625521754, 65.86196044157208],
+            [34.269446069860216, 59.96863105717815],
+            [34.269446069860216, 54.31999119302286],
+            [34.269446069860216, 52.37420072102932],
+            [34.269446069860216, 49.31888052079878],
+            [34.269446069860216, 46.04928170433339],
+            [34.269446069860216, 44.579871842867746],
+            [34.269446069860216, 42.96811933741816],
+            [28.841851525081044, 40.58726137740844],
+            [28.841851525081044, 38.575969027292345],
+            [26.95305123141592, 36.56233117329308],
+            [26.95305123141592, 35.870076020823575],
+            [26.95305123141592, 34.30665749704484],
+            [25.11053735526031, 32.81098627001869],
+            [25.11053735526031, 31.436801748311687],
+            [25.11053735526031, 30.223547245956667],
+            [23.687134100064842, 28.663160254060095],
+            [22.10846553656927, 27.258850378997984],
+            [22.10846553656927, 26.457614685228606],
+            [21.684327636484703, 25.68986331352079],
+            [21.684327636484703, 25.337951764288633],
+            [21.684327636484703, 25.337951764288633],
+            [21.684327636484703, 25.337951764288633]
+          ],
+          "reelset": {
+            "BaseGameReel": [
+              ["BB", "FF", "FF", "BB", "AA", "BB", "WD", "BB", "DD", "WD", "AA", "GG", "DD", "DD", "DD", "FF", "DD", "WD", "EE", "DD", "AA", "FF", "CC", "FF", "GG", "AA", "CC", "GG", "DD", "EE", "CC", "CC", "FF", "FF", "FF", "EE", "AA", "EE", "EE", "EE", "BB", "EE", "EE", "FF", "FF", "AA", "CC", "GG", "GG", "WD"],
+              ["BB", "DD", "SC", "GG", "GG", "AA", "AA", "FF", "GG", "CC", "CC", "EE", "BB", "GG", "DD", "SC", "AA", "CC", "CC", "EE", "BB", "SC", "WD", "DD", "CC", "AA", "WD", "BB", "AA", "GG", "EE", "FF", "CC", "AA", "FF", "EE", "DD", "SC", "CC", "FF", "AA", "CC", "CC", "FF", "CC", "FF", "FF", "DD", "CC", "WD"],
+              ["AA", "WD", "GG", "SC", "BB", "FF", "SC", "SC", "CC", "DD", "SC", "BB", "DD", "GG", "SC", "WD", "AA", "WD", "BB", "AA", "GG", "AA", "FF", "SC", "BB", "SC", "EE", "EE", "WD", "CC", "GG", "FF", "BB", "WD", "DD", "FF", "DD", "EE", "AA", "AA", "SC", "FF", "BB", "FF", "BB", "SC", "BB", "BB", "FF", "DD"],
+              ["GG", "DD", "DD", "EE", "BB", "BB", "FF", "EE", "GG", "DD", "SC", "EE", "CC", "WD", "EE", "AA", "WD", "WD", "WD", "DD", "WD", "EE", "AA", "EE", "FF", "CC", "EE", "CC", "CC", "AA", "SC", "DD", "BB", "FF", "EE", "CC", "EE", "WD", "AA", "GG", "BB", "CC", "DD", "DD", "FF", "CC", "AA", "DD", "GG", "DD"],
+              ["EE", "CC", "WD", "CC", "FF", "GG", "FF", "WD", "BB", "DD", "BB", "BB", "BB", "AA", "EE", "BB", "CC", "BB", "BB", "AA", "FF", "DD", "CC", "GG", "AA", "EE", "EE", "FF", "GG", "EE", "AA", "WD", "FF", "FF", "FF", "FF", "CC", "GG", "CC", "DD", "BB", "BB", "DD", "DD", "CC", "BB", "GG", "AA", "CC", "WD"]
+            ],
+            "FreeGameReel": [
+              ["AA", "EE", "BB", "BB", "WD", "BB", "FF", "FF", "WD", "FF", "FF", "SC", "WD", "CC", "SC", "GG", "FF", "DD", "GG", "BB", "CC", "GG", "BB", "AA", "SC", "BB", "BB", "EE", "EE", "DD", "EE", "EE", "WD", "SC", "AA", "SC", "DD", "DD", "DD", "WD", "WD", "CC", "AA", "BB", "GG", "DD", "WD", "DD", "CC", "EE"],
+              ["FF", "BB", "EE", "SC", "CC", "EE", "AA", "EE", "GG", "SC", "GG", "CC", "AA", "DD", "AA", "GG", "EE", "FF", "BB", "DD", "GG", "SC", "SC", "GG", "DD", "SC", "SC", "DD", "FF", "AA", "WD", "WD", "EE", "CC", "GG", "FF", "WD", "BB", "EE", "SC", "AA", "EE", "EE", "GG", "SC", "CC", "WD", "FF", "SC", "EE"],
+              ["FF", "AA", "FF", "AA", "GG", "SC", "AA", "WD", "AA", "CC", "GG", "EE", "DD", "WD", "BB", "BB", "CC", "GG", "GG", "AA", "DD", "DD", "AA", "GG", "WD", "AA", "WD", "WD", "SC", "FF", "WD", "GG", "WD", "CC", "CC", "BB", "AA", "AA", "EE", "EE", "EE", "SC", "AA", "SC", "BB", "GG", "SC", "CC", "FF", "DD"],
+              ["FF", "DD", "SC", "WD", "FF", "EE", "SC", "DD", "EE", "GG", "WD", "CC", "FF", "BB", "EE", "DD", "WD", "EE", "AA", "EE", "DD", "AA", "FF", "GG", "AA", "BB", "SC", "GG", "AA", "EE", "SC", "WD", "SC", "BB", "CC", "FF", "BB", "EE", "CC", "DD", "FF", "FF", "DD", "WD", "WD", "AA", "GG", "GG", "CC", "WD"],
+              ["BB", "CC", "FF", "SC", "SC", "BB", "EE", "BB", "CC", "WD", "BB", "SC", "WD", "SC", "DD", "GG", "CC", "AA", "WD", "BB", "GG", "CC", "CC", "CC", "SC", "EE", "GG", "GG", "FF", "CC", "DD", "FF", "FF", "SC", "FF", "AA", "CC", "AA", "WD", "FF", "SC", "EE", "WD", "BB", "FF", "FF", "BB", "FF", "WD", "BB"]
+            ]
+          },
+          "meta": {
+            "gaSeed": "14192752941958112770",
+            "finalCheckSeed": "10300494197229514956",
+            "bestFoundInGeneration": 47
+          }
+        },
+        "ElistismGenerational_RouletteSelection": {
+          "results": [
+            [92.63796292874332, 224.73290221174315],
+            [60.264285385704866, 176.335465931197],
+            [60.264285385704866, 115.40047771903748],
+            [60.264285385704866, 92.19623963307251],
+            [60.264285385704866, 77.50400182604304],
+            [54.31760795341234, 71.97023503136109]
+          ],
+          "reelset": {
+            "BaseGameReel": [
+              ["BB", "FF", "FF", "AA", "AA", "BB", "WD", "BB", "DD", "WD", "AA", "GG", "DD", "DD", "DD", "EE", "WD", "WD", "WD", "DD", "AA", "FF", "CC", "FF", "GG", "AA", "CC", "GG", "DD", "FF", "EE", "SC", "GG", "GG", "BB", "GG", "BB", "AA", "DD", "AA", "FF", "BB", "SC", "GG", "WD", "CC", "WD", "DD", "EE", "EE"],
+              ["BB", "DD", "SC", "GG", "GG", "AA", "AA", "BB", "GG", "CC", "AA", "EE", "BB", "GG", "DD", "SC", "AA", "CC", "CC", "EE", "BB", "SC", "WD", "DD", "CC", "AA", "WD", "BB", "GG", "EE", "WD", "CC", "AA", "EE", "AA", "CC", "AA", "SC", "BB", "EE", "WD", "CC", "WD", "BB", "SC", "AA", "FF", "FF", "DD", "WD"],
+              ["WD", "CC", "GG", "SC", "EE", "AA", "CC", "BB", "CC", "CC", "DD", "DD", "GG", "WD", "FF", "EE", "BB", "BB", "DD", "WD", "SC", "DD", "AA", "AA", "CC", "AA", "EE", "BB", "EE", "AA", "GG", "AA", "WD", "FF", "DD", "GG", "GG", "CC", "AA", "EE", "AA", "WD", "BB", "CC", "BB", "AA", "CC", "DD", "EE", "GG"],
+              ["BB", "DD", "DD", "SC", "BB", "BB", "FF", "EE", "GG", "DD", "BB", "FF", "CC", "SC", "EE", "AA", "SC", "GG", "EE", "DD", "BB", "SC", "CC", "FF", "FF", "CC", "EE", "EE", "CC", "AA", "SC", "GG", "CC", "WD", "EE", "FF", "CC", "SC", "EE", "BB", "AA", "CC", "DD", "AA", "FF", "FF", "CC", "CC", "WD", "DD"],
+              ["WD", "CC", "WD", "CC", "FF", "GG", "SC", "WD", "BB", "DD", "BB", "BB", "EE", "AA", "EE", "BB", "AA", "BB", "EE", "AA", "EE", "EE", "DD", "CC", "SC", "GG", "FF", "BB", "EE", "FF", "DD", "WD", "EE", "CC", "EE", "CC", "BB", "SC", "GG", "FF", "AA", "BB", "SC", "AA", "BB", "CC", "GG", "WD", "FF", "BB"]
+            ],
+            "FreeGameReel": [
+              ["AA", "EE", "BB", "BB", "WD", "BB", "FF", "FF", "WD", "FF", "FF", "SC", "WD", "CC", "SC", "GG", "FF", "DD", "GG", "BB", "CC", "GG", "BB", "AA", "SC", "BB", "BB", "EE", "EE", "DD", "EE", "EE", "WD", "SC", "AA", "SC", "DD", "DD", "DD", "WD", "WD", "CC", "AA", "BB", "GG", "DD", "WD", "DD", "CC", "EE"],
+              ["FF", "BB", "EE", "SC", "CC", "EE", "AA", "EE", "GG", "SC", "GG", "CC", "AA", "DD", "AA", "GG", "EE", "FF", "BB", "DD", "GG", "SC", "SC", "GG", "DD", "SC", "SC", "DD", "FF", "AA", "WD", "WD", "EE", "CC", "GG", "FF", "WD", "BB", "EE", "SC", "AA", "EE", "EE", "GG", "SC", "CC", "WD", "FF", "SC", "EE"],
+              ["FF", "AA", "FF", "AA", "GG", "SC", "AA", "WD", "AA", "CC", "GG", "EE", "DD", "WD", "BB", "BB", "CC", "GG", "GG", "AA", "DD", "DD", "AA", "GG", "WD", "AA", "WD", "WD", "SC", "FF", "WD", "GG", "WD", "CC", "CC", "BB", "AA", "AA", "EE", "EE", "EE", "SC", "AA", "SC", "BB", "GG", "SC", "CC", "FF", "DD"],
+              ["FF", "DD", "SC", "WD", "FF", "EE", "SC", "DD", "EE", "GG", "WD", "CC", "FF", "BB", "EE", "DD", "WD", "EE", "AA", "EE", "DD", "AA", "FF", "GG", "AA", "BB", "SC", "GG", "AA", "EE", "SC", "WD", "SC", "BB", "CC", "FF", "BB", "EE", "CC", "DD", "FF", "FF", "DD", "WD", "WD", "AA", "GG", "GG", "CC", "WD"],
+              ["BB", "CC", "FF", "SC", "SC", "BB", "EE", "BB", "CC", "WD", "BB", "SC", "WD", "SC", "DD", "GG", "CC", "AA", "WD", "BB", "GG", "CC", "CC", "CC", "SC", "EE", "GG", "GG", "FF", "CC", "DD", "FF", "FF", "SC", "FF", "AA", "CC", "AA", "WD", "FF", "SC", "EE", "WD", "BB", "FF", "FF", "BB", "FF", "WD", "BB"]
+            ]
+          },
+          "meta": {
+            "gaSeed": "3362690615861363938",
+            "finalCheckSeed": "5360043929908294722",
+            "bestFoundInGeneration": 6
+          }
+        },
+        "ElistismGenerational_TournamentSelection": {
+          "results": [
+            [55.08512308612331, 150.26831330879787],
+            [52.53127393008842, 101.02112087136115],
+            [40.20925603933992, 64.6288884816777],
+            [40.20925603933992, 53.42266754552984],
+            [34.48851588631229, 44.994707765793365],
+            [28.99403683675086, 37.630798468057456]
+          ],
+          "reelset": {
+            "BaseGameReel": [
+              ["BB", "FF", "FF", "BB", "AA", "BB", "WD", "BB", "DD", "FF", "AA", "GG", "DD", "DD", "DD", "EE", "WD", "WD", "WD", "DD", "AA", "FF", "CC", "FF", "GG", "AA", "CC", "GG", "DD", "BB", "EE", "SC", "GG", "GG", "WD", "EE", "AA", "EE", "EE", "AA", "EE", "AA", "FF", "EE", "GG", "CC", "DD", "DD", "EE", "CC"],
+              ["BB", "DD", "GG", "GG", "GG", "AA", "AA", "BB", "GG", "SC", "AA", "EE", "AA", "GG", "DD", "SC", "AA", "CC", "CC", "DD", "AA", "AA", "EE", "SC", "GG", "EE", "BB", "AA", "BB", "BB", "EE", "SC", "BB", "AA", "SC", "EE", "AA", "BB", "FF", "BB", "GG", "DD", "BB", "WD", "GG", "EE", "AA", "GG", "SC", "DD"],
+              ["WD", "WD", "GG", "SC", "BB", "AA", "CC", "WD", "CC", "CC", "DD", "DD", "GG", "WD", "FF", "EE", "BB", "BB", "FF", "EE", "SC", "DD", "GG", "AA", "CC", "AA", "EE", "BB", "EE", "AA", "GG", "FF", "WD", "FF", "DD", "GG", "GG", "CC", "AA", "EE", "AA", "WD", "GG", "AA", "FF", "GG", "DD", "BB", "FF", "DD"],
+              ["BB", "DD", "DD", "EE", "BB", "FF", "FF", "EE", "SC", "DD", "BB", "FF", "CC", "SC", "EE", "AA", "SC", "WD", "EE", "SC", "BB", "FF", "AA", "FF", "FF", "CC", "EE", "EE", "CC", "AA", "EE", "GG", "AA", "WD", "FF", "DD", "GG", "CC", "AA", "BB", "SC", "CC", "AA", "FF", "SC", "GG", "AA", "SC", "AA", "DD"],
+              ["WD", "CC", "DD", "CC", "FF", "GG", "SC", "WD", "BB", "DD", "BB", "BB", "EE", "FF", "DD", "BB", "BB", "BB", "EE", "AA", "FF", "WD", "AA", "GG", "AA", "EE", "DD", "AA", "GG", "EE", "AA", "BB", "FF", "FF", "FF", "BB", "DD", "DD", "WD", "CC", "GG", "CC", "FF", "DD", "WD", "CC", "CC", "WD", "SC", "WD"]
+            ],
+            "FreeGameReel": [
+              ["AA", "EE", "BB", "BB", "WD", "BB", "FF", "FF", "WD", "FF", "FF", "SC", "WD", "CC", "SC", "GG", "FF", "DD", "GG", "BB", "CC", "GG", "BB", "AA", "SC", "BB", "BB", "EE", "EE", "DD", "EE", "EE", "WD", "SC", "AA", "SC", "DD", "DD", "DD", "WD", "WD", "CC", "AA", "BB", "GG", "DD", "WD", "DD", "CC", "EE"],
+              ["FF", "BB", "EE", "SC", "CC", "EE", "AA", "EE", "GG", "SC", "GG", "CC", "AA", "DD", "AA", "GG", "EE", "FF", "BB", "DD", "GG", "SC", "SC", "GG", "DD", "SC", "SC", "DD", "FF", "AA", "WD", "WD", "EE", "CC", "GG", "FF", "WD", "BB", "EE", "SC", "AA", "EE", "EE", "GG", "SC", "CC", "WD", "FF", "SC", "EE"],
+              ["FF", "AA", "FF", "AA", "GG", "SC", "AA", "WD", "AA", "CC", "GG", "EE", "DD", "WD", "BB", "BB", "CC", "GG", "GG", "AA", "DD", "DD", "AA", "GG", "WD", "AA", "WD", "WD", "SC", "FF", "WD", "GG", "WD", "CC", "CC", "BB", "AA", "AA", "EE", "EE", "EE", "SC", "AA", "SC", "BB", "GG", "SC", "CC", "FF", "DD"],
+              ["FF", "DD", "SC", "WD", "FF", "EE", "SC", "DD", "EE", "GG", "WD", "CC", "FF", "BB", "EE", "DD", "WD", "EE", "AA", "EE", "DD", "AA", "FF", "GG", "AA", "BB", "SC", "GG", "AA", "EE", "SC", "WD", "SC", "BB", "CC", "FF", "BB", "EE", "CC", "DD", "FF", "FF", "DD", "WD", "WD", "AA", "GG", "GG", "CC", "WD"],
+              ["BB", "CC", "FF", "SC", "SC", "BB", "EE", "BB", "CC", "WD", "BB", "SC", "WD", "SC", "DD", "GG", "CC", "AA", "WD", "BB", "GG", "CC", "CC", "CC", "SC", "EE", "GG", "GG", "FF", "CC", "DD", "FF", "FF", "SC", "FF", "AA", "CC", "AA", "WD", "FF", "SC", "EE", "WD", "BB", "FF", "FF", "BB", "FF", "WD", "BB"]
+            ]
+          },
+          "meta": {
+            "gaSeed": "12955906010134661288",
+            "finalCheckSeed": "3031248850269484273",
+            "bestFoundInGeneration": 6
+          }
+        },
+        "ElistismGenerational_SUS": {
+          "results": [
+            [72.32720364645834, 215.08584521832137],
+            [41.780283101477394, 123.14176678737931],
+            [41.780283101477394, 84.86418077224366],
+            [29.81665441521787, 55.02271075970267],
+            [29.81665441521787, 43.5336756346467],
+            [29.81665441521787, 40.88551091085202]
+          ],
+          "reelset": {
+            "BaseGameReel": [
+              ["BB", "FF", "DD", "FF", "EE", "CC", "FF", "CC", "SC", "CC", "FF", "DD", "EE", "WD", "EE", "AA", "DD", "FF", "AA", "EE", "BB", "FF", "AA", "EE", "DD", "SC", "BB", "BB", "AA", "SC", "CC", "DD", "WD", "EE", "CC", "DD", "AA", "BB", "EE", "AA", "GG", "AA", "FF", "EE", "GG", "CC", "SC", "DD", "EE", "CC"],
+              ["BB", "DD", "SC", "GG", "GG", "AA", "BB", "BB", "GG", "CC", "AA", "EE", "BB", "GG", "DD", "BB", "AA", "CC", "CC", "EE", "BB", "SC", "WD", "DD", "CC", "AA", "WD", "BB", "AA", "SC", "EE", "AA", "CC", "FF", "GG", "EE", "AA", "BB", "FF", "BB", "GG", "DD", "BB", "WD", "GG", "EE", "CC", "GG", "SC", "DD"],
+              ["WD", "GG", "GG", "SC", "BB", "AA", "CC", "BB", "SC", "AA", "SC", "BB", "DD", "DD", "SC", "AA", "GG", "FF", "AA", "AA", "BB", "DD", "AA", "AA", "CC", "SC", "EE", "WD", "WD", "CC", "GG", "AA", "BB", "WD", "AA", "FF", "DD", "EE", "AA", "AA", "SC", "FF", "GG", "AA", "FF", "GG", "DD", "BB", "FF", "DD"],
+              ["BB", "DD", "DD", "EE", "BB", "BB", "FF", "EE", "GG", "BB", "AA", "AA", "WD", "GG", "GG", "AA", "SC", "WD", "CC", "DD", "BB", "EE", "AA", "FF", "FF", "CC", "EE", "DD", "WD", "GG", "CC", "DD", "BB", "FF", "EE", "SC", "EE", "WD", "AA", "BB", "BB", "CC", "DD", "CC", "FF", "CC", "GG", "SC", "AA", "DD"],
+              ["WD", "CC", "BB", "WD", "WD", "CC", "GG", "EE", "DD", "EE", "DD", "DD", "DD", "CC", "BB", "WD", "EE", "BB", "EE", "AA", "FF", "WD", "AA", "GG", "AA", "EE", "CC", "AA", "DD", "EE", "FF", "GG", "FF", "FF", "FF", "BB", "DD", "DD", "WD", "GG", "GG", "CC", "FF", "DD", "WD", "CC", "WD", "AA", "DD", "WD"]
+            ],
+            "FreeGameReel": [
+              ["AA", "EE", "BB", "BB", "WD", "BB", "FF", "FF", "WD", "FF", "FF", "SC", "WD", "CC", "SC", "GG", "FF", "DD", "GG", "BB", "CC", "GG", "BB", "AA", "SC", "BB", "BB", "EE", "EE", "DD", "EE", "EE", "WD", "SC", "AA", "SC", "DD", "DD", "DD", "WD", "WD", "CC", "AA", "BB", "GG", "DD", "WD", "DD", "CC", "EE"],
+              ["FF", "BB", "EE", "SC", "CC", "EE", "AA", "EE", "GG", "SC", "GG", "CC", "AA", "DD", "AA", "GG", "EE", "FF", "BB", "DD", "GG", "SC", "SC", "GG", "DD", "SC", "SC", "DD", "FF", "AA", "WD", "WD", "EE", "CC", "GG", "FF", "WD", "BB", "EE", "SC", "AA", "EE", "EE", "GG", "SC", "CC", "WD", "FF", "SC", "EE"],
+              ["FF", "AA", "FF", "AA", "GG", "SC", "AA", "WD", "AA", "CC", "GG", "EE", "DD", "WD", "BB", "BB", "CC", "GG", "GG", "AA", "DD", "DD", "AA", "GG", "WD", "AA", "WD", "WD", "SC", "FF", "WD", "GG", "WD", "CC", "CC", "BB", "AA", "AA", "EE", "EE", "EE", "SC", "AA", "SC", "BB", "GG", "SC", "CC", "FF", "DD"],
+              ["FF", "DD", "SC", "WD", "FF", "EE", "SC", "DD", "EE", "GG", "WD", "CC", "FF", "BB", "EE", "DD", "WD", "EE", "AA", "EE", "DD", "AA", "FF", "GG", "AA", "BB", "SC", "GG", "AA", "EE", "SC", "WD", "SC", "BB", "CC", "FF", "BB", "EE", "CC", "DD", "FF", "FF", "DD", "WD", "WD", "AA", "GG", "GG", "CC", "WD"],
+              ["BB", "CC", "FF", "SC", "SC", "BB", "EE", "BB", "CC", "WD", "BB", "SC", "WD", "SC", "DD", "GG", "CC", "AA", "WD", "BB", "GG", "CC", "CC", "CC", "SC", "EE", "GG", "GG", "FF", "CC", "DD", "FF", "FF", "SC", "FF", "AA", "CC", "AA", "WD", "FF", "SC", "EE", "WD", "BB", "FF", "FF", "BB", "FF", "WD", "BB"]
+            ]
+          },
+          "meta": {
+            "gaSeed": "16359699495333031952",
+            "finalCheckSeed": "6260472269238388804",
+            "bestFoundInGeneration": 4
+          }
+        }
+      }
+    }
+  }
+}

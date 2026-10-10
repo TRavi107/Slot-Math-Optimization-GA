@@ -1,12 +1,28 @@
-
+#include <algorithm>
+#include <cerrno>
+#include <cstdint>
+#include <cstdlib>
+#include <fstream>
+#include <iomanip>
 #include <iostream>
+#include <random>
+#include <sstream>
+#include <string>
 #include <vector>
 #include "constants.hpp"
 #include "reelsFunction.hpp"
 #include "Utility/Utilities.hpp"
+#include "Utility/rng.hpp"
 #include "Stats/simResult.hpp"
 #include "WinningFunctions.hpp"
 #include "multiThread/SimRunner.hpp"
+
+// Usage:
+//   simulator <spins> [reelset.json] [runBaseOnly true|false] [out.json] [seed]
+//
+// Same <spins>, reelset, runBaseOnly and <seed>  ->  bit-identical results,
+// on any machine and any number of CPU cores.
+// Without a seed a random one is chosen and printed, so the run can be replayed.
 
 std::vector<std::vector<GameSymbols>> baseReels;
 std::vector<std::vector<GameSymbols>> freeReels;
@@ -18,16 +34,9 @@ void PopulateReelsData(const std::string excelFilePath, int cols) {
     ReelFunctions::get_reel_data(Constants::freeReelWorkBook, excelFilePath.c_str(), freeReels, cols, 0);
     // ReelFunctions::get_reel_data(Constants::buyReelWorkBook, excelFilePath.c_str(), buyReelsStrip, cols, 0);
     // ReelFunctions::get_reel_data(Constants::buyReelWorkBook, excelFilePath.c_str(), buyFreeReels, cols, 6);
-
-    //for (const auto reel : buyFreeReels) {
-    //    for (const auto sym : reel) {
-    //        std::cout << Constants::stringFromGameSymbols(sym)<<" ";
-    //    }
-    //    std::cout << "\n";
-    //}
 }
 
-void free_game(SimResult& result)
+void free_game(SimResult& result, Rng::Xoshiro256ss& rng)
 {
     int freeSpinCount = Constants::freeSpinsCount;
     result.free.AddFreeTriggerCount(1);
@@ -46,7 +55,7 @@ void free_game(SimResult& result)
         winnings = 0;
         scatterCount = 0;
 
-        ReelFunctions::generate_slot_matrix(freeReels, Constants::matrixSize, matrix);
+        ReelFunctions::generate_slot_matrix(freeReels, Constants::matrixSize, matrix, rng);
 
         winnings = WinningFunctions::check_paylines(matrix, result.free, 1 );
         WinningFunctions::ScattersCount(matrix, scatterCount, GameSymbols::SC);
@@ -81,36 +90,24 @@ void free_game(SimResult& result)
     result.free.ResetFreeSpin();
 }
 
-void RunSim(long spinCount, SimResult& result) {
+void RunSim(long long spinCount, SimResult& result, Rng::Xoshiro256ss& rng) {
 
-    double totalWin = 0;
-
-    //const int matrixSize[2] = { 3,3 };
     std::vector<std::vector<GameSymbols>> matrix(
         Constants::matrixSize[0], std::vector<GameSymbols>(Constants::matrixSize[1])
     );
     int scatterCount = 0;
     double winnings = 0;
     double win = 0;
-    for (int i = 0; i < spinCount; i++)
+    for (long long i = 0; i < spinCount; i++)
     {
-        //buy_free_game(spinCount, result);
+        ReelFunctions::generate_slot_matrix(baseReels, Constants::matrixSize, matrix, rng);
 
-        ReelFunctions::generate_slot_matrix(baseReels, Constants::matrixSize, matrix);
-
-        //generate_slot_matrix(GameFeatureType::REDFREEGAME, matrixSize, matrix);
-        //check winnings 
-        //matrix = {
-        //    {GameSymbols::SC,GameSymbols::BB,GameSymbols::CC,GameSymbols::DD,GameSymbols::EE},
-        //    {GameSymbols::WD,GameSymbols::WD,GameSymbols::WD,GameSymbols::WD,GameSymbols::GG},
-        //    {GameSymbols::CC,GameSymbols::SC,GameSymbols::EE,GameSymbols::FF,GameSymbols::AA},
-        //};
         scatterCount = 0;
 
         winnings = WinningFunctions::check_paylines(matrix, result.base, 1 );
 
         WinningFunctions::ScattersCount(matrix, scatterCount, GameSymbols::SC);
-        
+
         if (result.CheckIfMaxWinReached(winnings)) {
             winnings = result.GetRemainingFromMaxWin();
             result.base.updateWinnings(winnings);
@@ -118,14 +115,12 @@ void RunSim(long spinCount, SimResult& result) {
 
             result.AddSpinWinnings();
             result.ResetSpinWinnings();
-            break;
+            break;   // NOTE: existing behaviour — skips the rest of this job's spins
         }
 
         if (scatterCount >= 3 && scatterCount <=5) {
             win = Paytable[static_cast<int>(GameSymbols::SC)][scatterCount - 3]*Constants::baseBet;
             winnings += win;
-            // if (scatterCount != 3 && scatterCount != 4 && scatterCount != 5)
-            //     std::cout << "Scatter is more " << scatterCount << std::endl;
             result.base.updateSymbolsData(win,scatterCount,GameSymbols::SC);
             if (result.CheckIfMaxWinReached(winnings)) {
                 winnings = result.GetRemainingFromMaxWin();
@@ -134,10 +129,10 @@ void RunSim(long spinCount, SimResult& result) {
 
                 result.AddSpinWinnings();
                 result.ResetSpinWinnings();
-                break;
+                break;   // NOTE: existing behaviour — skips the rest of this job's spins
             }
 
-            free_game(result);
+            free_game(result, rng);
         }
 
         result.base.updateWinnings(winnings);
@@ -145,46 +140,60 @@ void RunSim(long spinCount, SimResult& result) {
 
         result.AddSpinWinnings();
         result.ResetSpinWinnings();
-        //print winnings
-        //totalWin += winnings;
     }
-    //return result;
-    //std::cout << "Total wins " << static_cast<long long>( totalWin) << "\n";
 }
-SimResult SimRunnerInit(const long spinCount) {
-    return SimResult(spinCount,Constants::baseBet, Constants::maxWin);
- }
 
- static void writeResultsJson(const std::string& path, const SimResult& r, long spinCount)
-    {
-        std::ostringstream j;
-        j << std::setprecision(17);
-        j << "{\n"
-        << "  \"spinCount\": "      << spinCount << ",\n"
-        << "  \"baseHitRate\": "    << r.base.hitRate << ",\n"
-        << "  \"baseRTP\": "        << r.base.rtp << ",\n"
-        << "  \"freeHitRate\": "    << r.free.hitRate << ",\n"
-        << "  \"freeRTP\": "        << r.free.rtp << ",\n"
-        << "  \"freeAvgSpins\": "   << r.free.averageSpins << ",\n"
-        << "  \"freeTriggerRate\": "<< r.free.triggerRate << ",\n"
-        << "  \"freeReTriggerRate\": "<< r.free.retriggerRate << ",\n"
-        << "  \"totalRTP\": "       << r.totalRTP << ",\n"
-        << "  \"totalWins\": "      << static_cast<long long>(r.totalWins) << ",\n"
-        << "  \"maxWinCount\": "    << r.maxWinCount << ",\n"
-        << "  \"winDistribution\": {";
+SimResult SimRunnerInit(const long long spinCount) {
+    return SimResult(spinCount, Constants::baseBet, Constants::maxWin);
+}
 
-        bool first = true;
-        for (const auto& [bucket, value] : r.winDistribution) {
-            j << (first ? "\n    " : ",\n    ")
-            << "\"" << MiniJson::jsonEscape(bucket) << "\": " << value;
-            first = false;
-        }
-        j << "\n  }\n}\n";
+static void writeResultsJson(const std::string& path, const SimResult& r,
+                             long long spinCount, uint64_t seed)
+{
+    std::ostringstream j;
+    j << std::setprecision(17);
+    j << "{\n"
+    // seed as a string: 64-bit integers lose precision in many JSON readers
+    << "  \"seed\": \""          << seed << "\",\n"
+    << "  \"spinCount\": "      << spinCount << ",\n"
+    << "  \"baseHitRate\": "    << r.base.hitRate << ",\n"
+    << "  \"baseRTP\": "        << r.base.rtp << ",\n"
+    << "  \"freeHitRate\": "    << r.free.hitRate << ",\n"
+    << "  \"freeRTP\": "        << r.free.rtp << ",\n"
+    << "  \"freeAvgSpins\": "   << r.free.averageSpins << ",\n"
+    << "  \"freeTriggerRate\": "<< r.free.triggerRate << ",\n"
+    << "  \"freeReTriggerRate\": "<< r.free.retriggerRate << ",\n"
+    << "  \"totalRTP\": "       << r.totalRTP << ",\n"
+    << "  \"totalWins\": "      << static_cast<long long>(r.totalWins) << ",\n"
+    << "  \"maxWinCount\": "    << r.maxWinCount << ",\n"
+    << "  \"winDistribution\": {";
 
-        std::ofstream out(path, std::ios::binary);
-        if (!out) throw std::runtime_error("failed to write results file '" + path + "'");
-        out << j.str();
+    // sorted keys -> byte-identical file for identical results
+    std::vector<std::pair<std::string, double>> buckets(r.winDistribution.begin(), r.winDistribution.end());
+    std::sort(buckets.begin(), buckets.end(),
+        [](const auto& a, const auto& b) { return a.first < b.first; });
+
+    bool first = true;
+    for (const auto& [bucket, value] : buckets) {
+        j << (first ? "\n    " : ",\n    ")
+        << "\"" << MiniJson::jsonEscape(bucket) << "\": " << value;
+        first = false;
     }
+    j << "\n  }\n}\n";
+
+    std::ofstream out(path, std::ios::binary);
+    if (!out) throw std::runtime_error("failed to write results file '" + path + "'");
+    out << j.str();
+}
+
+static uint64_t parseSeed(const char* text) {
+    char* end = nullptr;
+    errno = 0;
+    unsigned long long v = std::strtoull(text, &end, 10);
+    if (errno != 0 || end == text || *end != '\0' || text[0] == '-')
+        throw std::runtime_error(std::string("invalid seed '") + text + "' (use a non-negative integer)");
+    return static_cast<uint64_t>(v);
+}
 
 int main(int argc, char* argv[])
 {
@@ -193,13 +202,13 @@ int main(int argc, char* argv[])
 
         PopulateReelsData(reelSetPath,Constants::matrixSize[1]);
 
-        long spinCount = 0;
+        long long spinCount = 0;
 
         if (argc > 1) {
             // from command line: myapp.exe 10000000
             char* end = nullptr;
             errno = 0;
-            spinCount = std::strtol(argv[1], &end, 10);
+            spinCount = std::strtoll(argv[1], &end, 10);
             if (errno != 0 || end == argv[1] || *end != '\0' || spinCount <= 0) {
                 printf("ERROR: invalid spin count '%s'\n", argv[1]);
                 return 1;
@@ -229,16 +238,23 @@ int main(int argc, char* argv[])
             }
         }
 
-        SimResult result = SimResult(spinCount, Constants::baseBet, Constants::maxWin);
+        // ---- seed (argv[5]) ----
+        uint64_t seed;
+        if (argc > 5) {
+            seed = parseSeed(argv[5]);
+        } else {
+            std::random_device rd;
+            seed = (static_cast<uint64_t>(rd()) << 32) | rd();
+        }
+        std::cout << "Seed: " << seed << '\n';
 
-        // RunSim(spinCount, result);
-        result = SimRunner::RunMultiThreadSim<SimResult>(spinCount, SimRunnerInit, RunSim);
+        SimResult result = SimRunner::RunMultiThreadSim<SimResult>(spinCount, seed, SimRunnerInit, RunSim);
         result.calculate();
 
-        if (argc > 3)
-            writeResultsJson(argv[4], result, spinCount);
+        if (argc > 4)                                   // argv[4] exists only when argc > 4
+            writeResultsJson(argv[4], result, spinCount, seed);
 
-        std::vector<std::pair<GameSymbols, /*ValueType*/ decltype(result.base.symbolsData)::mapped_type>>
+        std::vector<std::pair<GameSymbols, decltype(result.base.symbolsData)::mapped_type>>
             rows(result.base.symbolsData.begin(), result.base.symbolsData.end());
 
         std::sort(rows.begin(), rows.end(),
@@ -253,16 +269,6 @@ int main(int argc, char* argv[])
 
         std::cout << "==============Free Game=============== "<< '\n';
 
-        std::vector<std::pair<GameSymbols, /*ValueType*/ decltype(result.free.symbolsData)::mapped_type>>
-            frows(result.free.symbolsData.begin(), result.free.symbolsData.end());
-
-        std::sort(frows.begin(), frows.end(),
-            [](const auto& a, const auto& b) { return a.first < b.first; });
-
-        //for (const auto& [symbol, data] : frows) {
-        //    std::cout << std::left << std::setw(10) << Constants::stringFromGameSymbols(symbol)
-        //        << std::setw(12) << data.rtp * 100 << std::setw(12) << data.hitrate << std::setw(12) << data.hitrate3OK << std::setw(12) << data.hitrate4OK << std::setw(12) << data.hitrate5OK << "\n";
-        //}
         std::cout << "free Hitrate " << result.free.hitRate << '\n';
         std::cout << "Free RTP: " << result.free.rtp * 100 << '\n';
         std::cout << "Free average free spins " << result.free.averageSpins << '\n';
@@ -271,15 +277,12 @@ int main(int argc, char* argv[])
         std::cout << "Free RETrigger rate: " << result.free.retriggerRate<< '\n';
 
         std::cout << "==============Overall Game=============== " << '\n';
-        // Copy out so we can order it (unordered_map has no order)
         std::vector<std::pair<std::string, double>> drows(
             result.winDistribution.begin(), result.winDistribution.end());
 
-        // sort by key (bucket name) ascending
         std::sort(drows.begin(), drows.end(),
             [](const auto& a, const auto& b) { return a.second > b.second; });
 
-        // header
         std::cout << std::left << std::setw(18) << "Bucket"
             << std::right << std::setw(14) << "Value" << "\n";
         std::cout << std::string(32, '-') << "\n";
@@ -289,18 +292,15 @@ int main(int argc, char* argv[])
             std::cout << std::left << std::setw(18) << bucket
                 << std::right << std::setw(14) << value << std::setw(14) << value/spinCount*100 << "\n";
         }
-        //std::cout << "Buy strip wins " << result.buyGame. << '\n';
 
         std::cout << "RTP: " << result.totalRTP * 100 << '\n';
         std::cout << "Total wins " << static_cast<long long>( result.totalWins)<< '\n';
         std::cout << "Achieved Max win " << result.achievedMaxWin << '\n';
-        std::cout << "Max Win Count " << result.maxWinCount << '\n';     
+        std::cout << "Max Win Count " << result.maxWinCount << '\n';
     }
     catch (const std::exception& e) {
         printf("ERROR: %s\n", e.what());
         return 1;
-    }    
-    // WaitForKey waitForKey;
+    }
     return 0;
 }
-
