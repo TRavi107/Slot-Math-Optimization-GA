@@ -7,12 +7,14 @@ class Parent:
     freeReelSet = []
     fitnessVariable = []
     fitnessValue = 0;
+    simOutput = None
 
     def __init__(self,fitnessVariable:list [FitnessVariable], baseReelSet=None, freeReelSet=None):
         self.fitnessVariable = copy.deepcopy(fitnessVariable)
         self.baseReelSet = baseReelSet
         self.freeReelSet = freeReelSet
         self.fitnessValue = float("inf")   # unevaluated = worst possible
+        self.simOutput = None              # full simulator output of the last evaluation
 
     def CalcuteFitness(self):
         self.fitnessValue = 0
@@ -76,10 +78,12 @@ OUTPUT_KEYS = {
 }
 
 def UpdateParentVars(parent, output):
-    """Update every fitness variable enabled in the config from the simulator output."""
+    """Update every fitness variable enabled in the config from the simulator output,
+    and keep the whole output on the parent (saved later as the best reelset's stats)."""
     for var in parent.fitnessVariable:
         key = OUTPUT_KEYS[var.varName]
         if key not in output:
             raise KeyError(f"Simulator output has no '{key}' (needed for {var.varName.name})")
         var.currentValue = output[key]
+    parent.simOutput = output
     parent.CalcuteFitness()

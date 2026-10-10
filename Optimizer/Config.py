@@ -6,6 +6,7 @@ import yaml
 from Parents import VariableType, FitnessVariable, GameMode
 from Selection import SelectionTypes
 from Replacement import ReplacementType
+from Baselines import BaselineType
 
 
 @dataclass
@@ -13,7 +14,6 @@ class Config:
     runNumber: int               # the run currently being executed (set per run by main.py)
     runNumbers: list             # every run to execute, in order
     generations: int
-    createNewParents: bool
     populationSize: int
     spins: int
     gameMode: GameMode
@@ -23,9 +23,15 @@ class Config:
     freeGameBaseSource: str      # same | manual
     baseReelFile: str            # manual: single reelset file
 
+    runGA: bool                  # false = skip the GA sweep, run only the baselines
     replacementTypes: list
     selectionTypes: list
     mutationCounts: list
+
+    # baselines: same budget (generations), starting reelsets, spins and sim seed as the GA
+    baselineTypes: list
+    saStartTemperature: float
+    saEndTemperature: float
 
     symbols: list
     reelSize: int
@@ -78,6 +84,16 @@ def _non_negative_int(value, where):
     return v
 
 
+def _positive_float(value, where):
+    try:
+        v = float(value)
+    except (TypeError, ValueError):
+        raise ConfigError(f"{where} must be a number, got '{value}'") from None
+    if v <= 0:
+        raise ConfigError(f"{where} must be greater than 0, got {v}")
+    return v
+
+
 def _run_numbers(run):
     """
     run.runNumbers accepts:
@@ -114,6 +130,33 @@ def _run_numbers(run):
     if dups:
         raise ConfigError(f"{where} lists these run numbers more than once: {dups}")
     return numbers
+
+
+def _baselines(raw):
+    """
+    Optional section; leaving it out runs no baselines (older configs keep working).
+        baselines:
+          methods: [RandomSearch, HillClimbing, SimulatedAnnealing]
+          simulatedAnnealing: { startTemperature: 0.14, endTemperature: 0.002 }
+    """
+    bl = raw.get("baselines") or {}
+    names = bl.get("methods") or []
+    if not isinstance(names, list):
+        names = [names]
+    methods = [_enum(BaselineType, n, "baselines.methods") for n in names]
+    dups = sorted({m.name for m in methods if methods.count(m) > 1})
+    if dups:
+        raise ConfigError(f"baselines.methods lists these more than once: {dups}")
+
+    sa = bl.get("simulatedAnnealing") or {}
+    t_start = _positive_float(sa.get("startTemperature", 0.14),
+                              "baselines.simulatedAnnealing.startTemperature")
+    t_end = _positive_float(sa.get("endTemperature", 0.002),
+                            "baselines.simulatedAnnealing.endTemperature")
+    if t_end > t_start:
+        raise ConfigError("baselines.simulatedAnnealing: endTemperature must not be "
+                          "higher than startTemperature")
+    return methods, t_start, t_end
 
 
 def LoadConfig(path="config.yaml"):
@@ -163,14 +206,19 @@ def LoadConfig(path="config.yaml"):
         raise ConfigError(f"No fitness goals enabled under {section} - "
                           "set 'enabled: true' on at least one")
 
+    if "createNewParents" in run:
+        print("[config] run.createNewParents is no longer used and is ignored: a run reuses "
+              "its saved initial parents if there are any, otherwise it generates new ones "
+              "seeded by the runNumber. You can delete that line.")
+
     fg = raw.get("freeGame") or {}
     run_numbers = _run_numbers(run)
+    baseline_types, sa_start, sa_end = _baselines(raw)
 
     cfg = Config(
         runNumber=run_numbers[0],
         runNumbers=run_numbers,
         generations=_positive_int(_get(run, "generations", "run"), "run.generations"),
-        createNewParents=bool(_get(run, "createNewParents", "run")),
         populationSize=_positive_int(_get(run, "populationSize", "run"), "run.populationSize"),
         spins=_positive_int(_get(run, "spins", "run"), "run.spins"),
         gameMode=game_mode,
@@ -179,12 +227,17 @@ def LoadConfig(path="config.yaml"):
         freeGameBaseSource=str(fg.get("baseReelSource", "same")).strip().lower(),
         baseReelFile=str(fg.get("baseReelFile", "")),
 
+        runGA=bool((exp or {}).get("runGA", True)),
         replacementTypes=[_enum(ReplacementType, n, "experiments.replacementTypes")
                           for n in _get(exp, "replacementTypes", "experiments")],
         selectionTypes=[_enum(SelectionTypes, n, "experiments.selectionTypes")
                         for n in _get(exp, "selectionTypes", "experiments")],
         mutationCounts=[_positive_int(m, "experiments.mutationCounts")
                         for m in _get(exp, "mutationCounts", "experiments")],
+
+        baselineTypes=baseline_types,
+        saStartTemperature=sa_start,
+        saEndTemperature=sa_end,
 
         symbols=[str(s) for s in _get(reels, "symbols", "reels")],
         reelSize=_positive_int(_get(reels, "reelSize", "reels"), "reels.reelSize"),
@@ -199,6 +252,9 @@ def LoadConfig(path="config.yaml"):
         simulatorPath=str(_get(paths, "simulatorPath", "paths")),
     )
 
+    if not cfg.runGA and not cfg.baselineTypes:
+        raise ConfigError("experiments.runGA is false and baselines.methods is empty - "
+                          "nothing to run")
     if cfg.gameMode.name == "FreeGame":
         src = cfg.freeGameBaseSource
         if src not in ("same", "manual"):

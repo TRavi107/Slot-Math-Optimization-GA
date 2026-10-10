@@ -121,6 +121,50 @@ def save_sim_results(startingParents, results, best_parent, replacement_type, se
     return f"{seed_key}/{mutation_key}/{combo_key}"
 
 
+def save_baseline_results(history, best_parent, combo_key, filepath, mutation, seed,
+                          run_meta=None, combo_meta=None):
+    """
+    Save a baseline run in the GA's layout, next to the GA combinations:
+        seed_<seed> -> results -> mutation_<mutation> -> <Method>_Baseline
+    history: [(best so far, current), ...], one row per evaluation.
+    """
+    data = _load_results(filepath)
+    seed_key = f"seed_{seed}"
+    mutation_key = f"mutation_{mutation}"
+
+    seed_entry = data.setdefault(seed_key, {})
+    if run_meta is not None:
+        seed_entry["meta"] = run_meta
+
+    entry = {
+        "results": [[float(best), float(current)] for best, current in history],
+        "reelset": {
+            "BaseGameReel": best_parent.baseReelSet,
+            "FreeGameReel": best_parent.freeReelSet,
+        },
+    }
+    if combo_meta is not None:
+        entry["meta"] = combo_meta
+    seed_entry.setdefault("results", {}).setdefault(mutation_key, {})[combo_key] = entry
+
+    _write_results(data, filepath)
+    return f"{seed_key}/{mutation_key}/{combo_key}"
+
+
+def save_best_spin(record, combo_key, filepath, mutation, seed):
+    """
+    Attach the best reelset's checked stats to an already saved combination:
+        seed_<seed> -> results -> mutation_<mutation> -> <combo_key> -> bestSpin
+    """
+    data = _load_results(filepath)
+    entry = (data.get(f"seed_{seed}", {}).get("results", {})
+             .get(f"mutation_{mutation}", {}).get(combo_key))
+    if entry is None:
+        raise KeyError(f"No saved result for seed_{seed}/mutation_{mutation}/{combo_key}")
+    entry["bestSpin"] = record
+    _write_results(data, filepath)
+
+
 def generate_reelset_col(symbols, reelSize, rng=random):
     if not symbols:
         raise ValueError("symbols list is empty")
