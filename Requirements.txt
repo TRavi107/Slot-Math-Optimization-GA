@@ -1,0 +1,7 @@
+# Optimizer (Optimizer/main.py)
+PyYAML>=6.0
+
+# Result charts (Optimizer/Compare.py)
+matplotlib>=3.7
+numpy>=1.24
+pandas>=2.0

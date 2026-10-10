@@ -1,3 +1,4 @@
+from __future__ import annotations   # allows type hints that reference classes defined later (Python 3.10+)
 from enum import Enum,auto
 import copy
 
