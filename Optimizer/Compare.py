@@ -34,7 +34,7 @@ from matplotlib.patches import Patch
 
 # ----------------------------------------------------------------- settings
 BUDGET = 1000        # fitness evaluations per run
-REEL_SIZE = 50       # stops per reel -> mutation % = M / REEL_SIZE
+REEL_SIZE = 250       # stops per reel -> mutation % = M / REEL_SIZE
 GRID = np.arange(10, BUDGET + 1, 10)   # common evaluation axis for curves
 
 # ----------------------------------------------------------------- style
@@ -338,4 +338,4 @@ def run_all(json_file, out_dir="plots", speed_mutation=5):
 
 
 if __name__ == "__main__":
-    run_all("Results/results.json", "Results")
+    run_all("Results/results-1000-5-runs.json", "Results")
