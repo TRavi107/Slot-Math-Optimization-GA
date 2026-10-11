@@ -1,4 +1,3 @@
-
 #include <algorithm>
 #include <cerrno>
 #include <chrono>
@@ -20,9 +19,25 @@
 #include "multiThread/SimRunner.hpp"
 
 // Usage:
-//   simulator <spins> [reelset.json] [runBaseOnly true|false] [out.json] [seed]
+//   simulator <spins> [reelset.json] [mode] [out.json] [seed] [triggerRate]
 //
-// Same <spins>, reelset, runBaseOnly and <seed>  ->  bit-identical results,
+//   mode  false     full game: base spins, free games played when triggered (default)
+//         true      base game only: free games are counted (trigger rate) but not played
+//         sessions  free-sessions mode: <spins> is the number of free-game SESSIONS to
+//                   play directly, with no base spins. Needs [triggerRate] = the base
+//                   game's trigger rate as "1 in X" (e.g. 80). A session does not depend
+//                   on the base spin that triggered it (free_game() only uses the free
+//                   reels and the RNG; the max-win cap inside it already covers only the
+//                   session's own wins), so its stats equal the full game's:
+//                       freeRTP           = average session win (x bet) / X
+//                       freeHitRate       = free spins / winning free spins   (as before)
+//                       freeReTriggerRate = free spins / retriggers           (as before)
+//                       freeTriggerRate   = X (the value passed in)
+//                   Base stats are 0 and totalRTP is the free-game part only. Use it to
+//                   tune free reels while the base reels are fixed; validate the result
+//                   with a full-game run.
+//
+// Same <spins>, reelset, mode, <seed> (and triggerRate)  ->  bit-identical results,
 // on any machine and any number of CPU cores.
 // Without a seed a random one is chosen and printed, so the run can be replayed.
 //
@@ -152,6 +167,17 @@ void RunSim(long long spinCount, SimResult& result, Rng::Xoshiro256ss& rng) {
     }
 }
 
+// Free-sessions mode: play `sessionCount` free-game sessions, each exactly as a base
+// spin with 3+ scatters would start one. Per session the win is recorded the way RunSim
+// records a base spin (win distribution, max win), so per-session totals line up.
+void RunFreeSessions(long long sessionCount, SimResult& result, Rng::Xoshiro256ss& rng) {
+    for (long long i = 0; i < sessionCount; i++) {
+        free_game(result, rng);
+        result.AddSpinWinnings();
+        result.ResetSpinWinnings();
+    }
+}
+
 SimResult SimRunnerInit(const long long spinCount) {
     return SimResult(spinCount, Constants::baseBet, Constants::maxWin);
 }
@@ -219,14 +245,21 @@ static std::string targetName() {
 
 static void writeResultsJson(const std::string& path, const SimResult& r,
                              long long spinCount, uint64_t seed,
-                             const SimRunner::RunInfo& run, double wallSeconds)
+                             const SimRunner::RunInfo& run, double wallSeconds,
+                             const char* mode, double triggerRateUsed)
 {
     std::ostringstream j;
     j << std::setprecision(17);
     j << "{\n"
     // seed as a string: 64-bit integers lose precision in many JSON readers
     << "  \"seed\": \""          << seed << "\",\n"
-    << "  \"spinCount\": "      << spinCount << ",\n"
+    // fullGame | baseOnly | freeSessions. In freeSessions, spinCount is the number of
+    // sessions played and triggerRateUsed the X the free RTP was divided by.
+    << "  \"mode\": \""          << mode << "\",\n";
+    if (triggerRateUsed > 0)
+        j << "  \"sessions\": "        << spinCount << ",\n"
+          << "  \"triggerRateUsed\": " << triggerRateUsed << ",\n";
+    j << "  \"spinCount\": "      << spinCount << ",\n"
     << "  \"baseHitRate\": "    << r.base.hitRate << ",\n"
     << "  \"baseRTP\": "        << r.base.rtp << ",\n"
     << "  \"freeHitRate\": "    << r.free.hitRate << ",\n"
@@ -324,6 +357,7 @@ int main(int argc, char* argv[])
             }
         }
 
+        bool sessionsMode = false;
         if (argc > 3) {
             std::string arg = argv[3];
             std::transform(arg.begin(), arg.end(), arg.begin(),
@@ -333,8 +367,29 @@ int main(int argc, char* argv[])
                 Constants::runBaseOnly = true;
             else if (arg == "0" || arg == "false" || arg == "no")
                 Constants::runBaseOnly  = false;
+            else if (arg == "sessions") {
+                Constants::runBaseOnly = false;
+                sessionsMode = true;
+            }
             else {
-                printf("ERROR: invalid runOnlyBase '%s' (use true/false or 1/0)\n", argv[3]);
+                printf("ERROR: invalid mode '%s' (use true/false, 1/0 or sessions)\n", argv[3]);
+                return 1;
+            }
+        }
+
+        // ---- trigger rate (argv[6]), sessions mode only ----
+        double triggerRate = 0.0;
+        if (sessionsMode) {
+            if (argc <= 6) {
+                printf("ERROR: sessions mode needs the trigger rate as argument 6 "
+                       "(\"1 in X\", e.g. 80)\n");
+                return 1;
+            }
+            char* end = nullptr;
+            errno = 0;
+            triggerRate = std::strtod(argv[6], &end);
+            if (errno != 0 || end == argv[6] || *end != '\0' || !(triggerRate >= 1.0)) {
+                printf("ERROR: invalid trigger rate '%s' (a number >= 1, \"1 in X\")\n", argv[6]);
                 return 1;
             }
         }
@@ -350,9 +405,24 @@ int main(int argc, char* argv[])
         std::cout << "Seed: " << seed << '\n';
 
         SimRunner::RunInfo runInfo;
-        SimResult result = SimRunner::RunMultiThreadSim<SimResult>(spinCount, seed, SimRunnerInit, RunSim,
-                                                                   threadOverride(), &runInfo);
+        SimResult result = sessionsMode
+            ? SimRunner::RunMultiThreadSim<SimResult>(spinCount, seed, SimRunnerInit, RunFreeSessions,
+                                                      threadOverride(), &runInfo, SimRunner::JOB_SESSIONS)
+            : SimRunner::RunMultiThreadSim<SimResult>(spinCount, seed, SimRunnerInit, RunSim,
+                                                      threadOverride(), &runInfo);
         result.calculate();
+
+        const char* mode = sessionsMode ? "freeSessions"
+                         : (Constants::runBaseOnly ? "baseOnly" : "fullGame");
+        if (sessionsMode) {
+            // calculate() divided by the number of sessions, so free.rtp is now the
+            // average session win in bets. Per base spin that is 1/X of it.
+            result.free.rtp /= triggerRate;
+            result.free.triggerRate = triggerRate;
+            result.totalRTP = result.free.rtp;
+            std::cout << "Mode: free sessions (" << spinCount << " sessions, trigger rate 1 in "
+                      << triggerRate << ")\n";
+        }
 
         const double wallSeconds = std::chrono::duration<double>(
             std::chrono::steady_clock::now() - programStart).count();
@@ -361,7 +431,8 @@ int main(int argc, char* argv[])
                   << buildType() << ")\n";
 
         if (argc > 4)                                   // argv[4] exists only when argc > 4
-            writeResultsJson(argv[4], result, spinCount, seed, runInfo, wallSeconds);
+            writeResultsJson(argv[4], result, spinCount, seed, runInfo, wallSeconds,
+                             mode, sessionsMode ? triggerRate : 0.0);
 
         std::vector<std::pair<GameSymbols, decltype(result.base.symbolsData)::mapped_type>>
             rows(result.base.symbolsData.begin(), result.base.symbolsData.end());

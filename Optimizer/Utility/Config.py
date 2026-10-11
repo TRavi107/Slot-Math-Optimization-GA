@@ -2,10 +2,6 @@ import os
 from dataclasses import dataclass
 
 import yaml
-import sys
-
-PARENT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, PARENT)
 
 from Parents import VariableType, FitnessVariable, GameMode
 from Selection import SelectionTypes
@@ -15,6 +11,13 @@ from Baselines import BaselineType
 # run.gameMode: one of the GameMode stages, or BOTH_MODE = BaseGame then FreeGame
 BOTH_MODE = "Both"
 RUN_MODES = [m.name for m in GameMode] + [BOTH_MODE]
+
+# freeGame.evaluation: how FreeGame candidates are simulated during the search
+FREE_EVALUATIONS = ("fullGame", "sessions")
+# goals a free-sessions evaluation can score: it plays no base spins, so base goals
+# (baseRTP, baseHitRate) would always read 0
+SESSIONS_GOALS = {VariableType.freeRTP, VariableType.freeHitRate,
+                  VariableType.freeRetriggerRate, VariableType.freeTriggerRate}
 
 
 @dataclass
@@ -35,6 +38,12 @@ class Config:
     # free game: where the fixed base reels come from
     freeGameBaseSource: str      # same | manual  (Both always uses same)
     baseReelFile: str            # manual: single reelset file
+
+    # free game: how candidates are simulated during the search (final checks are
+    # always full game)
+    freeEvaluation: str          # fullGame | sessions
+    freeSessions: int            # sessions per evaluation; 0 = auto (spins / trigger rate)
+    triggerRateSpins: int        # base-only spins used to measure each base reelset's trigger rate
 
     runGA: bool                  # false = skip the GA sweep, run only the baselines
     replacementTypes: list
@@ -219,6 +228,26 @@ def _baselines(raw):
     return methods, t_start, t_end
 
 
+def _free_evaluation(fg):
+    """
+    freeGame.evaluation / sessions / triggerRateSpins (all optional; leaving them out
+    keeps the full-game evaluation older configs used).
+    Returns (evaluation, sessions, triggerRateSpins); sessions 0 = auto.
+    """
+    evaluation = str(fg.get("evaluation", "fullGame")).strip()
+    if evaluation not in FREE_EVALUATIONS:
+        raise ConfigError(f"freeGame.evaluation '{evaluation}' must be one of: "
+                          f"{', '.join(FREE_EVALUATIONS)}")
+    raw_sessions = fg.get("sessions", "auto")
+    if str(raw_sessions).strip().lower() == "auto":
+        sessions = 0
+    else:
+        sessions = _positive_int(raw_sessions, "freeGame.sessions")
+    trigger_spins = _positive_int(fg.get("triggerRateSpins", 100_000_000),
+                                  "freeGame.triggerRateSpins")
+    return evaluation, sessions, trigger_spins
+
+
 def LoadConfig(path="config.yaml"):
     if not os.path.exists(path):
         raise ConfigError(f"Config file not found: {path}")
@@ -249,6 +278,7 @@ def LoadConfig(path="config.yaml"):
         print(f"[config] gameMode Both always takes each combination's base reels from its "
               f"own BaseGame result; freeGame.baseReelSource '{base_source}' is ignored.")
         base_source = "same"
+    free_evaluation, free_sessions, trigger_spins = _free_evaluation(fg)
 
     run_numbers = _run_numbers(run)
     baseline_types, sa_start, sa_end = _baselines(raw)
@@ -267,6 +297,10 @@ def LoadConfig(path="config.yaml"):
 
         freeGameBaseSource=base_source,
         baseReelFile=str(fg.get("baseReelFile", "")),
+
+        freeEvaluation=free_evaluation,
+        freeSessions=free_sessions,
+        triggerRateSpins=trigger_spins,
 
         runGA=bool((exp or {}).get("runGA", True)),
         replacementTypes=[_enum(ReplacementType, n, "experiments.replacementTypes")
@@ -303,6 +337,13 @@ def LoadConfig(path="config.yaml"):
             raise ConfigError(f"freeGame.baseReelSource '{src}' must be same or manual")
         if src == "manual" and not os.path.isfile(cfg.baseReelFile):
             raise ConfigError(f"freeGame.baseReelFile not found: '{cfg.baseReelFile}'")
+    if cfg.freeEvaluation == "sessions" and GameMode.FreeGame in cfg.stages:
+        bad = [v.varName.name for v in fitness_by_mode[GameMode.FreeGame]
+               if v.varName not in SESSIONS_GOALS]
+        if bad:
+            raise ConfigError(f"freeGame.evaluation 'sessions' plays no base spins, so it cannot "
+                              f"score {', '.join(bad)}. Disable those FreeGame goals or use "
+                              f"evaluation: fullGame")
     if cfg.finalCheckSpins < 0:
         raise ConfigError("run.finalCheckSpins must be 0 (off) or a positive number")
     if not os.path.isfile(cfg.simulatorPath):

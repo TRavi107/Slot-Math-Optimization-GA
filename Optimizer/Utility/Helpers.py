@@ -5,7 +5,8 @@ the algorithms or the experiment.
     seeds          every seed a run uses, derived from the runNumber
     results keys   where each experiment is saved in the results file
     parents        which reelsets a run starts from
-    free game      where the fixed base reels come from, checked before spinning
+    free game      where the fixed base reels come from, checked before spinning;
+                   how FreeGame candidates are simulated (full game or free sessions)
     run helpers    per-run / per-stage config copy, final check and bestSpin record,
                    end-of-batch summary
 
@@ -22,7 +23,7 @@ from Utility.Config import ConfigError, BOTH_MODE
 from Parents import Parent, OUTPUT_KEYS
 from Utility.Seeding import derive_seed, make_rng
 from Utility.Utility import (CreateInitialPopulation, EvaluateParents, LoadInitialParents,
-                     save_reelset_file, Evaluate)
+                     save_reelset_file, Evaluate, FreeSessions)
 
 
 # =====================================================================
@@ -73,6 +74,12 @@ def final_check_seed_for(cfg, mutation_count, replacement, selection):
 def baseline_final_check_seed_for(cfg, method, mutation_count):
     m = mutation_count if uses_mutation(method) else "any"
     return _final_check_seed(cfg, m, method.name, BASELINE_TAG)
+
+
+def trigger_rate_seed_for(cfg):
+    """Seed of the base-only runs that measure trigger rates (free-sessions mode).
+    One seed per run and stage: every base reelset is measured on the same stops."""
+    return derive_seed(cfg.runNumber, "trigger_rate", cfg.gameMode.name)
 
 
 # =====================================================================
@@ -203,12 +210,67 @@ def with_base_reels(parents, base_reels):
     return parents
 
 
-def evaluate_population(parents, cfg, label):
-    """Simulate and score every parent (BaseGame mode: base game only)."""
+def evaluate_population(parents, cfg, label, evaluation=None):
+    """Simulate and score every parent. evaluation: what the simulator plays (see
+    evaluation_for); default base game only in BaseGame mode, full game in FreeGame."""
+    if evaluation is None:
+        evaluation = cfg.gameMode.name == "BaseGame"
     print(f"Evaluating {len(parents)} initial parents{label}...")
     EvaluateParents(parents, cfg.spins, cfg.simulatorPath, cfg.folder,
-                    cfg.gameMode.name == "BaseGame",
-                    sim_seed_for(cfg))
+                    evaluation, sim_seed_for(cfg))
+
+
+# =====================================================================
+#  Free game: how candidates are simulated
+# =====================================================================
+def measure_trigger_rate(base_reels, cfg):
+    """
+    Trigger rate ("1 in X") of one base reelset, from a base-only run with
+    freeGame.triggerRateSpins spins. Free games are counted but not played, so the free
+    reels in the file do not matter (the base reels are written there as placeholders).
+    """
+    path = f"{cfg.folder}/trigger_rate.json"
+    save_reelset_file(base_reels, base_reels, path)
+    out = Evaluate(cfg.triggerRateSpins, path, cfg.simulatorPath, trigger_rate_seed_for(cfg), True)
+    rate = out.get("freeTriggerRate")
+    if not rate or rate <= 0 or rate >= cfg.triggerRateSpins:
+        raise ValueError(f"base reels never trigger the free game in {cfg.triggerRateSpins:,} "
+                         f"spins (trigger rate {rate}) - free sessions cannot be scaled")
+    return float(rate)
+
+
+def evaluation_for(cfg, base_reels, trigger_rates):
+    """
+    What the simulator plays when scoring candidates in this stage:
+        BaseGame                         True  (base game only)
+        FreeGame, evaluation fullGame    False (full game)
+        FreeGame, evaluation sessions    FreeSessions(sessions, trigger rate of base_reels)
+    In sessions mode the trigger rate of each base reelset is measured once and kept in
+    `trigger_rates` (a dict the caller owns, keyed by the base reels). freeGame.sessions
+    auto = spins / trigger rate: the number of free games a full-game evaluation with
+    run.spins base spins plays on average, so both modes rest on the same free-game data.
+    """
+    if cfg.gameMode.name == "BaseGame":
+        return True
+    if cfg.freeEvaluation != "sessions":
+        return False
+    key = json.dumps(base_reels)
+    if key not in trigger_rates:
+        rate = measure_trigger_rate(base_reels, cfg)
+        trigger_rates[key] = rate
+        print(f"[free sessions] base reels trigger 1 in {rate:.4f} "
+              f"({cfg.triggerRateSpins:,} base-only spins)")
+    rate = trigger_rates[key]
+    sessions = cfg.freeSessions or max(1, round(cfg.spins / rate))
+    return FreeSessions(sessions, rate)
+
+
+def evaluation_meta(evaluation):
+    """How an experiment's candidates were simulated, for its saved meta (FreeGame only)."""
+    if isinstance(evaluation, FreeSessions):
+        return {"mode": "freeSessions", "sessions": evaluation.sessions,
+                "triggerRate": evaluation.triggerRate}
+    return {"mode": "baseOnly" if evaluation else "fullGame"}
 
 
 # =====================================================================
@@ -317,17 +379,32 @@ def is_both(cfg):
     return cfg.runMode == BOTH_MODE
 
 
+def final_check_base_only(cfg):
+    """
+    The final check plays the same game the stage was tuned on: base game only in the
+    BaseGame stage (its free reels are still random starting reels, so playing them
+    would cost time and give meaningless free-game stats), full game in the FreeGame stage.
+    Free games are still triggered and counted, so freeTriggerRate stays valid.
+    """
+    return cfg.gameMode.name == "BaseGame"
+
+
 def final_check(best_parent, cfg, seed):
-    """Re-run the best reelset (full game) with many spins to confirm its stats.
+    """Re-run the best reelset with many spins to confirm its stats
+    (base game only in the BaseGame stage, see final_check_base_only).
     Returns the simulator output."""
+    base_only = final_check_base_only(cfg)
     path = f"{cfg.folder}/best.json"
     save_reelset_file(best_parent.baseReelSet, best_parent.freeReelSet, path)
-    print(f"Final check of best reelset with {cfg.finalCheckSpins:,} spins (seed {seed})...")
-    out = Evaluate(cfg.finalCheckSpins, path, cfg.simulatorPath, seed)
-    for label, key in [("Total RTP", "totalRTP"), ("Base RTP", "baseRTP"),
-                       ("Base hit rate", "baseHitRate"), ("Free RTP", "freeRTP"),
-                       ("Free hit rate", "freeHitRate"), ("Free trigger rate", "freeTriggerRate"),
-                       ("Free retrigger rate", "freeReTriggerRate")]:
+    game = "base game only" if base_only else "full game"
+    print(f"Final check of best reelset with {cfg.finalCheckSpins:,} spins, {game} (seed {seed})...")
+    out = Evaluate(cfg.finalCheckSpins, path, cfg.simulatorPath, seed, base_only)
+    stats = [("Total RTP", "totalRTP"), ("Base RTP", "baseRTP"),
+             ("Base hit rate", "baseHitRate"), ("Free trigger rate", "freeTriggerRate")]
+    if not base_only:
+        stats += [("Free RTP", "freeRTP"), ("Free hit rate", "freeHitRate"),
+                  ("Free retrigger rate", "freeReTriggerRate")]
+    for label, key in stats:
         print(f"  {label:<20} {out.get(key)}")
     return out
 
@@ -371,14 +448,20 @@ def check_best(best_parent, cfg, seed):
     bestSpin record for one experiment's best reelset: re-checked with finalCheckSpins
     if that is on, otherwise the output it was scored on during the optimization run.
     """
+    full_game = not final_check_base_only(cfg)
     if cfg.finalCheckSpins > 0:
         out = final_check(best_parent, cfg, seed)
-        return best_spin_record(out, cfg, "finalCheck", True, cfg.finalCheckSpins)
+        return best_spin_record(out, cfg, "finalCheck", full_game, cfg.finalCheckSpins)
 
     if best_parent.simOutput is None:
         raise ValueError("best reelset has no simulator output - it was never evaluated")
+    # the stats it was scored on: full game only if that evaluation played the full game
+    # (a free-sessions evaluation played no base spins)
+    mode = best_parent.simOutput.get("mode")
+    if mode is not None:
+        full_game = mode == "fullGame"
     record = best_spin_record(best_parent.simOutput, cfg, "optimizationRun",
-                              cfg.gameMode.name != "BaseGame", cfg.spins)
+                              full_game, cfg.spins)
     print(f"Best reelset stats from the optimization run ({record['spins']:,} spins; "
           f"finalCheckSpins is 0): fitness {record['fitness']:.4f}")
     return record

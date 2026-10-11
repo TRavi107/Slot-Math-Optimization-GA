@@ -5,14 +5,44 @@ import re
 import subprocess
 import tempfile
 import time
+from dataclasses import dataclass
 
-import Stats.Compute as Compute
+from Stats import Compute
 from Parents import Parent, UpdateParentVars, VariableType, findBest
+
+
+@dataclass(frozen=True)
+class FreeSessions:
+    """
+    How to evaluate a FreeGame candidate without base spins (freeGame.evaluation:
+    sessions): the simulator plays `sessions` free-game sessions directly and divides
+    the average session win by `triggerRate` (the fixed base reels' trigger rate,
+    "1 in X") to get free RTP per base spin. Free hit rate and retrigger rate are per
+    free spin and need no conversion. See the simulator's main.cpp for the details.
+
+    Wherever a `runBaseOnly` flag is passed to Evaluate (True = base game only,
+    False = full game), a FreeSessions value can be passed instead.
+    """
+    sessions: int
+    triggerRate: float
 
 
 def Evaluate(spin_count, reelset_path, exe, sim_seed, run_only_base=False):
     """Run the C++ simulator. Same sim_seed + same reelset -> identical output.
+    run_only_base: True (base game only), False (full game) or a FreeSessions value,
+    in which case spin_count is ignored and FreeSessions.sessions sessions are played.
     Every call is timed and logged in Compute (wall time, simulator time, threads)."""
+    if isinstance(run_only_base, FreeSessions):
+        count = run_only_base.sessions
+        mode_args = ["sessions"]
+        extra = [repr(float(run_only_base.triggerRate))]   # argv[6]
+        base_only = False
+    else:
+        count = spin_count
+        mode_args = ["true" if run_only_base else "false"]
+        extra = []
+        base_only = bool(run_only_base)
+
     fd, out_path = tempfile.mkstemp(suffix=".json")
     os.close(fd)
     try:
@@ -20,11 +50,12 @@ def Evaluate(spin_count, reelset_path, exe, sim_seed, run_only_base=False):
         proc = subprocess.run(
             [
                 exe,
-                str(spin_count),
+                str(count),
                 reelset_path,
-                "true" if run_only_base else "false",   # argv[3]
+                *mode_args,                             # argv[3]
                 out_path,                               # argv[4]
                 str(sim_seed),                          # argv[5]
+                *extra,                                 # argv[6], sessions mode only
             ],
             capture_output=True,
             text=True,
@@ -37,7 +68,10 @@ def Evaluate(spin_count, reelset_path, exe, sim_seed, run_only_base=False):
             )
         with open(out_path, encoding="utf-8") as f:
             output = json.load(f)
-        Compute.record_call(time.perf_counter() - start, spin_count, run_only_base, output)
+        if isinstance(run_only_base, FreeSessions) and output.get("mode") != "freeSessions":
+            raise RuntimeError("freeGame.evaluation is 'sessions' but this simulator build does "
+                               "not support it - rebuild the simulator from Simulator/src")
+        Compute.record_call(time.perf_counter() - start, count, base_only, output)
         return output
     finally:
         os.remove(out_path)
@@ -267,12 +301,14 @@ def LoadInitialParents(parentPath, populationSize, fitnessvariable):
 
 
 def EvaluateAndSaveParents(parent, spin, simulatorPath, savepath, runBaseOnly, sim_seed):
+    """runBaseOnly: True, False or a FreeSessions value (see Evaluate)."""
     save_reelset_file(parent.baseReelSet, parent.freeReelSet, savepath)
     output = Evaluate(spin, savepath, simulatorPath, sim_seed, runBaseOnly)
     UpdateParentVars(parent, output)
 
 
 def EvaluateParents(parents, spins, simulatorPath, folder, runBaseOnly, sim_seed):
+    """runBaseOnly: True, False or a FreeSessions value (see Evaluate)."""
     for i, p in enumerate(parents):
         path = f"{folder}/parent{i}.json"
         save_reelset_file(p.baseReelSet, p.freeReelSet, path)

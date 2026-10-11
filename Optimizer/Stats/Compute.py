@@ -6,6 +6,8 @@ Every simulator call goes through Utility.Evaluate, which records it here:
                  reading the reelset, spinning, writing and reading the JSON)
     simSeconds   time the simulator itself spent spinning (its "compute" block)
     spins, threads, baseOnly
+    mode         fullGame | baseOnly | freeSessions. In freeSessions calls "spins"
+                 is the number of free-game sessions played, not base spins.
 
 main.py takes a mark() before a piece of work and since(mark) after it, so each
 experiment gets exactly its own calls, without passing a timer through every
@@ -47,6 +49,7 @@ def record_call(seconds, spins, run_only_base, output):
         "hardwareThreads": comp.get("hardwareThreads"),
         "spins": int(spins),
         "baseOnly": bool(run_only_base),
+        "mode": output.get("mode") or ("baseOnly" if run_only_base else "fullGame"),
     })
 
 
@@ -75,6 +78,7 @@ def summary(calls):
         "simSeconds": _total(calls, "simSeconds"),
         "spins": sorted({c["spins"] for c in calls}),
         "threads": sorted({c["threads"] for c in calls if c["threads"] is not None}),
+        "modes": sorted({c["mode"] for c in calls}),
     }
 
 
@@ -83,8 +87,11 @@ def experiment_timing(start_calls, search_calls, final_calls, wall_seconds, mach
     Timing saved with one experiment (GA combination or baseline):
         evaluations                fitness evaluations in the search
         searchSeconds, simSeconds  their total time (wall, and simulator-only)
+        modes                      simulator modes of the search's calls (freeSessions:
+                                   "spins" then counts sessions)
         startEvaluations           FreeGame 'same' only: evaluating the starting
                                    population on this experiment's own base reels
+                                   (and, in sessions mode, measuring their trigger rate)
         finalCheck                 the high-spin re-check of the best reelset
         wallSeconds                the whole experiment, including the optimizer's own
                                    work (selection, files, saving results)
@@ -95,6 +102,7 @@ def experiment_timing(start_calls, search_calls, final_calls, wall_seconds, mach
         "wallSeconds": round(wall_seconds, 3),
         "spins": search.get("spins", []),
         "threads": search.get("threads", []),
+        "modes": search.get("modes", []),
         "evaluations": search["evaluations"],
         "searchSeconds": search["seconds"],
         "simSeconds": search.get("simSeconds"),
@@ -183,11 +191,11 @@ def _cpu_windows():
         mem = stat.ullTotalPhys / 1024 ** 3
     except (OSError, AttributeError):
         pass
-    # try:
-    #     import psutil                        # optional; only for the physical core count
-    #     cores = psutil.cpu_count(logical=False)
-    # except ImportError:
-    #     pass
+    try:
+        import psutil                        # optional; only for the physical core count
+        cores = psutil.cpu_count(logical=False)
+    except ImportError:
+        pass
     return model, cores, mem
 
 

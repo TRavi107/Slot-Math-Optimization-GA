@@ -22,6 +22,13 @@ GAME MODES (run.gameMode)
                running BaseGame and then FreeGame (baseReelSource: same) separately
                with the same run number and settings.
 
+FREE-GAME EVALUATION (freeGame.evaluation)
+    fullGame   every FreeGame candidate is scored on run.spins full-game spins.
+    sessions   every FreeGame candidate is scored on free-game sessions played
+               directly (no base spins): the base reels are fixed, so their trigger
+               rate is measured once per experiment and free RTP is scaled by it.
+               Same statistics, several times faster. Final checks stay full game.
+
 MULTIPLE RUNS
     run.runNumbers lists the runs to execute, e.g. [1, 2, 3] or "1-30".
     The whole experiment sweep is repeated once per run number, and each run is
@@ -63,7 +70,7 @@ import json
 import sys
 import time
 
-import Stats.Compute as Compute
+from Stats import Compute
 from Baselines import (BaselineType, Problem, results_key, uses_mutation,
                        random_search, hill_climbing, simulated_annealing)
 from Utility.Config import LoadConfig, ConfigError
@@ -71,6 +78,7 @@ from Utility.Helpers import (sim_seed_for, ga_stream_labels, ga_seed_for, baseli
                      baseline_seed_for, final_check_seed_for, baseline_final_check_seed_for,
                      ga_key, results_seed, load_initial_parents, with_base_reels,
                      evaluate_population, base_reels_from_file, base_reels_from_same_combos,
+                     evaluation_for, evaluation_meta,
                      preflight, for_run, for_stage, is_both, check_best, print_summary)
 from Parents import findBest
 from Replacement import ReplacementType, ReplaceSingleWorstParent, GenerationalReplace
@@ -99,6 +107,11 @@ def run_meta(cfg):
         "generations": cfg.generations,
         "finalCheckSpins": cfg.finalCheckSpins,
     }
+    if cfg.gameMode.name == "FreeGame":
+        meta["freeEvaluation"] = cfg.freeEvaluation
+        if cfg.freeEvaluation == "sessions":
+            meta["freeSessions"] = cfg.freeSessions or "auto (spins / trigger rate)"
+            meta["triggerRateSpins"] = cfg.triggerRateSpins
     if is_both(cfg):
         meta["runMode"] = "Both (BaseGame then FreeGame, base reels per combination)"
     return meta
@@ -137,26 +150,28 @@ def select_parents(parents, selection, count, rng):
 
 
 def run_generation(parents, selected, replacement, mutation_count, gen, cfg,
-                   fixed_base_reels, rng, sim_seed):
+                   fixed_base_reels, rng, sim_seed, evaluation=None):
     """
     Produce and evaluate one generation. Returns (best_parent, mean_distance).
     fixed_base_reels: base reels every child uses in FreeGame mode (None in BaseGame mode).
+    evaluation: what the simulator plays (Helpers.evaluation_for); None = mode default.
     """
     if replacement == ReplacementType.SteadyState:
         return ReplaceSingleWorstParent(
             parents, cfg.spins, cfg.simulatorPath, cfg.fitnessVariables, cfg.folder,
             selected[0], selected[1], cfg.symbols, mutation_count,
-            gen, cfg.gameMode, fixed_base_reels, rng, sim_seed)
+            gen, cfg.gameMode, fixed_base_reels, rng, sim_seed, eval_mode=evaluation)
 
     elite = ELITE_COUNT if replacement == ReplacementType.ElistismGenerational else 0
     return GenerationalReplace(
         parents, selected, elite, cfg.spins, cfg.simulatorPath,
         cfg.fitnessVariables, cfg.folder, cfg.symbols, mutation_count,
-        gen, cfg.gameMode, fixed_base_reels, rng, sim_seed)
+        gen, cfg.gameMode, fixed_base_reels, rng, sim_seed, eval_mode=evaluation)
 
 
 # ---------------- one experiment ----------------
-def run_optimization(initial_parents, replacement, selection, mutation_count, cfg, fixed_base_reels):
+def run_optimization(initial_parents, replacement, selection, mutation_count, cfg,
+                     fixed_base_reels, evaluation=None):
     generations = generations_for(replacement, cfg)
     parent_count = parents_per_generation(replacement, cfg.populationSize)
 
@@ -180,7 +195,7 @@ def run_optimization(initial_parents, replacement, selection, mutation_count, cf
         selected = select_parents(parents, selection, parent_count, rng)
         best_parent, mean_dist = run_generation(parents, selected, replacement,
                                                 mutation_count, gen, cfg,
-                                                fixed_base_reels, rng, sim_seed)
+                                                fixed_base_reels, rng, sim_seed, evaluation)
         gen_results.append((best_parent.fitnessValue, mean_dist))
 
         if best_parent.fitnessValue < best_ever.fitnessValue:   # lower = better
@@ -192,6 +207,8 @@ def run_optimization(initial_parents, replacement, selection, mutation_count, cf
         "finalCheckSeed": str(final_check_seed_for(cfg, mutation_count, replacement, selection)),
         "bestFoundInGeneration": best_ever_gen,
     }
+    if cfg.gameMode.name == "FreeGame" and evaluation is not None:
+        combo_meta["evaluation"] = evaluation_meta(evaluation)
     save_sim_results(initial_parents, gen_results, best_ever, replacement, selection,
                      cfg.resultFile, mutation_count, results_seed(cfg),
                      run_meta=run_meta(cfg), combo_meta=combo_meta)
@@ -203,18 +220,18 @@ def run_optimization(initial_parents, replacement, selection, mutation_count, cf
     return best_ever
 
 
-def run_baseline(start_parents, method, mutation_count, cfg, fixed_base_reels):
+def run_baseline(start_parents, method, mutation_count, cfg, fixed_base_reels, evaluation=None):
     """
     One baseline run on the GA's terms: same evaluated starting population, same
     budget (run.generations evaluations), same spins and simulator seed, same
-    mutation operator. Returns (BaselineRun, combo_meta).
+    simulator mode, same mutation operator. Returns (BaselineRun, combo_meta).
     """
     budget = cfg.generations
     seed = baseline_seed_for(cfg, method, mutation_count)
     rng = make_rng(cfg.runNumber, *baseline_stream_labels(cfg, method, mutation_count))
     problem = Problem(cfg.fitnessVariables, cfg.symbols, cfg.reelSize, cfg.columnCount,
                       cfg.gameMode, fixed_base_reels, mutation_count, cfg.spins,
-                      cfg.simulatorPath, cfg.folder, sim_seed_for(cfg))
+                      cfg.simulatorPath, cfg.folder, sim_seed_for(cfg), evaluation)
 
     m_text = f"mutation {mutation_count}" if uses_mutation(method) else "no mutation"
     print(f"\n>> {method.name} baseline | {m_text} | {budget} evaluations | seed {seed}")
@@ -227,6 +244,8 @@ def run_baseline(start_parents, method, mutation_count, cfg, fixed_base_reels):
         "startsFrom": "best parent of initial_population",
         "resultsColumns": ["bestSoFar", "current"],
     }
+    if cfg.gameMode.name == "FreeGame" and evaluation is not None:
+        combo_meta["evaluation"] = evaluation_meta(evaluation)
     match method:
         case BaselineType.RandomSearch:
             run = random_search(start_parents, budget, problem, rng)
@@ -292,6 +311,8 @@ def run_stage(cfg):
         same_bases = base_reels_from_same_combos(cfg)
         print(f"[free game] Base reels per combination from seed_{cfg.runNumber} "
               f"({len(same_bases)} found)")
+    if free_game:
+        print(f"[free game] Candidates evaluated with: {cfg.freeEvaluation}")
 
     if manual_base is not None:
         initial_parents = with_base_reels(initial_parents, manual_base)
@@ -299,19 +320,26 @@ def run_stage(cfg):
     # record what this run starts from (overwrites any older run with this number)
     start_run_entry(initial_parents, cfg.resultFile, results_seed(cfg), run_meta(cfg))
 
-    # BaseGame and manual: the starting population is the same for every combination,
-    # so evaluate it once. "same" evaluates per combination because the base changes.
+    # trigger rate of every base reelset, measured once (FreeGame + evaluation sessions)
+    trigger_rates = {}
+
+    # BaseGame and manual: the starting population and the evaluation are the same for
+    # every combination, so evaluate once. "same" evaluates per combination because the
+    # base changes.
+    stage_evaluation = None
     if not same_bases:
-        evaluate_population(initial_parents, cfg, "")
+        stage_evaluation = evaluation_for(cfg, manual_base, trigger_rates)
+        evaluate_population(initial_parents, cfg, "", stage_evaluation)
 
     def starting_point(mutation_count, key):
-        """(evaluated starting parents, fixed base reels) for one experiment."""
+        """(evaluated starting parents, fixed base reels, evaluation) for one experiment."""
         if not same_bases:
-            return initial_parents, manual_base
+            return initial_parents, manual_base, stage_evaluation
         base = same_bases[(mutation_count, key)]
+        evaluation = evaluation_for(cfg, base, trigger_rates)
         parents = with_base_reels(initial_parents, base)
-        evaluate_population(parents, cfg, f" on {key} base reels")
-        return parents, base
+        evaluate_population(parents, cfg, f" on {key} base reels", evaluation)
+        return parents, base, evaluation
 
     def timed(t0, m0, m1, m2):
         """Timing of one experiment: start evaluations, search, final check (marks m0..m2..now)."""
@@ -325,10 +353,11 @@ def run_stage(cfg):
             for replacement in cfg.replacementTypes:
                 for selection in cfg.selectionTypes:
                     t0, m0 = time.perf_counter(), Compute.mark()
-                    parents, base = starting_point(mutation_count, ga_key(replacement, selection))
+                    parents, base, evaluation = starting_point(mutation_count,
+                                                               ga_key(replacement, selection))
                     m1 = Compute.mark()
                     best_parent = run_optimization(parents, replacement, selection,
-                                                   mutation_count, cfg, base)
+                                                   mutation_count, cfg, base, evaluation)
                     m2 = Compute.mark()
                     # stats of the best reelset: final check, or the run's own output
                     record = check_best(best_parent, cfg, final_check_seed_for(
@@ -366,9 +395,9 @@ def run_stage(cfg):
                     summary.append((label, run.best.fitnessValue))
                     continue
 
-            parents, base = starting_point(mutation_count, key)
+            parents, base, evaluation = starting_point(mutation_count, key)
             m1 = Compute.mark()
-            run, meta = run_baseline(parents, method, mutation_count, cfg, base)
+            run, meta = run_baseline(parents, method, mutation_count, cfg, base, evaluation)
             save_baseline_results(run.history, run.best, key, cfg.resultFile,
                                   mutation_count, results_seed(cfg),
                                   run_meta=run_meta(cfg), combo_meta=meta)

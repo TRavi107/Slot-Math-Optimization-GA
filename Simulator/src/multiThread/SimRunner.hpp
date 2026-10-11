@@ -28,27 +28,34 @@ namespace SimRunner {
     //                the outcome directly into the accumulator.
     //
     // REPRODUCIBILITY
-    //   The work is cut into fixed-size jobs (JOB_SPINS). Job j always uses the
-    //   RNG seeded with Rng::jobSeed(seed, j), and job results are merged in job
-    //   order. So the result depends only on (seed, spinCount) — never on the
-    //   number of CPU cores or on which thread happened to run which job.
+    //   The work is cut into fixed-size jobs (jobSize, JOB_SPINS by default). Job j
+    //   always uses the RNG seeded with Rng::jobSeed(seed, j), and job results are
+    //   merged in job order. So the result depends only on (seed, spinCount, jobSize)
+    //   — never on the number of CPU cores or on which thread happened to run which job.
     //   (The timing in RunInfo does depend on the machine; it is not part of the result.)
+    //
+    //   "spins" below means the unit the caller counts: base spins in the normal
+    //   modes, free-game sessions in the free-sessions mode (main.cpp).
     // ─────────────────────────────────────────────
 
     constexpr long long JOB_SPINS = 1'000'000;   // fixed: changing it changes results
+    // Free-sessions mode: one session is ~10-20 free spins, so a much smaller job keeps
+    // a 125k-session call split over ~60 jobs (all threads busy, good load balance).
+    constexpr long long JOB_SESSIONS = 2'000;     // fixed: changing it changes results
 
     // What one call cost: filled in by RunMultiThreadSim when `info` is given.
     struct RunInfo {
         int workers = 0;            // worker threads actually used
         int hardwareThreads = 0;    // logical CPUs the OS reports
-        long long jobs = 0;         // JOB_SPINS-sized jobs
+        long long jobs = 0;         // jobs the work was cut into
         double seconds = 0.0;       // wall time from launching workers to the merged result
     };
 
     // Worker threads a run of `spinCount` spins uses: 80% of the logical CPUs
     // (leaves the machine usable), never more than there are jobs.
-    inline int workerCount(long long spinCount, int workerOverride = 0) {
-        const long long jobCount = (spinCount + JOB_SPINS - 1) / JOB_SPINS;
+    inline int workerCount(long long spinCount, int workerOverride = 0,
+                           long long jobSize = JOB_SPINS) {
+        const long long jobCount = (spinCount + jobSize - 1) / jobSize;
         int hwThreads = static_cast<int>(std::thread::hardware_concurrency());
         int workers = std::max(1, static_cast<int>(std::floor(hwThreads * 0.8)));
         if (workerOverride > 0) workers = workerOverride;
@@ -73,10 +80,11 @@ namespace SimRunner {
     template <typename Result, typename MakeResult, typename RunSim>
     inline Result RunMultiThreadSim(const long long spinCount, const uint64_t seed,
                                     MakeResult makeResult, RunSim runSim,
-                                    int workerOverride = 0, RunInfo* info = nullptr) {
+                                    int workerOverride = 0, RunInfo* info = nullptr,
+                                    long long jobSize = JOB_SPINS) {
         const auto t0 = std::chrono::steady_clock::now();
-        const long long jobCount = (spinCount + JOB_SPINS - 1) / JOB_SPINS;
-        const int workers = workerCount(spinCount, workerOverride);
+        const long long jobCount = (spinCount + jobSize - 1) / jobSize;
+        const int workers = workerCount(spinCount, workerOverride, jobSize);
 
         // One slot per job; each slot is written by exactly one thread.
         std::vector<std::optional<Result>> jobResults(static_cast<size_t>(jobCount));
@@ -85,7 +93,7 @@ namespace SimRunner {
 
         auto worker = [&]() {
             for (long long j; (j = nextJob.fetch_add(1)) < jobCount; ) {
-                const long long spins = std::min(JOB_SPINS, spinCount - j * JOB_SPINS);
+                const long long spins = std::min(jobSize, spinCount - j * jobSize);
                 Rng::Xoshiro256ss rng(Rng::jobSeed(seed, static_cast<uint64_t>(j)));
 
                 Result r = makeResult(spins);

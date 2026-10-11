@@ -9,6 +9,7 @@ What every baseline shares with the GA (so the comparison is fair):
     simulator seed      the run's sim seed (common random numbers): a reelset gets
                         the same score whichever method proposes it
     spins, goals        the same run.spins and fitnessVariables
+    evaluation          the same simulator mode (FreeGame: full game or free sessions)
     mutation operator   Selection.mutate with the same mutation count
 
 Methods
@@ -78,11 +79,14 @@ class Problem:
     simulatorPath: str
     folder: str
     simSeed: int
+    # what the simulator plays: True / False / a Utility.FreeSessions value.
+    # None = base game only in BaseGame mode, full game in FreeGame mode.
+    evalMode: object = None
 
     def evaluate(self, parent):
+        mode = (self.gameMode == GameMode.BaseGame) if self.evalMode is None else self.evalMode
         EvaluateAndSaveParents(parent, self.spins, self.simulatorPath,
-                               f"{self.folder}/baseline.json",
-                               self.gameMode == GameMode.BaseGame, self.simSeed)
+                               f"{self.folder}/baseline.json", mode, self.simSeed)
         return parent.fitnessValue
 
     def _tuned(self, parent):

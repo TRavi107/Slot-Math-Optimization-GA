@@ -10,15 +10,21 @@ class ReplacementType(Enum):
     ElistismGenerational = auto()
 
 
+def _evaluation(gameMode, eval_mode):
+    """What Evaluate plays: eval_mode if given (True, False or a FreeSessions value),
+    otherwise base game only in BaseGame mode and the full game in FreeGame mode."""
+    return (gameMode == GameMode.BaseGame) if eval_mode is None else eval_mode
+
+
 def ReplaceSingleWorstParent(parents, spins, simulationFolder, fitnessvariable, folder,
                              parent1, parent2, symbols, mutationCount, gen,
-                             gameMode, parentBaseReel, rng, sim_seed):
+                             gameMode, parentBaseReel, rng, sim_seed, eval_mode=None):
     child = make_child(parent1, parent2, fitnessvariable, symbols, mutationCount,
                        gameMode, parentBaseReel, rng)
 
     # evaluate only the child (writes it to a temp file first)
     EvaluateAndSaveParents(child, spins, simulationFolder, f"{folder}/child.json",
-                           gameMode == GameMode.BaseGame, sim_seed)
+                           _evaluation(gameMode, eval_mode), sim_seed)
 
     # replace the worst parent only if the child is better
     worst_idx = findWorstIndex(parents)
@@ -61,7 +67,7 @@ def make_child(p1, p2, fitnessvariable, symbols, mutationCount, gameMode, parent
 
 def GenerationalReplace(parents, selected, n_elite, spins, simulatorPath,
                         fitnessvariable, folder, symbols, mutationCount,
-                        gen, gameMode, parentBaseReel, rng, sim_seed):
+                        gen, gameMode, parentBaseReel, rng, sim_seed, eval_mode=None):
     n_children = len(parents) - n_elite
     elites = sorted(parents, key=lambda p: p.fitnessValue)[:n_elite]
 
@@ -74,7 +80,7 @@ def GenerationalReplace(parents, selected, n_elite, spins, simulatorPath,
             c = make_child(a, b, fitnessvariable, symbols, mutationCount,
                            gameMode, parentBaseReel, rng)
             EvaluateAndSaveParents(c, spins, simulatorPath, f"{folder}/child.json",
-                                   gameMode == GameMode.BaseGame, sim_seed)
+                                   _evaluation(gameMode, eval_mode), sim_seed)
             children.append(c)
     assert len(children) == n_children, "select 2 parents per 2 children"
 
