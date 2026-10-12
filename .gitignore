@@ -45,6 +45,7 @@ x86/
 /Optimizer/Runs
 /Optimizer/ReelSets
 /Parallel
+/Results/*.json
 
 
 # CMake

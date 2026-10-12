@@ -81,9 +81,9 @@ Noise: fitness SD of one evaluation is 0.034 at 10M spins (BaseGame, simulator n
 | 40M | 0.15 s | 2.6 min | 57.5 h | 0.0170 | 0.0471 |
 | 100M | 0.30 s | 5.1 min | 114.0 h | 0.0108 | 0.0298 |
 
-- **Fewer spins** (1M): 1.0× faster, but the noise floor rises to 0.298, above the 0.072 median final error of the best GA configuration: the search could no longer tell its late improvements from noise.
+- **Fewer spins** (1M): 1.0× faster, but the noise floor rises to 0.298, above the 0.090 median final error of the best GA configuration: the search could no longer tell its late improvements from noise.
 - **More spins** (40M): the floor halves to 0.047, but every run takes 1.0× as long (2.6 min → 2.6 min), and these 1350 runs 57.5 h → 57.5 h. That time buys more seeds instead, which the statistical tests need more.
-- At 10M the noise floor is 0.094 against a best median final error of 0.072. The final check (finalCheckSpins) then measures each best reelset precisely once.
+- At 10M the noise floor is 0.094 against a best median final error of 0.090. The final check (finalCheckSpins) then measures each best reelset precisely once.
 
 ### Evaluation budget (run.generations = 1000)
 

@@ -7,39 +7,41 @@ Reads the save_sim_results JSON layout:
 and, when the runs recorded it (see Compute.py), the computing cost:
     seed_<S> -> compute / machines,   ... -> <combo> -> timing
 
+FINAL ERRORS: every chart that compares where runs ENDED uses the run's final check
+(bestSpin.fitness, re-measured with finalCheckSpins on a seed the run never used), the same
+numbers Stats.py tests. The in-run final best is the lowest of ~1000 noisy 10M-spin measurements
+and is biased low, so it is only used for curves over the run (convergence, speed to target,
+best vs mean). Files without final checks fall back to the in-run value, and the axis labels
+say which one is shown.
+
 and writes these PNGs:
-    1_convergence_by_strategy.png   best-so-far vs fitness evaluations, per strategy + baselines (one panel per mutation)
-    2_final_error_by_mutation.png   final best error for every mutation rate (GA box + seed dots, baseline dots beside)
+    1_convergence_by_strategy.png   best-so-far vs fitness evaluations, per strategy + baselines (in-run)
+    2_final_error_by_mutation.png   final error for every mutation rate (GA box + seed dots, baseline dots beside)
     3_heatmap_config_mutation.png   median final error, config x mutation (baselines are rows too)
-    4_speed_to_target.png           evaluations needed to reach error <= 0.5 / 0.2 (one mutation rate)
-    5_steadystate_by_mutation.png   Steady-state vs hill climbing convergence for each mutation rate
+    4_speed_to_target.png           evaluations needed to reach error <= 0.5 / 0.2 (in-run, one mutation rate)
+    5_steadystate_by_mutation.png   Steady-state vs hill climbing convergence for each mutation rate (in-run)
     6_selection_comparison.png      selection method within each strategy, baselines alongside (median + IQR)
-    7_best_vs_mean.png              best vs population-mean error over the run (diversity; GA only)
-    8_final_best_mean_gap.png       final best vs final mean per strategy x mutation (GA only)
-    9_ga_vs_baselines.png           best GA configuration vs each baseline: convergence + per-seed finals
+    7_best_vs_mean.png              best vs population-mean error over the run (diversity; GA only; in-run)
+    8_final_best_mean_gap.png       final best vs final mean per strategy x mutation (GA only; in-run)
+    9_ga_vs_baselines.png           a top-group GA configuration vs each baseline: convergence + per-seed finals
   computing cost (only for runs that recorded timing):
-    10_compute_cost.png             time per evaluation and per run for every method; seconds and
-                                    noise per evaluation against spins (the case for run.spins)
-    11_budget_and_population.png    what the last evaluations still buy, in error and in hours (the case
-                                    for run.generations); generations and start-up cost per population size
-    12_machine_comparison.png       the same work timed on each machine (only when the file has several)
-    compute_report.md               the numbers behind 10-12: machines, time per evaluation / run / study,
-                                    and the cost-based case for spins, budget and population size
+    10_compute_cost.png, 11_budget_and_population.png, 12_machine_comparison.png, compute_report.md
+  free game (paper figures):
+    13_free_fixed_base_check.png    Both-mode free stage vs the fixed-base re-run: medians per method x
+                                    mutation (rank agreement) and the paired per-run difference
+    14_free_game_tradeoff.png       where the free-game error comes from: hit-rate error vs retrigger-rate
+                                    error of every final reelset (the two basins)
 
 x-axis is "fitness evaluations": every run costs the same BUDGET evaluations (run.generations,
 read from the file's meta), so children-per-step = BUDGET / steps (with 1000: SteadyState 1000
 steps -> 1, Generational 100 -> 10, Elitist 125 -> 8, every baseline 1000 -> 1).
 Mutation <M> is shown as M stops out of REEL_SIZE (stops per reelset, read from the file).
 Random search ignores the mutation count, so the same random-search runs appear at every rate.
-Charts 7 and 8 measure population diversity; the baselines keep a single reelset, so they are
-left out there.
 
 Usage (from the project root):
-    python Optimizer/Compare.py                                   # Results/results.json, auto stage
-    python Optimizer/Compare.py Results/results.json --stage free # free-game stage (seed_<n>_free)
-    python Optimizer/Compare.py my.json --out plots --mutation 5  # other file / folder / chart-4 rate
---stage auto (default) uses the BaseGame runs if the file has any, otherwise the FreeGame runs.
-Charts go to Results/ (base) or Results/FreeGame/ (free) unless --out is given.
+    python Optimizer/Stats/Compare.py
+    python Optimizer/Stats/Compare.py --results Results/results.json --fixed Results/results_fixedbase.json
+Base charts go to Results/Graphs, free charts to Results/Graphs/FreeGame.
 """
 import argparse
 import json
@@ -64,6 +66,7 @@ BUDGET = 1000        # fitness evaluations per run (run.generations)
 REEL_SIZE = 250       # stops per reelset -> mutation % = M / REEL_SIZE
 GRID = np.arange(10, BUDGET + 1, 10)   # common evaluation axis for curves
 STAGES = {"base": r"^seed_\d+$", "free": r"^seed_\d+_free$"}   # BaseGame / FreeGame results keys
+FINAL_DESC = "final error"             # set by load(): what the "final" column holds
 
 
 def _set_scale(budget, reel_size):
@@ -162,11 +165,16 @@ def _scale_from(raw, keys, stage):
 
 def load(json_file, stage="base"):
     """Returns (df, curves) for one stage: "base" (seed_<n>) or "free" (seed_<n>_free).
-    Also sets BUDGET and REEL_SIZE from the file.
+    Also sets BUDGET, REEL_SIZE and FINAL_DESC from the file.
     df: one row per run with final metrics (GA combinations and baselines; baseline rows have
         selection == "Baseline" and is_baseline == True).
+        final_best  in-run best-so-far at the end (biased low)
+        final_check final-check fitness (bestSpin, re-measured; NaN if the run has none)
+        final       final_check where available, else final_best  <- used for every final-error chart
+        err_<goal>  final-check error per goal in % ((actual - target) / target * 100)
     curves[(seed, mut, strategy, selection)] = dict(best=..., mean=...) on GRID (best = best-so-far).
     For a baseline, strategy is the method name and "mean" is the reelset it is currently on."""
+    global FINAL_DESC
     with open(json_file) as f:
         raw = json.load(f)
     keys = [k for k in raw if re.match(STAGES[stage], k)]
@@ -175,7 +183,7 @@ def load(json_file, stage="base"):
         raise ValueError(f"No {stage}-game runs in {json_file} (stages found: {found})")
     _set_scale(*_scale_from(raw, keys, stage))
 
-    rows, curves = [], {}
+    rows, curves, check_spins = [], {}, set()
     for seed_key in keys:
         seed_entry = raw[seed_key]
         for mut_key, combos in seed_entry.get("results", {}).items():
@@ -194,17 +202,35 @@ def load(json_file, stage="base"):
                 bsf = np.minimum.accumulate(best)                             # best-so-far
                 curves[(seed_key, mut, strat, sel)] = dict(
                     best=np.interp(GRID, ev, bsf), mean=np.interp(GRID, ev, mean))
+                bs = entry.get("bestSpin") or {}
+                checked = bs.get("source") == "finalCheck" and bs.get("fitness") is not None
+                fc = float(bs["fitness"]) if checked else np.nan
+                if checked:
+                    check_spins.add(int(bs.get("spins") or 0))
                 is_bl = sel == BASELINE_TAG
                 r = dict(seed=seed_key, mutation=mut, strategy=strat, selection=sel,
                          config=_config_label(strat, sel), is_baseline=is_bl,
-                         final_best=bsf[-1], final_mean=mean[-1])
+                         final_best=bsf[-1], final_mean=mean[-1],
+                         final_check=fc, final=fc if checked else bsf[-1])
+                for goal, v in (bs.get("errorPercent") or {}).items():
+                    r[f"err_{goal}"] = v
                 for t in (0.5, 0.2):
                     hit = np.where(bsf <= t)[0]
                     r[f"evals_to_{t}"] = float(ev[hit[0]]) if len(hit) else np.nan
                 rows.append(r)
     if not rows:
         raise ValueError(f"No {stage}-game results found in {json_file}")
-    return pd.DataFrame(rows), curves
+    df = pd.DataFrame(rows)
+    n_checked = int(df.final_check.notna().sum())
+    if n_checked == len(df) and check_spins:
+        FINAL_DESC = f"final error (re-checked, {_fmt_spins(min(check_spins))} spins)"
+    elif n_checked:
+        FINAL_DESC = "final error (re-checked where available, else in-run)"
+        print(f"[compare] WARNING: only {n_checked}/{len(df)} runs have a final check; the others use "
+              "their in-run value")
+    else:
+        FINAL_DESC = "final error (in-run, biased low: no final checks in this file)"
+    return df, curves
 
 
 def _stack(curves, key, mut, strat, seeds=None, sel=None):
@@ -217,6 +243,10 @@ def _stack(curves, key, mut, strat, seeds=None, sel=None):
 
 def _ga(df):
     return df[~df.is_baseline]
+
+
+def _cap(s):
+    return s[:1].upper() + s[1:]
 
 
 # ----------------------------------------------------------------- charts
@@ -240,7 +270,7 @@ def chart1_convergence(df, curves, out_dir, muts):
         ax.set_title(f"Mutation {pct(m)} ({m}/{REEL_SIZE} stops)", loc="left", fontsize=11)
         for t in (0.5, 0.1):
             ax.axhline(t, color=MUTED, lw=0.8, ls="--")
-    axes[0][0].set_ylabel("Best error so far (log)")
+    axes[0][0].set_ylabel("Best error so far, in-run (log)")
     h, l = axes[0][0].get_legend_handles_labels()
     ncol = min(len(l), 6 if len(muts) > 1 else 2)
     fig.legend(h, l, loc="lower center", ncol=ncol, fontsize=9,
@@ -256,35 +286,35 @@ def chart2_final_by_mutation(df, out_dir, seeds, rates):
     sub_all = df[df.seed.isin(seeds)]
     ga = _ga(sub_all)
     fig, ax = plt.subplots(figsize=(max(6.0, 2.0 * len(rates) + 0.8), 4.8))
-    data = [ga[ga.mutation == r].final_best.values for r in rates]
+    data = [ga[ga.mutation == r].final.values for r in rates]
     bp = ax.boxplot(data, positions=range(len(rates)), widths=0.42, patch_artist=True, showfliers=False,
                     medianprops=dict(color=INK, lw=2), whiskerprops=dict(color=MUTED), capprops=dict(color=MUTED))
     for p, c in zip(bp["boxes"], SEQ):
         p.set_facecolor(c); p.set_alpha(0.35); p.set_edgecolor(c)
     rng = np.random.default_rng(0)
-    top = sub_all.final_best.max() * 2.5
+    top = sub_all.final.max() * 2.5
     bl_x = {"HillClimbing": 0.33, "SimulatedAnnealing": 0.43, "RandomSearch": 0.53}   # right of each box
     for i, r in enumerate(rates):
         sub = ga[ga.mutation == r]
         for s in STRATS:
-            y = sub[sub.strategy == s].final_best.values
+            y = sub[sub.strategy == s].final.values
             ax.scatter(i + rng.uniform(-0.15, 0.15, len(y)), y, s=24, color=SC[s], edgecolor="white", lw=0.8,
                        zorder=3, label=SL[s] if i == 0 and len(y) else None)
         for b in BLS:
-            y = sub_all[(sub_all.mutation == r) & (sub_all.strategy == b)].final_best.values
+            y = sub_all[(sub_all.mutation == r) & (sub_all.strategy == b)].final.values
             if not len(y):
                 continue
             ax.scatter(np.full(len(y), i + bl_x[b]), y, s=26, marker=BLS_MK[b], color=BC[b],
                        edgecolor="white", lw=0.8, zorder=3, label=BL[b] if i == 0 else None)
             ax.hlines(np.median(y), i + bl_x[b] - 0.04, i + bl_x[b] + 0.04, color=INK, lw=1.6, zorder=4)
         if len(sub):
-            ax.text(i, top, f"GA median {np.median(sub.final_best):.2f}", ha="center", va="bottom",
+            ax.text(i, top, f"GA median {np.median(sub.final):.2f}", ha="center", va="bottom",
                     fontsize=9, color=INK, fontweight="bold")
     ax.set_xticks(range(len(rates)), [pct_tick(r) for r in rates]); ax.set_yscale("log")
     ax.set_xlim(-0.5, len(rates) - 0.5 + 0.2)
-    ax.set_ylim(sub_all.final_best.min() * 0.6, top * 1.6)
+    ax.set_ylim(sub_all.final.min() * 0.6, top * 1.6)
     ax.set_xlabel(f"Mutation rate (stops mutated out of {REEL_SIZE} in the reelset)")
-    ax.set_ylabel(f"Final best error after {BUDGET} evals (log)")
+    ax.set_ylabel(f"{_cap(FINAL_DESC)} (log)")
     ax.set_title(f"Final error by mutation rate  ({len(seeds)} seeds)\n"
                  f"box = all GA configs; baselines to the right, tick = median",
                  loc="left", fontsize=11)
@@ -293,7 +323,7 @@ def chart2_final_by_mutation(df, out_dir, seeds, rates):
 
 
 def chart3_heatmap(df, out_dir, sort_mut):
-    piv = df.pivot_table(index="config", columns="mutation", values="final_best", aggfunc="median")
+    piv = df.pivot_table(index="config", columns="mutation", values="final", aggfunc="median")
     piv = piv.loc[piv[sort_mut].sort_values().index]
     nseeds = df.groupby("mutation").seed.nunique()
     cmap = LinearSegmentedColormap.from_list("b", ["#cde2fb", "#86b6ef", "#3987e5", "#1c5cab", "#0d366b"])
@@ -315,8 +345,9 @@ def chart3_heatmap(df, out_dir, sort_mut):
     for sp in ax.spines.values():
         sp.set_visible(False)
     cb = fig.colorbar(im, ax=ax, shrink=0.8)
-    cb.set_label("Median final best error (log)", color=INK2); cb.outline.set_visible(False)
-    ax.set_title("Median final error per configuration and baseline  (lower = better)", loc="left", fontsize=11)
+    cb.set_label(f"Median {FINAL_DESC} (log)", color=INK2); cb.outline.set_visible(False)
+    ax.set_title(f"Median {FINAL_DESC} per configuration and baseline  (lower = better)",
+                 loc="left", fontsize=11)
     return _save(fig, out_dir, "3_heatmap_config_mutation")
 
 
@@ -342,7 +373,7 @@ def chart4_speed(df, out_dir, mut):
     for lab in ax.get_yticklabels():
         if lab.get_text().startswith("Baseline:"):
             lab.set_fontstyle("italic")
-    ax.set_xlabel("Median fitness evaluations needed (of seeds that reached it)")
+    ax.set_xlabel("Median fitness evaluations needed (of seeds that reached it; in-run error)")
     ax.set_title(f"How fast each configuration hits the target  (mutation {pct(mut)} = {mut}/{REEL_SIZE} stops, "
                  f"{g.seed.nunique()} seeds)", loc="left", fontsize=11)
     ax.legend(handles=[Patch(color=MUTED, alpha=0.45, label="to reach error ≤ 0.5"),
@@ -375,7 +406,7 @@ def chart5_steadystate_by_mutation(curves, out_dir, seeds, rates):
     for yv, lab in ends:
         ax.text(BUDGET * 1.008, yv, lab, color=INK, va="center", fontsize=9)
     ax.set_yscale("log"); ax.set_xlim(0, BUDGET * 1.06)
-    ax.set_xlabel("Fitness evaluations"); ax.set_ylabel("Best error so far (log)")
+    ax.set_xlabel("Fitness evaluations"); ax.set_ylabel("Best error so far, in-run (log)")
     for t in (0.5, 0.1):
         ax.axhline(t, color=MUTED, lw=0.8, ls="--")
     ax.legend(handles=[Line2D([], [], color=INK2, lw=2, label="Steady-state GA (median of 3 selections)"),
@@ -394,7 +425,7 @@ def chart6_selection(df, out_dir, muts):
     fig, ax = plt.subplots(figsize=(9.5, 4.2))
     for i, s in enumerate(STRATS):
         for j, sel in enumerate(SELS):
-            g = main[(main.strategy == s) & (main.selection == sel)].final_best
+            g = main[(main.strategy == s) & (main.selection == sel)].final
             if g.empty:
                 continue
             x = j + (i - 1) * 0.25
@@ -403,7 +434,7 @@ def chart6_selection(df, out_dir, muts):
                        label=SL[s] if j == 0 else None)
     xb = len(SELS) + 0.3        # baselines have no selection: their own group on the right
     for k, b in enumerate(BLS):
-        g = main[main.strategy == b].final_best
+        g = main[main.strategy == b].final
         if g.empty:
             continue
         x = xb + (k - 1) * 0.25
@@ -413,7 +444,7 @@ def chart6_selection(df, out_dir, muts):
     ax.axvline(len(SELS) - 0.35, color=GRIDC, lw=1)
     ax.set_xticks(list(range(len(SELS))) + [xb], [SELL[s] for s in SELS] + ["Baselines\n(no selection)"])
     ax.set_yscale("log")
-    ax.set_ylabel("Final best error (log)")
+    ax.set_ylabel(f"{_cap(FINAL_DESC)} (log)")
     ax.set_title(f"Selection method within each strategy, baselines alongside  (dot = median, bar = IQR; "
                  f"mutation {'/'.join(pct(m) for m in muts)})", loc="left", fontsize=11)
     ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.14), ncol=3, fontsize=9); ax.grid(axis="x", visible=False)
@@ -434,7 +465,7 @@ def chart7_best_vs_mean(curves, out_dir, muts):
             ax.plot(GRID, M, color=SC[s], lw=1.6, ls="--")
         ax.set_yscale("log"); ax.set_xlim(0, BUDGET); ax.set_xlabel("Fitness evaluations")
         ax.set_title(f"Mutation {pct(m)} ({m}/{REEL_SIZE} stops)", loc="left", fontsize=11)
-    axes[0][0].set_ylabel("Error (log)")
+    axes[0][0].set_ylabel("Error, in-run (log)")
     h = [Line2D([], [], color=SC[s], lw=2, label=SL[s]) for s in STRATS] + \
         [Line2D([], [], color=INK2, lw=2, label="best"),
          Line2D([], [], color=INK2, lw=1.6, ls="--", label="population mean")]
@@ -445,6 +476,7 @@ def chart7_best_vs_mean(curves, out_dir, muts):
 
 
 def chart8_best_mean_gap(df, out_dir, rates):
+    """Both ends of each bar are in-run values (the population mean has no final check)."""
     df = _ga(df)
     fig, ax = plt.subplots(figsize=(9, 0.33 * len(STRATS) * len(rates) + 1.2))
     y, ticks = 0, []
@@ -463,26 +495,28 @@ def chart8_best_mean_gap(df, out_dir, rates):
         y += 0.8
     ax.set_yticks([t[0] for t in ticks], [t[1] for t in ticks], fontsize=8.5); ax.invert_yaxis()
     ax.set_xscale("log"); ax.grid(axis="y", visible=False)
-    ax.set_xlabel("Final error (log)  —  ● best   ○ population mean   (×n = mean / best)")
+    ax.set_xlabel("Final error, in-run (log)  —  ● best   ○ population mean   (×n = mean / best)")
     ax.set_title("How far the population sits from its best at the end of the run  (median over seeds)",
                  loc="left", fontsize=11)
     return _save(fig, out_dir, "8_final_best_mean_gap")
 
 
 def _best_ga_config(df, mut):
-    """(config label, strategy, selection) of the GA configuration with the lowest median final error."""
+    """(config label, strategy, selection) of the GA configuration with the lowest median final error.
+    Only a representative of the top group: Stats.py shows several configurations tied with it."""
     ga = _ga(df[df.mutation == mut])
     if ga.empty:
         return None
-    best_cfg = ga.groupby("config").final_best.median().idxmin()
+    best_cfg = ga.groupby("config").final.median().idxmin()
     bstrat, bsel = ga[ga.config == best_cfg][["strategy", "selection"]].iloc[0]
     return best_cfg, bstrat, bsel
 
 
 def chart9_ga_vs_baselines(df, curves, out_dir, mut):
-    """Best GA configuration at this mutation rate (lowest median final error) against each
-    baseline: median convergence with IQR, then each seed's final error, with the best GA and
-    hill climbing joined per seed so wins and losses are visible run by run."""
+    """The GA configuration with the lowest median final error at this mutation rate (a representative
+    of the top group, not a significant winner) against each baseline: median convergence with IQR,
+    then each seed's final error, with the GA and hill climbing joined per seed so wins and losses are
+    visible run by run."""
     g = df[df.mutation == mut]
     ga = _ga(g)
     bls = [b for b in BLS if (g.strategy == b).any()]
@@ -500,23 +534,23 @@ def chart9_ga_vs_baselines(df, curves, out_dir, mut):
         ax.fill_between(GRID, np.percentile(A, 25, 0), np.percentile(A, 75, 0), color=c, alpha=0.10, lw=0)
         ax.plot(GRID, np.median(A, 0), color=c, lw=2, ls=ls, label=lab)
     ax.set_yscale("log"); ax.set_xlim(0, BUDGET)
-    ax.set_xlabel("Fitness evaluations"); ax.set_ylabel("Best error so far (log)")
+    ax.set_xlabel("Fitness evaluations"); ax.set_ylabel("Best error so far, in-run (log)")
     for t in (0.5, 0.1):
         ax.axhline(t, color=MUTED, lw=0.8, ls="--")
     ax.set_title("Convergence  (median, band = IQR over seeds)", loc="left", fontsize=11)
-    ax.legend(loc="upper right", fontsize=9)
+    ax.legend(loc="lower left", fontsize=9, framealpha=0.9, frameon=True, edgecolor=GRIDC)
 
-    # per-seed finals; best GA and hill climbing joined by a line for each seed
+    # per-seed finals; GA and hill climbing joined by a line for each seed
     seeds = sorted(g.seed.unique(), key=lambda s: int(s.split("_")[1]))
-    ga_final = ga[ga.config == best_cfg].set_index("seed").final_best
+    ga_final = ga[ga.config == best_cfg].set_index("seed").final
     cols = [("GA", ga_final, SC.get(bstrat, INK), "o")]
-    cols += [(b, g[g.strategy == b].set_index("seed").final_best, BC[b], BLS_MK[b]) for b in bls]
+    cols += [(b, g[g.strategy == b].set_index("seed").final, BC[b], BLS_MK[b]) for b in bls]
     for k, (_, vals, c, mk) in enumerate(cols):
         v = vals.reindex(seeds).values
         ax2.scatter(np.full(len(v), k), v, s=34, marker=mk, color=c, edgecolor="white", lw=0.8, zorder=3)
         ax2.hlines(np.nanmedian(v), k - 0.22, k + 0.22, color=INK, lw=2, zorder=4)
     if "HillClimbing" in bls:
-        hc = g[g.strategy == "HillClimbing"].set_index("seed").final_best
+        hc = g[g.strategy == "HillClimbing"].set_index("seed").final
         k_hc = 1 + bls.index("HillClimbing")
         wins = 0
         for s in seeds:
@@ -524,19 +558,20 @@ def chart9_ga_vs_baselines(df, curves, out_dir, mut):
                 ax2.plot([0, k_hc], [ga_final[s], hc[s]], color=MUTED, lw=0.7, alpha=0.6, zorder=1)
                 wins += ga_final[s] < hc[s]
         n = len(set(ga_final.index) & set(hc.index))
-        ax2.set_title(f"Final error per seed  (GA beats hill climbing on {wins}/{n} seeds)",
+        ax2.set_title(f"Final error per seed  (GA lower than hill climbing on {wins}/{n} seeds)",
                       loc="left", fontsize=11)
     else:
         ax2.set_title("Final error per seed", loc="left", fontsize=11)
     short = {"HillClimbing": "Hill\nclimbing", "SimulatedAnnealing": "Simulated\nannealing",
              "RandomSearch": "Random\nsearch"}
-    ax2.set_xticks(range(len(cols)), ["Best\nGA"] + [short[b] for b in bls])
+    ax2.set_xticks(range(len(cols)), ["GA"] + [short[b] for b in bls])
     ax2.set_yscale("log"); ax2.grid(axis="x", visible=False)
     ax2.yaxis.set_minor_formatter(NullFormatter())
-    ax2.set_ylabel(f"Final best error after {BUDGET} evals (log)")
-    fig.suptitle(f"Best GA configuration ({best_cfg}) vs baselines  —  mutation {pct(mut)} "
-                 f"({mut}/{REEL_SIZE} stops), {len(seeds)} seeds",
-                 x=0.01, ha="left", fontsize=12, color=INK)
+    ax2.set_ylabel(f"{_cap(FINAL_DESC)} (log)")
+    fig.suptitle(f"{best_cfg} vs baselines  —  mutation {pct(mut)} ({mut}/{REEL_SIZE} stops), {len(seeds)} seeds\n"
+                 "GA shown: lowest median final error at this rate, one of several statistically tied "
+                 "top configurations (see stats_report.md)",
+                 x=0.01, ha="left", fontsize=12, color=INK, y=1.04)
     return _save(fig, out_dir, "9_ga_vs_baselines")
 
 
@@ -846,12 +881,12 @@ def chart11_budget_population(df, curves, cc, stage, out_dir, mut):
                 f"last 25%: −{rows[0]['gain_last']:.3g} error\n{_fmt_t(0.25 * BUDGET * t_eval)} per run",
                 fontsize=8, color=INK2, va="top")
     ax.set_yscale("log"); ax.set_xlim(0, BUDGET)
-    ax.set_xlabel("Fitness evaluations"); ax.set_ylabel("Best error so far (median over seeds, log)")
+    ax.set_xlabel("Fitness evaluations"); ax.set_ylabel("Best error so far, in-run (median over seeds, log)")
     run_s = BUDGET * t_eval
     unit, div = ("hours", 3600) if run_s >= 7200 else ("minutes", 60) if run_s >= 120 else ("seconds", 1)
     top = ax.secondary_xaxis("top", functions=(lambda e: e * t_eval / div, lambda u: u * div / max(t_eval, 1e-9)))
     top.set_xlabel(f"{unit.capitalize()} into one run (at {t_eval:.2f} s per evaluation)", color=INK2)
-    ax.legend(loc="upper right", fontsize=8)
+    ax.legend(loc="center right", fontsize=8)
     ax.set_title(f"What the budget buys  (mutation {pct(mut)})", loc="left", fontsize=11, pad=34)
 
     # population: generations per strategy and start-up cost, at this budget
@@ -1031,7 +1066,7 @@ def compute_report(df, curves, cc, stage, out_dir, mut):
     # ---- the case for the settings
     L += ["", "## Choosing the settings", ""]
     best = _best_ga_config(df, mut)
-    best_err = float(df[(df.mutation == mut) & (df.config == best[0])].final_best.median()) if best else np.nan
+    best_err = float(df[(df.mutation == mut) & (df.config == best[0])].final.median()) if best else np.nan
     n_runs = len(exps)
 
     # spins
@@ -1140,6 +1175,131 @@ def run_compute(df, curves, json_file, stage, out_dir, mut):
             compute_report(df, curves, cc, stage, out_dir, mut)]
 
 
+# ================================================================= free game (paper figures)
+def _method_label(strat, sel):
+    """'Steady-state + Tournament' / 'Hill climbing' (no 'Baseline:' prefix, for compact plots)."""
+    if sel == BASELINE_TAG:
+        return {"HillClimbing": "Hill climbing", "SimulatedAnnealing": "Simulated annealing",
+                "RandomSearch": "Random search"}.get(strat, strat)
+    return f"{SL.get(strat, strat)} + {SELL.get(sel, sel)}"
+
+
+def chart13_free_fixed_base(both_json, fixed_json, out_dir):
+    """Robustness check for the free-game stage. In Both mode each method's free stage starts from the
+    base reels it found itself; the fixed-base re-run gives every method one identical base reelset.
+    Left: median final-check error per method x mutation in both experiments (on the diagonal = the
+    base reels made no difference). Right: per run (same method, mutation and seed) fixed minus Both."""
+    from scipy import stats as sps
+    a, _ = load(both_json, "free")
+    b, _ = load(fixed_json, "free")
+    desc = FINAL_DESC
+    keep = lambda d: d[(d.strategy != "RandomSearch") & d.final_check.notna()]
+    a, b = keep(a), keep(b)
+    common = sorted(set(a.mutation) & set(b.mutation))
+    a, b = a[a.mutation.isin(common)], b[b.mutation.isin(common)]
+    ma = a.groupby(["strategy", "selection", "mutation"]).final.median().rename("both")
+    mb = b.groupby(["strategy", "selection", "mutation"]).final.median().rename("fixed")
+    t = pd.concat([ma, mb], axis=1).dropna().reset_index()
+    rho, p_rho = sps.spearmanr(t.both, t.fixed)
+    pair = a.merge(b, on=["seed", "strategy", "selection", "mutation"], suffixes=("_both", "_fixed"))
+    pair["diff"] = pair.final_fixed - pair.final_both
+    p_w = sps.wilcoxon(pair.final_both, pair.final_fixed).pvalue if len(pair) else np.nan
+
+    fig, (ax, ax2) = plt.subplots(1, 2, figsize=(13, 5.4), gridspec_kw=dict(width_ratios=[1.05, 1], wspace=0.3))
+    mk = {m: k for m, k in zip(common, ["o", "s", "^", "D", "v"])}
+    for r in t.itertuples():
+        col = COLOR.get(r.strategy, MUTED)
+        ax.scatter(r.both, r.fixed, s=46, marker=mk[r.mutation], color=col, edgecolor="white", lw=0.8, zorder=3)
+    lo, hi = min(t.both.min(), t.fixed.min()) * 0.95, max(t.both.max(), t.fixed.max()) * 1.05
+    ax.plot([lo, hi], [lo, hi], color=MUTED, lw=1, ls="--", zorder=1)
+    ax.set_xlim(lo, hi); ax.set_ylim(lo, hi); ax.set_aspect("equal", adjustable="box")
+    ax.set_xlabel("Median error, Both mode (each method's own base reels)")
+    ax.set_ylabel("Median error, one fixed base reelset")
+    ax.set_title(f"Medians per method × mutation  (Spearman ρ = {rho:.2f}, n = {len(t)})", loc="left", fontsize=11)
+    handles = [Line2D([], [], color=COLOR[s], marker="o", ls="none", ms=7, label=LABEL[s])
+               for s in STRATS + ["HillClimbing", "SimulatedAnnealing"] if (t.strategy == s).any()]
+    handles += [Line2D([], [], color=INK2, marker=mk[m], ls="none", ms=6, label=f"mutation {m}/{REEL_SIZE}")
+                for m in common]
+    ax.legend(handles=handles, loc="upper left", fontsize=8, frameon=True, framealpha=0.9, edgecolor=GRIDC)
+
+    groups = [s for s in STRATS + ["HillClimbing", "SimulatedAnnealing"] if (pair.strategy == s).any()]
+    data = [pair[pair.strategy == s]["diff"].values for s in groups]
+    bp = ax2.boxplot(data, positions=range(len(groups)), widths=0.5, patch_artist=True, showfliers=False,
+                     medianprops=dict(color=INK, lw=2), whiskerprops=dict(color=MUTED), capprops=dict(color=MUTED))
+    for box, s in zip(bp["boxes"], groups):
+        box.set_facecolor(COLOR[s]); box.set_alpha(0.35); box.set_edgecolor(COLOR[s])
+    rng = np.random.default_rng(1)
+    for i, (s, d) in enumerate(zip(groups, data)):
+        ax2.scatter(i + rng.uniform(-0.18, 0.18, len(d)), d, s=6, color=COLOR[s], alpha=0.35, lw=0, zorder=2)
+    ax2.axhline(0, color=INK2, lw=1)
+    ax2.set_xticks(range(len(groups)), [LABEL[s].replace(" (1+1)-EA", "").replace(" ", "\n", 1) for s in groups],
+                   fontsize=9)
+    ax2.set_ylabel("Fixed base − Both mode, same method / mutation / seed")
+    ax2.grid(axis="x", visible=False)
+    ax2.set_title(f"Paired per run  (fixed lower in {(pair['diff'] < 0).mean():.0%} of {len(pair)} pairs, "
+                  f"Wilcoxon p = {p_w:.2f})", loc="left", fontsize=11)
+    fig.suptitle(f"Free game: does the choice of base reels change the result?  ({desc}; "
+                 f"medians {a.final.median():.2f} Both vs {b.final.median():.2f} fixed)",
+                 x=0.01, ha="left", fontsize=12, color=INK, y=1.02)
+    print(f"[compare] fixed-base check: rho {rho:.3f} (p {p_rho:.1e}), paired n {len(pair)}, Wilcoxon p {p_w:.3f}")
+    return _save(fig, out_dir, "13_free_fixed_base_check")
+
+
+def chart14_free_tradeoff(json_files, out_dir):
+    """Where the free-game error comes from. Every final reelset (final check) as hit-rate error vs
+    retrigger-rate error, coloured by its fitness. The target is (0, 0); runs pile up in two places:
+    hit rate too frequent with retrigger on target, or hit rate on target with retriggers far too frequent."""
+    frames = []
+    for label, path in json_files:
+        d, _ = load(path, "free")
+        d = d[(d.strategy != "RandomSearch") & d.final_check.notna()]
+        need = {"err_freeHitRate", "err_freeReTriggerRate"}
+        if not need <= set(d.columns):
+            print(f"[compare] {path}: no per-goal errors in bestSpin - skipped in chart 14")
+            continue
+        d = d.assign(source=label)
+        frames.append(d)
+    if not frames:
+        print("chart 14 skipped: no free-game final checks with per-goal errors")
+        return None
+    d = pd.concat(frames, ignore_index=True).dropna(subset=["err_freeHitRate", "err_freeReTriggerRate"])
+    hit_ok = d.err_freeHitRate.abs() <= 5
+    a_basin = (~hit_ok) & (d.err_freeHitRate < 0) & (d.err_freeReTriggerRate.abs() <= 15)
+    b_basin = hit_ok & (d.err_freeReTriggerRate < -25)
+    near = (d.final <= 0.25)
+
+    fig, ax = plt.subplots(figsize=(9.5, 6.2))
+    cmap = LinearSegmentedColormap.from_list("f", ["#0d366b", "#2a78d6", "#86b6ef", "#e6e5e0"])
+    markers = {lab: m for lab, m in zip([l for l, _ in json_files], ["o", "^"])}
+    for lab, g in d.groupby("source"):
+        sc = ax.scatter(g.err_freeHitRate, g.err_freeReTriggerRate, c=g.final, cmap=cmap,
+                        norm=LogNorm(vmin=max(d.final.min(), 0.02), vmax=d.final.quantile(0.98)),
+                        s=16, marker=markers.get(lab, "o"), edgecolor="none", alpha=0.75, label=lab)
+    ax.axhline(0, color=INK2, lw=0.8); ax.axvline(0, color=INK2, lw=0.8)
+    ax.scatter([0], [0], marker="*", s=260, color="#e34948", edgecolor="white", lw=1, zorder=5, label="target")
+    cb = fig.colorbar(sc, ax=ax, shrink=0.85)
+    cb.set_label(f"Fitness ({FINAL_DESC}, log)", color=INK2); cb.outline.set_visible(False)
+    ax.set_xlabel("Free hit-rate error, %  (negative = wins more often than the target 1 in 2.7)")
+    ax.set_ylabel("Free retrigger-rate error, %  (negative = retriggers more often than 1 in 60)")
+    n = len(d)
+    ax.annotate(f"A: hit rate too frequent,\nretrigger on target\n{a_basin.sum()} runs ({a_basin.mean():.0%})",
+                xy=(d[a_basin].err_freeHitRate.median(), d[a_basin].err_freeReTriggerRate.median()),
+                xytext=(0.03, 0.95), textcoords="axes fraction", va="top", fontsize=9, color=INK,
+                bbox=dict(boxstyle="round,pad=0.3", fc="white", ec=GRIDC),
+                arrowprops=dict(arrowstyle="->", color=INK2, lw=0.8))
+    if b_basin.any():
+        ax.annotate(f"B: hit rate on target,\nretriggers far too frequent\n{b_basin.sum()} runs ({b_basin.mean():.0%})",
+                    xy=(d[b_basin].err_freeHitRate.median(), d[b_basin].err_freeReTriggerRate.median()),
+                    xytext=(0.45, 0.40), textcoords="axes fraction", va="top", fontsize=9, color=INK,
+                    bbox=dict(boxstyle="round,pad=0.3", fc="white", ec=GRIDC),
+                    arrowprops=dict(arrowstyle="->", color=INK2, lw=0.8))
+    ax.set_title(f"Free game: the hit-rate / retrigger trade-off  ({n} final reelsets; "
+                 f"{near.sum()} ({near.mean():.1%}) reach fitness ≤ 0.25)", loc="left", fontsize=11)
+    ax.legend(loc="lower right", fontsize=8, frameon=True, framealpha=0.9, edgecolor=GRIDC)
+    print(f"[compare] free trade-off: A {a_basin.mean():.1%}, B {b_basin.mean():.1%}, near target {near.mean():.2%} of {n}")
+    return _save(fig, out_dir, "14_free_game_tradeoff")
+
+
 # ----------------------------------------------------------------- main
 def _report(df, json_file, stage, out_dir):
     """Print what was loaded, so a missing method or stage is obvious before reading charts."""
@@ -1150,14 +1310,14 @@ def _report(df, json_file, stage, out_dir):
     print(f"[compare] budget {BUDGET} evaluations | reelset {REEL_SIZE} stops | "
           f"mutation counts {sorted(int(m) for m in df.mutation.unique())}")
     print(f"[compare] GA configurations: {ga.config.nunique()} | "
-          f"baselines: {', '.join(BL[b] for b in bls) or 'none'}")
+          f"baselines: {', '.join(BL[b] for b in bls) or 'none'} | final errors: {FINAL_DESC}")
     if not bls:
         print("[compare] NOTE: no baseline results in this file - the charts show the GA only. "
               "Run the optimizer with baselines.methods set to add them.")
     print(f"[compare] writing charts to {out_dir}/")
 
 
-def run_all(json_file, out_dir="plots", speed_mutation=5, stage="base"):
+def run_all(json_file, out_dir="plots", speed_mutation=5, stage="base", compute=True):
     """Draw all report charts for one stage ("base" or "free").
     speed_mutation = mutation count used for charts 4, 9 and 11 (and heatmap sort)."""
     os.makedirs(out_dir, exist_ok=True)
@@ -1186,8 +1346,39 @@ def run_all(json_file, out_dir="plots", speed_mutation=5, stage="base"):
         chart8_best_mean_gap(df, out_dir, all_rates),
         chart9_ga_vs_baselines(df, curves, out_dir, speed_mutation),
     ]
-    out += run_compute(df, curves, json_file, stage, out_dir, speed_mutation)
+    if compute:
+        out += run_compute(df, curves, json_file, stage, out_dir, speed_mutation)
     return out
 
-run_all("Results/results.json","Results/Graphs",stage="base")
-# run_all("Results/results.json","Results/Graphs",stage="free")
+
+def run_free(json_file, fixed_json, out_dir, speed_mutation=5):
+    """Minimal free-game set for the paper: heatmap (3) and GA vs baselines (9) on the main runs,
+    the fixed-base robustness check (13) and the hit-rate / retrigger trade-off (14)."""
+    os.makedirs(out_dir, exist_ok=True)
+    df, curves = load(json_file, "free")
+    _report(df, json_file, "free", out_dir)
+    out = [chart3_heatmap(df, out_dir, speed_mutation),
+           chart9_ga_vs_baselines(df, curves, out_dir, speed_mutation)]
+    sources = [("Both mode", json_file)]
+    if fixed_json and os.path.isfile(fixed_json):
+        out.append(chart13_free_fixed_base(json_file, fixed_json, out_dir))
+        sources.append(("Fixed base", fixed_json))
+    else:
+        print(f"[compare] {fixed_json} not found - chart 13 (fixed-base check) skipped")
+    out.append(chart14_free_tradeoff(sources, out_dir))
+    return out
+
+
+if __name__ == "__main__":
+    ap = argparse.ArgumentParser(description="Report charts for the GA reelset-tuning experiment.")
+    ap.add_argument("--results", default="Results/results.json")
+    ap.add_argument("--fixed", default="Results/results_fixedbase.json",
+                    help="fixed-base FreeGame re-run, for chart 13 (skipped if missing)")
+    ap.add_argument("--out", default="Results/Graphs")
+    ap.add_argument("--mutation", type=int, default=5, help="mutation count for charts 4, 9, 11")
+    ap.add_argument("--stage", choices=["base", "free", "both"], default="both")
+    args = ap.parse_args()
+    if args.stage in ("base", "both"):
+        run_all(args.results, args.out, args.mutation, stage="base")
+    if args.stage in ("free", "both"):
+        run_free(args.results, args.fixed, os.path.join(args.out, "FreeGame"), args.mutation)
