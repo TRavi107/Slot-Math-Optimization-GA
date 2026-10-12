@@ -1,0 +1,451 @@
+Noise study: 96 reelsets x 30 seeds x 10,000,000 spins = 2880 simulations (12 in parallel)
+BaseGame fitness: baseHitRate target 3 weight 6, baseRTP target 0.57 weight 10, freeTriggerRate target 80 weight 3
+    recovered from 1440 saved results (reproduces every saved fitness to within 3.5e-04)
+FreeGame fitness: freeHitRate target 2.7 weight 6, freeRTP target 0.38 weight 10, freeReTriggerRate target 60 weight 3
+    recovered from 1440 saved results (reproduces every saved fitness to within 3.0e-05)
+
+==============================================================================
+BaseGame, mutation 1: 12 combinations (best reelset of each across GA runs)
+==============================================================================
+Simulated base game only, as the GA scored it.
+Hit / trigger / retrigger rates are '1 in X' spins.
+
+combination                                        from  saved fit   mean fit  SD baseRTP  SD baseHitRate  SD freeTriggerRate  SD fitness
+ElistismGenerational_RouletteSelection          seed_30     0.0102     0.0195   0.0005947        0.001339              0.1861    0.008323
+ElistismGenerational_SUS                        seed_11     0.0156     0.0309     0.00079        0.001197              0.2509     0.01293
+ElistismGenerational_TournamentSelection         seed_5     0.0270     0.0318   0.0006985        0.001183              0.2407     0.01385
+Generational_RouletteSelection                   seed_7     0.0491     0.0584   0.0005381        0.001438              0.2295     0.01438
+Generational_SUS                                 seed_5     0.0338     0.0456   0.0008907        0.001639              0.2855     0.01225
+Generational_TournamentSelection                 seed_7     0.0205     0.0325   0.0006393        0.001513              0.2422     0.01255
+HillClimbing_Baseline                           seed_21     0.0297     0.0377    0.001067        0.001469              0.2312     0.02046
+RandomSearch_Baseline                           seed_16    25.0276    25.0300    0.001621        0.000843             0.04633     0.02949
+SimulatedAnnealing_Baseline                     seed_29     0.0175     0.0275   0.0008181         0.00131              0.1738     0.01079
+SteadyState_RouletteSelection                   seed_18     0.0090     0.0170   0.0005219         0.00106              0.2427    0.007399
+SteadyState_SUS                                  seed_8     0.0160     0.0330   0.0008037        0.001218              0.2499     0.01226
+SteadyState_TournamentSelection                 seed_11     0.0094     0.0250   0.0007719        0.001092              0.2194     0.01281
+
+Smallest difference that counts as real (one run vs one run, independent seeds: SD(diff) = sqrt(2)*SD)
+metric                 median SD      max SD   95% (2.77 SD)  strict (4.24 SD)
+baseRTP                0.0007809    0.001621        0.004489          0.006872
+baseHitRate             0.001264    0.001639        0.004541           0.00695
+freeTriggerRate           0.2359      0.2855          0.7907              1.21
+fitness                  0.01268     0.02949         0.08168             0.125
+(thresholds use the max SD, so they hold for the noisiest combination)
+
+Common random numbers (same seed for both reelsets): paired-difference SD
+divided by the independent-seed SD, over all pairs of combinations.
+Below 1 = the shared seed reduces noise when comparing these reelsets.
+metric                  median       min       max
+baseRTP                   1.01      0.83      1.23
+baseHitRate               1.01      0.69      1.19
+freeTriggerRate           1.01      0.74      1.15
+fitness                   1.01      0.83      1.19
+
+Ranking by mean fitness over all seeds (lower = better), with a 95% interval
+of the mean. Overlapping intervals = the difference is within simulation noise.
+  SteadyState_RouletteSelection                 0.0170  +/- 0.0026
+  ElistismGenerational_RouletteSelection        0.0195  +/- 0.0030
+  SteadyState_TournamentSelection               0.0250  +/- 0.0046
+  SimulatedAnnealing_Baseline                   0.0275  +/- 0.0039
+  ElistismGenerational_SUS                      0.0309  +/- 0.0046
+  ElistismGenerational_TournamentSelection      0.0318  +/- 0.0050
+  Generational_TournamentSelection              0.0325  +/- 0.0045
+  SteadyState_SUS                               0.0330  +/- 0.0044
+  HillClimbing_Baseline                         0.0377  +/- 0.0073
+  Generational_SUS                              0.0456  +/- 0.0044
+  Generational_RouletteSelection                0.0584  +/- 0.0051
+  RandomSearch_Baseline                        25.0300  +/- 0.0106
+
+==============================================================================
+BaseGame, mutation 10: 12 combinations (best reelset of each across GA runs)
+==============================================================================
+Simulated base game only, as the GA scored it.
+Hit / trigger / retrigger rates are '1 in X' spins.
+
+combination                                        from  saved fit   mean fit  SD baseRTP  SD baseHitRate  SD freeTriggerRate  SD fitness
+ElistismGenerational_RouletteSelection          seed_18     0.1071     0.1029   0.0009508        0.001416              0.2099     0.01903
+ElistismGenerational_SUS                        seed_14     0.0571     0.0611   0.0007123         0.00129              0.1752     0.01338
+ElistismGenerational_TournamentSelection        seed_20     0.0599     0.0522   0.0008106        0.001088              0.2281     0.01467
+Generational_RouletteSelection                  seed_19     0.2423     0.2515    0.001116        0.001601              0.2098     0.02257
+Generational_SUS                                 seed_3     0.2896     0.2909    0.001023        0.001415              0.2165     0.02454
+Generational_TournamentSelection                seed_15     0.1778     0.1833    0.001023        0.001098              0.1797     0.01419
+HillClimbing_Baseline                            seed_4     0.0288     0.0323   0.0006458        0.001221              0.1904     0.00884
+RandomSearch_Baseline                           seed_16    25.0276    25.0300    0.001621        0.000843             0.04633     0.02949
+SimulatedAnnealing_Baseline                     seed_11     0.0384     0.0390   0.0009204        0.001175              0.2111     0.01132
+SteadyState_RouletteSelection                   seed_29     0.0336     0.0323   0.0007472         0.00159               0.221     0.01282
+SteadyState_SUS                                  seed_4     0.0826     0.0855   0.0008132        0.001102                 0.2     0.01519
+SteadyState_TournamentSelection                 seed_24     0.0211     0.0333   0.0009185        0.001304              0.1548     0.01339
+
+Smallest difference that counts as real (one run vs one run, independent seeds: SD(diff) = sqrt(2)*SD)
+metric                 median SD      max SD   95% (2.77 SD)  strict (4.24 SD)
+baseRTP                0.0009194    0.001621        0.004489          0.006872
+baseHitRate             0.001256    0.001601        0.004436          0.006789
+freeTriggerRate           0.2049      0.2281           0.632            0.9673
+fitness                  0.01443     0.02949         0.08168             0.125
+(thresholds use the max SD, so they hold for the noisiest combination)
+
+Common random numbers (same seed for both reelsets): paired-difference SD
+divided by the independent-seed SD, over all pairs of combinations.
+Below 1 = the shared seed reduces noise when comparing these reelsets.
+metric                  median       min       max
+baseRTP                   0.99      0.76      1.20
+baseHitRate               1.02      0.80      1.19
+freeTriggerRate           1.01      0.77      1.17
+fitness                   1.04      0.78      1.17
+
+Ranking by mean fitness over all seeds (lower = better), with a 95% interval
+of the mean. Overlapping intervals = the difference is within simulation noise.
+  SteadyState_RouletteSelection                 0.0323  +/- 0.0046
+  HillClimbing_Baseline                         0.0323  +/- 0.0032
+  SteadyState_TournamentSelection               0.0333  +/- 0.0048
+  SimulatedAnnealing_Baseline                   0.0390  +/- 0.0040
+  ElistismGenerational_TournamentSelection      0.0522  +/- 0.0053
+  ElistismGenerational_SUS                      0.0611  +/- 0.0048
+  SteadyState_SUS                               0.0855  +/- 0.0054
+  ElistismGenerational_RouletteSelection        0.1029  +/- 0.0068
+  Generational_TournamentSelection              0.1833  +/- 0.0051
+  Generational_RouletteSelection                0.2515  +/- 0.0081
+  Generational_SUS                              0.2909  +/- 0.0088
+  RandomSearch_Baseline                        25.0300  +/- 0.0106
+
+==============================================================================
+BaseGame, mutation 3: 12 combinations (best reelset of each across GA runs)
+==============================================================================
+Simulated base game only, as the GA scored it.
+Hit / trigger / retrigger rates are '1 in X' spins.
+
+combination                                        from  saved fit   mean fit  SD baseRTP  SD baseHitRate  SD freeTriggerRate  SD fitness
+ElistismGenerational_RouletteSelection          seed_21     0.0158     0.0294   0.0008581        0.001452               0.222     0.01152
+ElistismGenerational_SUS                        seed_28     0.0268     0.0385   0.0009474        0.001578              0.2469     0.01104
+ElistismGenerational_TournamentSelection        seed_16     0.0226     0.0295   0.0005638         0.00149              0.1987     0.01037
+Generational_RouletteSelection                  seed_12     0.0620     0.0698   0.0008498         0.00128              0.2359     0.01419
+Generational_SUS                                 seed_8     0.1064     0.1029   0.0009633        0.001377              0.1881     0.01947
+Generational_TournamentSelection                seed_18     0.0475     0.0603   0.0006963        0.001229              0.2454     0.02077
+HillClimbing_Baseline                           seed_13     0.0183     0.0304   0.0006977        0.001223              0.2309     0.01033
+RandomSearch_Baseline                           seed_16    25.0276    25.0300    0.001621        0.000843             0.04633     0.02949
+SimulatedAnnealing_Baseline                     seed_15     0.0290     0.0360   0.0008586        0.001281              0.2203      0.0104
+SteadyState_RouletteSelection                   seed_18     0.0194     0.0315    0.000607        0.001123              0.2256     0.01416
+SteadyState_SUS                                 seed_26     0.0266     0.0329    0.000504        0.001549              0.1568     0.01025
+SteadyState_TournamentSelection                 seed_21     0.0226     0.0352   0.0009803        0.001407              0.2089     0.01183
+
+Smallest difference that counts as real (one run vs one run, independent seeds: SD(diff) = sqrt(2)*SD)
+metric                 median SD      max SD   95% (2.77 SD)  strict (4.24 SD)
+baseRTP                 0.000854    0.001621        0.004489          0.006872
+baseHitRate             0.001329    0.001578        0.004371           0.00669
+freeTriggerRate           0.2211      0.2469           0.684             1.047
+fitness                  0.01167     0.02949         0.08168             0.125
+(thresholds use the max SD, so they hold for the noisiest combination)
+
+Common random numbers (same seed for both reelsets): paired-difference SD
+divided by the independent-seed SD, over all pairs of combinations.
+Below 1 = the shared seed reduces noise when comparing these reelsets.
+metric                  median       min       max
+baseRTP                   1.01      0.82      1.17
+baseHitRate               0.99      0.78      1.20
+freeTriggerRate           1.01      0.74      1.19
+fitness                   1.02      0.84      1.16
+
+Ranking by mean fitness over all seeds (lower = better), with a 95% interval
+of the mean. Overlapping intervals = the difference is within simulation noise.
+  ElistismGenerational_RouletteSelection        0.0294  +/- 0.0041
+  ElistismGenerational_TournamentSelection      0.0295  +/- 0.0037
+  HillClimbing_Baseline                         0.0304  +/- 0.0037
+  SteadyState_RouletteSelection                 0.0315  +/- 0.0051
+  SteadyState_SUS                               0.0329  +/- 0.0037
+  SteadyState_TournamentSelection               0.0352  +/- 0.0042
+  SimulatedAnnealing_Baseline                   0.0360  +/- 0.0037
+  ElistismGenerational_SUS                      0.0385  +/- 0.0040
+  Generational_TournamentSelection              0.0603  +/- 0.0074
+  Generational_RouletteSelection                0.0698  +/- 0.0051
+  Generational_SUS                              0.1029  +/- 0.0070
+  RandomSearch_Baseline                        25.0300  +/- 0.0106
+
+==============================================================================
+BaseGame, mutation 5: 12 combinations (best reelset of each across GA runs)
+==============================================================================
+Simulated base game only, as the GA scored it.
+Hit / trigger / retrigger rates are '1 in X' spins.
+
+combination                                        from  saved fit   mean fit  SD baseRTP  SD baseHitRate  SD freeTriggerRate  SD fitness
+ElistismGenerational_RouletteSelection          seed_11     0.0349     0.0332    0.001051        0.001381              0.1926     0.01448
+ElistismGenerational_SUS                        seed_20     0.0338     0.0353   0.0006675        0.001651              0.2304    0.008571
+ElistismGenerational_TournamentSelection         seed_8     0.0198     0.0332   0.0009975        0.001052              0.2351     0.01304
+Generational_RouletteSelection                  seed_30     0.1057     0.1143    0.001024        0.001564              0.2429     0.01401
+Generational_SUS                                seed_26     0.0448     0.0478   0.0008205        0.001287              0.2176     0.01625
+Generational_TournamentSelection                seed_19     0.0502     0.0652    0.001124         0.00131              0.2473     0.01285
+HillClimbing_Baseline                            seed_2     0.0224     0.0332    0.000852        0.001507              0.2295     0.01415
+RandomSearch_Baseline                           seed_16    25.0276    25.0300    0.001621        0.000843             0.04633     0.02949
+SimulatedAnnealing_Baseline                     seed_12     0.0209     0.0303   0.0008409        0.001353              0.2099     0.01237
+SteadyState_RouletteSelection                    seed_3     0.0361     0.0420   0.0006691        0.001246              0.2651     0.01754
+SteadyState_SUS                                 seed_13     0.0247     0.0323   0.0009883        0.001403              0.2656     0.01486
+SteadyState_TournamentSelection                 seed_16     0.0218     0.0300   0.0009053        0.001291              0.2076     0.01101
+
+Smallest difference that counts as real (one run vs one run, independent seeds: SD(diff) = sqrt(2)*SD)
+metric                 median SD      max SD   95% (2.77 SD)  strict (4.24 SD)
+baseRTP                0.0009468    0.001621        0.004489          0.006872
+baseHitRate             0.001331    0.001651        0.004572          0.006998
+freeTriggerRate             0.23      0.2656          0.7357             1.126
+fitness                  0.01408     0.02949         0.08168             0.125
+(thresholds use the max SD, so they hold for the noisiest combination)
+
+Common random numbers (same seed for both reelsets): paired-difference SD
+divided by the independent-seed SD, over all pairs of combinations.
+Below 1 = the shared seed reduces noise when comparing these reelsets.
+metric                  median       min       max
+baseRTP                   0.99      0.82      1.17
+baseHitRate               1.00      0.74      1.23
+freeTriggerRate           1.00      0.80      1.15
+fitness                   1.00      0.83      1.15
+
+Ranking by mean fitness over all seeds (lower = better), with a 95% interval
+of the mean. Overlapping intervals = the difference is within simulation noise.
+  SteadyState_TournamentSelection               0.0300  +/- 0.0039
+  SimulatedAnnealing_Baseline                   0.0303  +/- 0.0044
+  SteadyState_SUS                               0.0323  +/- 0.0053
+  HillClimbing_Baseline                         0.0332  +/- 0.0051
+  ElistismGenerational_RouletteSelection        0.0332  +/- 0.0052
+  ElistismGenerational_TournamentSelection      0.0332  +/- 0.0047
+  ElistismGenerational_SUS                      0.0353  +/- 0.0031
+  SteadyState_RouletteSelection                 0.0420  +/- 0.0063
+  Generational_SUS                              0.0478  +/- 0.0058
+  Generational_TournamentSelection              0.0652  +/- 0.0046
+  Generational_RouletteSelection                0.1143  +/- 0.0050
+  RandomSearch_Baseline                        25.0300  +/- 0.0106
+
+==============================================================================
+FreeGame, mutation 1: 12 combinations (best reelset of each across GA runs)
+==============================================================================
+Hit / trigger / retrigger rates are '1 in X' spins.
+
+combination                                        from  saved fit   mean fit  SD baseRTP  SD baseHitRate  SD freeTriggerRate  SD freeRTP  SD freeHitRate  SD freeReTriggerRate  SD totalRTP  SD fitness
+ElistismGenerational_RouletteSelection     seed_17_free     1.1173     1.1325    0.000667        0.001216              0.2502    0.001625        0.002086                0.4516     0.002023     0.03591
+ElistismGenerational_SUS                   seed_24_free     0.9001     0.9426   0.0006832        0.001212              0.2301    0.001298        0.001533                0.3726     0.001604     0.01942
+ElistismGenerational_TournamentSelection    seed_7_free     1.1581     1.2007   0.0006012        0.001502              0.2181    0.001385        0.002162                 0.408     0.001651     0.03959
+Generational_RouletteSelection              seed_7_free     1.4904     1.4863   0.0006038        0.001217               0.224    0.001524        0.001558                0.3295     0.001844     0.02932
+Generational_SUS                            seed_7_free     0.9013     0.9206   0.0005539         0.00159              0.1657    0.001346        0.001746                 0.511     0.001495     0.03229
+Generational_TournamentSelection            seed_3_free     1.3444     1.3610   0.0009169         0.00172              0.1844    0.001196        0.001788                0.2945     0.001781     0.02666
+HillClimbing_Baseline                      seed_14_free     0.7148     0.7280    0.001561        0.001165             0.04726    0.001047        0.001624                0.2633     0.001891     0.02183
+RandomSearch_Baseline                       seed_6_free    22.0286    22.0008    0.004756       0.0005051             0.03144    0.003379       0.0008599               0.08963     0.007407     0.09294
+SimulatedAnnealing_Baseline                 seed_5_free     0.8978     0.9234    0.000784        0.001175              0.1875    0.001729        0.001478                0.4456     0.002102       0.034
+SteadyState_RouletteSelection              seed_16_free     1.1763     1.1976   0.0008758         0.00113              0.2579    0.001408        0.002206                0.3823     0.001924     0.02572
+SteadyState_SUS                            seed_25_free     1.2935     1.3210   0.0007986        0.001105               0.168    0.001408        0.001427                0.3615     0.001906     0.02542
+SteadyState_TournamentSelection            seed_16_free     1.4794     1.5007   0.0005679        0.001164              0.2543    0.001808        0.002378                0.1684     0.001999     0.03113
+
+Smallest difference that counts as real (one run vs one run, independent seeds: SD(diff) = sqrt(2)*SD)
+metric                 median SD      max SD   95% (2.77 SD)  strict (4.24 SD)
+baseRTP                0.0007336    0.004756         0.01317           0.02017
+baseHitRate             0.001193     0.00172        0.004765          0.007294
+freeTriggerRate           0.2028      0.2579          0.7145             1.094
+freeRTP                 0.001408    0.003379         0.00936           0.01433
+freeHitRate             0.001685    0.002378        0.006588           0.01008
+freeReTriggerRate          0.367       0.511           1.415             2.167
+totalRTP                0.001899    0.007407         0.02052           0.03141
+fitness                  0.03023     0.09294          0.2575            0.3941
+(thresholds use the max SD, so they hold for the noisiest combination)
+
+Common random numbers (same seed for both reelsets): paired-difference SD
+divided by the independent-seed SD, over all pairs of combinations.
+Below 1 = the shared seed reduces noise when comparing these reelsets.
+metric                  median       min       max
+baseRTP                   1.00      0.77      1.16
+baseHitRate               0.99      0.66      1.16
+freeTriggerRate           1.01      0.75      1.17
+freeRTP                   1.01      0.82      1.21
+freeHitRate               0.98      0.78      1.14
+freeReTriggerRate         0.99      0.81      1.11
+totalRTP                  1.01      0.81      1.16
+fitness                   1.00      0.76      1.18
+
+Ranking by mean fitness over all seeds (lower = better), with a 95% interval
+of the mean. Overlapping intervals = the difference is within simulation noise.
+  HillClimbing_Baseline                         0.7280  +/- 0.0078
+  Generational_SUS                              0.9206  +/- 0.0116
+  SimulatedAnnealing_Baseline                   0.9234  +/- 0.0122
+  ElistismGenerational_SUS                      0.9426  +/- 0.0069
+  ElistismGenerational_RouletteSelection        1.1325  +/- 0.0128
+  SteadyState_RouletteSelection                 1.1976  +/- 0.0092
+  ElistismGenerational_TournamentSelection      1.2007  +/- 0.0142
+  SteadyState_SUS                               1.3210  +/- 0.0091
+  Generational_TournamentSelection              1.3610  +/- 0.0095
+  Generational_RouletteSelection                1.4863  +/- 0.0105
+  SteadyState_TournamentSelection               1.5007  +/- 0.0111
+  RandomSearch_Baseline                        22.0008  +/- 0.0333
+
+==============================================================================
+FreeGame, mutation 10: 12 combinations (best reelset of each across GA runs)
+==============================================================================
+Hit / trigger / retrigger rates are '1 in X' spins.
+
+combination                                        from  saved fit   mean fit  SD baseRTP  SD baseHitRate  SD freeTriggerRate  SD freeRTP  SD freeHitRate  SD freeReTriggerRate  SD totalRTP  SD fitness
+ElistismGenerational_RouletteSelection     seed_27_free     0.8028     0.8041    0.001125        0.001163              0.1814    0.001425        0.002845                0.3579     0.001923     0.05112
+ElistismGenerational_SUS                   seed_19_free     1.1148     1.1296   0.0009336        0.001159              0.2148    0.001878        0.002113                 0.366     0.002444     0.06146
+ElistismGenerational_TournamentSelection   seed_28_free     1.0387     1.0731   0.0006557        0.001545              0.2581    0.001487        0.002122                0.4358     0.001913     0.04053
+Generational_RouletteSelection             seed_12_free     1.0156     1.0007   0.0005269        0.001157              0.1458    0.001277        0.001762                 0.291     0.001575     0.02819
+Generational_SUS                           seed_10_free     1.0684     1.0417    0.001014        0.001352              0.1197    0.001077         0.00218                0.3364     0.001757     0.03604
+Generational_TournamentSelection           seed_24_free     1.1616     1.1475   0.0008202        0.001159              0.1713    0.001377        0.002231                0.2752     0.001709     0.04725
+HillClimbing_Baseline                       seed_8_free     0.4966     0.4794   0.0006718        0.001147              0.2202    0.001536        0.002511                0.2737     0.001935     0.04679
+RandomSearch_Baseline                       seed_6_free    22.0286    22.0008    0.004756       0.0005051             0.03144    0.003379       0.0008599               0.08963     0.007407     0.09294
+SimulatedAnnealing_Baseline                seed_28_free     0.3399     0.3346    0.000981        0.001225              0.2427    0.001835        0.002416                0.4486     0.002457     0.03711
+SteadyState_RouletteSelection               seed_4_free     0.6490     0.6584   0.0009284        0.001479              0.2264    0.001552        0.002343                0.3959     0.001932     0.05272
+SteadyState_SUS                            seed_15_free     0.5304     0.5743   0.0007792         0.00121              0.1885    0.001219        0.002262                0.3955     0.001546     0.03646
+SteadyState_TournamentSelection            seed_18_free     0.6508     0.6358     0.00101        0.001386              0.2218    0.001237        0.002058                 0.343     0.001725      0.0394
+
+Smallest difference that counts as real (one run vs one run, independent seeds: SD(diff) = sqrt(2)*SD)
+metric                 median SD      max SD   95% (2.77 SD)  strict (4.24 SD)
+baseRTP                 0.000931    0.004756         0.01317           0.02017
+baseHitRate             0.001186    0.001545        0.004279           0.00655
+freeTriggerRate           0.2016      0.2581           0.715             1.094
+freeRTP                 0.001456    0.003379         0.00936           0.01433
+freeHitRate             0.002205    0.002845        0.007881           0.01206
+freeReTriggerRate         0.3504      0.4486           1.242             1.902
+totalRTP                0.001918    0.007407         0.02052           0.03141
+fitness                  0.04366     0.09294          0.2575            0.3941
+(thresholds use the max SD, so they hold for the noisiest combination)
+
+Common random numbers (same seed for both reelsets): paired-difference SD
+divided by the independent-seed SD, over all pairs of combinations.
+Below 1 = the shared seed reduces noise when comparing these reelsets.
+metric                  median       min       max
+baseRTP                   0.98      0.77      1.16
+baseHitRate               1.02      0.68      1.18
+freeTriggerRate           1.00      0.83      1.19
+freeRTP                   1.00      0.79      1.20
+freeHitRate               0.99      0.79      1.18
+freeReTriggerRate         1.00      0.78      1.19
+totalRTP                  1.00      0.77      1.21
+fitness                   0.99      0.78      1.18
+
+Ranking by mean fitness over all seeds (lower = better), with a 95% interval
+of the mean. Overlapping intervals = the difference is within simulation noise.
+  SimulatedAnnealing_Baseline                   0.3346  +/- 0.0133
+  HillClimbing_Baseline                         0.4794  +/- 0.0167
+  SteadyState_SUS                               0.5743  +/- 0.0130
+  SteadyState_TournamentSelection               0.6358  +/- 0.0141
+  SteadyState_RouletteSelection                 0.6584  +/- 0.0189
+  ElistismGenerational_RouletteSelection        0.8041  +/- 0.0183
+  Generational_RouletteSelection                1.0007  +/- 0.0101
+  Generational_SUS                              1.0417  +/- 0.0129
+  ElistismGenerational_TournamentSelection      1.0731  +/- 0.0145
+  ElistismGenerational_SUS                      1.1296  +/- 0.0220
+  Generational_TournamentSelection              1.1475  +/- 0.0169
+  RandomSearch_Baseline                        22.0008  +/- 0.0333
+
+==============================================================================
+FreeGame, mutation 3: 12 combinations (best reelset of each across GA runs)
+==============================================================================
+Hit / trigger / retrigger rates are '1 in X' spins.
+
+combination                                        from  saved fit   mean fit  SD baseRTP  SD baseHitRate  SD freeTriggerRate  SD freeRTP  SD freeHitRate  SD freeReTriggerRate  SD totalRTP  SD fitness
+ElistismGenerational_RouletteSelection      seed_5_free     0.2546     0.2526   0.0009464        0.001185              0.2035     0.00163        0.002888                0.3092     0.001971     0.02723
+ElistismGenerational_SUS                   seed_26_free     0.6019     0.6084   0.0006842        0.001467                0.18    0.001576        0.002639                0.3353     0.001846      0.0385
+ElistismGenerational_TournamentSelection   seed_15_free     0.4917     0.5155   0.0006807        0.001162              0.2136    0.001515        0.002733                0.3903     0.001927     0.03019
+Generational_RouletteSelection             seed_14_free     1.4513     1.4667    0.000701        0.001453              0.1674    0.001223         0.00167                0.3161     0.001633     0.02627
+Generational_SUS                           seed_25_free     1.1079     1.1330   0.0006032        0.001448              0.1848    0.001637        0.001983                0.3372     0.002003     0.03247
+Generational_TournamentSelection           seed_30_free     0.7274     0.7574    0.000604        0.001218              0.2123    0.001468          0.0026                0.3353     0.001814     0.03453
+HillClimbing_Baseline                      seed_20_free     0.6616     0.6638   0.0008335        0.001251              0.2165     0.00164        0.002348                0.3809     0.001921     0.02985
+RandomSearch_Baseline                       seed_6_free    22.0286    22.0008    0.004756       0.0005051             0.03144    0.003379       0.0008599               0.08963     0.007407     0.09294
+SimulatedAnnealing_Baseline                seed_13_free     0.2455     0.2716   0.0007457        0.001169              0.1745    0.001395        0.002394                0.3978     0.001648     0.03646
+SteadyState_RouletteSelection               seed_7_free     0.0308     0.0601   0.0006018        0.001589              0.2206     0.00149        0.002983                0.2779     0.001955     0.02655
+SteadyState_SUS                            seed_16_free     0.4049     0.4251   0.0006669        0.001348              0.2442    0.001223        0.002038                0.3825     0.001608     0.03502
+SteadyState_TournamentSelection            seed_28_free     0.1197     0.1218   0.0008357        0.001226               0.207    0.001566        0.002071                0.4782     0.002018     0.05982
+
+Smallest difference that counts as real (one run vs one run, independent seeds: SD(diff) = sqrt(2)*SD)
+metric                 median SD      max SD   95% (2.77 SD)  strict (4.24 SD)
+baseRTP                0.0006926    0.004756         0.01317           0.02017
+baseHitRate             0.001238    0.001589          0.0044          0.006736
+freeTriggerRate           0.2053      0.2442          0.6764             1.035
+freeRTP                 0.001541    0.003379         0.00936           0.01433
+freeHitRate             0.002371    0.002983        0.008263           0.01265
+freeReTriggerRate         0.3363      0.4782           1.325             2.028
+totalRTP                0.001924    0.007407         0.02052           0.03141
+fitness                   0.0335     0.09294          0.2575            0.3941
+(thresholds use the max SD, so they hold for the noisiest combination)
+
+Common random numbers (same seed for both reelsets): paired-difference SD
+divided by the independent-seed SD, over all pairs of combinations.
+Below 1 = the shared seed reduces noise when comparing these reelsets.
+metric                  median       min       max
+baseRTP                   1.01      0.75      1.21
+baseHitRate               1.00      0.75      1.17
+freeTriggerRate           1.01      0.77      1.20
+freeRTP                   1.00      0.74      1.20
+freeHitRate               0.98      0.75      1.21
+freeReTriggerRate         1.01      0.71      1.18
+totalRTP                  1.01      0.84      1.18
+fitness                   0.97      0.82      1.21
+
+Ranking by mean fitness over all seeds (lower = better), with a 95% interval
+of the mean. Overlapping intervals = the difference is within simulation noise.
+  SteadyState_RouletteSelection                 0.0601  +/- 0.0095
+  SteadyState_TournamentSelection               0.1218  +/- 0.0214
+  ElistismGenerational_RouletteSelection        0.2526  +/- 0.0097
+  SimulatedAnnealing_Baseline                   0.2716  +/- 0.0130
+  SteadyState_SUS                               0.4251  +/- 0.0125
+  ElistismGenerational_TournamentSelection      0.5155  +/- 0.0108
+  ElistismGenerational_SUS                      0.6084  +/- 0.0138
+  HillClimbing_Baseline                         0.6638  +/- 0.0107
+  Generational_TournamentSelection              0.7574  +/- 0.0124
+  Generational_SUS                              1.1330  +/- 0.0116
+  Generational_RouletteSelection                1.4667  +/- 0.0094
+  RandomSearch_Baseline                        22.0008  +/- 0.0333
+
+==============================================================================
+FreeGame, mutation 5: 12 combinations (best reelset of each across GA runs)
+==============================================================================
+Hit / trigger / retrigger rates are '1 in X' spins.
+
+combination                                        from  saved fit   mean fit  SD baseRTP  SD baseHitRate  SD freeTriggerRate  SD freeRTP  SD freeHitRate  SD freeReTriggerRate  SD totalRTP  SD fitness
+ElistismGenerational_RouletteSelection     seed_15_free     0.5461     0.5665   0.0007877        0.001343              0.2147    0.001559        0.002386                0.3646     0.001969     0.04495
+ElistismGenerational_SUS                   seed_12_free     0.3755     0.4012   0.0007217         0.00114              0.2865    0.001938         0.00268                0.3535     0.002456     0.04646
+ElistismGenerational_TournamentSelection   seed_17_free     0.0961     0.1049    0.001224        0.001419              0.1884    0.001875        0.002724                0.3597     0.002396     0.03885
+Generational_RouletteSelection              seed_8_free     1.3481     1.3366   0.0007845        0.001401              0.1829    0.001528        0.001812                0.2698     0.002043     0.04073
+Generational_SUS                            seed_5_free     0.7339     0.7177   0.0005728        0.001677              0.2182    0.001471        0.002446                0.4315     0.001626     0.02852
+Generational_TournamentSelection           seed_14_free     1.0323     1.0023    0.000723        0.001378              0.2482    0.001849        0.002445                0.3388     0.002325     0.04038
+HillClimbing_Baseline                       seed_3_free     0.1275     0.1331     0.00107        0.001301              0.2202    0.001478        0.003056                0.3719     0.002194     0.04678
+RandomSearch_Baseline                       seed_6_free    22.0286    22.0008    0.004756       0.0005051             0.03144    0.003379       0.0008599               0.08963     0.007407     0.09294
+SimulatedAnnealing_Baseline                seed_29_free     0.5147     0.5516   0.0006048        0.001378              0.2095    0.001486        0.002433                0.4043     0.001949     0.02952
+SteadyState_RouletteSelection               seed_9_free     0.2564     0.2847   0.0007312        0.001435              0.2377    0.001512        0.002681                0.3587     0.001863     0.03509
+SteadyState_SUS                             seed_6_free     0.8235     0.8352   0.0006537         0.00143              0.2319    0.001399        0.002358                 0.449     0.001733     0.02939
+SteadyState_TournamentSelection            seed_11_free     0.1584     0.1889   0.0005946        0.001563              0.2488    0.001707         0.00347                0.4118     0.001713     0.03277
+
+Smallest difference that counts as real (one run vs one run, independent seeds: SD(diff) = sqrt(2)*SD)
+metric                 median SD      max SD   95% (2.77 SD)  strict (4.24 SD)
+baseRTP                0.0007271    0.004756         0.01317           0.02017
+baseHitRate              0.00139    0.001677        0.004646          0.007111
+freeTriggerRate           0.2192      0.2865          0.7936             1.215
+freeRTP                 0.001544    0.003379         0.00936           0.01433
+freeHitRate             0.002446     0.00347        0.009611           0.01471
+freeReTriggerRate         0.3622       0.449           1.244             1.904
+totalRTP                0.002006    0.007407         0.02052           0.03141
+fitness                  0.03962     0.09294          0.2575            0.3941
+(thresholds use the max SD, so they hold for the noisiest combination)
+
+Common random numbers (same seed for both reelsets): paired-difference SD
+divided by the independent-seed SD, over all pairs of combinations.
+Below 1 = the shared seed reduces noise when comparing these reelsets.
+metric                  median       min       max
+baseRTP                   1.01      0.85      1.15
+baseHitRate               0.97      0.76      1.18
+freeTriggerRate           1.00      0.74      1.17
+freeRTP                   0.98      0.75      1.19
+freeHitRate               0.99      0.78      1.22
+freeReTriggerRate         0.96      0.75      1.17
+totalRTP                  0.99      0.82      1.16
+fitness                   0.99      0.72      1.20
+
+Ranking by mean fitness over all seeds (lower = better), with a 95% interval
+of the mean. Overlapping intervals = the difference is within simulation noise.
+  ElistismGenerational_TournamentSelection      0.1049  +/- 0.0139
+  HillClimbing_Baseline                         0.1331  +/- 0.0167
+  SteadyState_TournamentSelection               0.1889  +/- 0.0117
+  SteadyState_RouletteSelection                 0.2847  +/- 0.0126
+  ElistismGenerational_SUS                      0.4012  +/- 0.0166
+  SimulatedAnnealing_Baseline                   0.5516  +/- 0.0106
+  ElistismGenerational_RouletteSelection        0.5665  +/- 0.0161
+  Generational_SUS                              0.7177  +/- 0.0102
+  SteadyState_SUS                               0.8352  +/- 0.0105
+  Generational_TournamentSelection              1.0023  +/- 0.0144
+  Generational_RouletteSelection                1.3366  +/- 0.0146
+  RandomSearch_Baseline                        22.0008  +/- 0.0333
+
+Files written to NoiseStudy/: report.txt, noise_runs.csv, noise_summary.csv, reelsets/

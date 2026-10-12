@@ -1,6 +1,7 @@
 # =====================================================================
 #  Slot Reelset Optimizer - Configuration
-#  Edit the values below, then run:   python main.py config.yaml
+#  Edit the values below, then run (from the "Math Optimization" folder):
+#      python Optimizer/main.py GA-config.yaml
 #  Lines starting with # are comments and are ignored.
 # =====================================================================
 
@@ -8,53 +9,74 @@
 #  RUN SETTINGS
 # ---------------------------------------------------------------------
 run:
-  # Label for this run; saved with the results so you can tell runs apart.
-  runNumber: 1
+  # Runs to execute. The whole experiment sweep below is repeated once per
+  # run number, and each run is saved under its own seed_<n> in resultFile.
+  # The run number IS the random seed: the same number + the same settings
+  # always reproduces exactly the same results.
+  #   runNumbers: [1, 2, 3]        explicit list (easy to re-create one run later)
+  #   runNumbers: "1-30"           range, same as [1, 2, ..., 30]
+  #   runNumbers: [1-10, 50]       ranges and numbers mixed
+  # To re-create a single run later: runNumbers: [7]  (same settings as before)
+  runNumbers: "1-30"
 
   # How many generations to evolve (SteadyState uses this number directly;
-  # Generational uses generations/10, ElistismGenerational uses generations/8).
+  # Generational uses generations/populationSize,
+  # ElistismGenerational uses generations/(populationSize-2)).
+  # This is also the evaluation budget of every baseline.
   generations: 1000
 
-  # true  = always generate brand-new random parents into initialParentsFolder
-  # false = reuse existing parents, checked in this order:
-  #           1. resultFile -> seed_<runNumber> -> initial_population
-  #           2. paths.seedParentsFile
-  #         if neither is found, new random parents are created automatically.
-  #   Tip: keep the same runNumber to repeat an experiment on the same parents;
-  #        use a new runNumber to start fresh.
-  createNewParents: true
+  # Starting parents are picked automatically, in this order:
+  #   1. resultFile -> seed_<runNumber> -> initial_population  (the parents this run used before)
+  #   2. paths.seedParentsFile                                  (a fixed set you provide)
+  #   3. new random parents, seeded by the run number (same number -> same parents)
+  # For fresh parents, use a new run number.
 
   # Number of reelsets (parents) in the population.
   populationSize: 10
 
   # Spins per simulation. More = more accurate but slower.
+  # Changing this changes every result, so keep it fixed across runs you compare.
   #   100_000      quick test
   #   10_000_000   normal tuning
   spins: 10_000_000
 
   # Which part of the game to tune.
-  # Options: BaseGame, FreeGame
-  gameMode: FreeGame
+  # Options:
+  #   BaseGame : tune the base reels                         -> saved as seed_<n>
+  #   FreeGame : keep base reels fixed, tune the free reels  -> saved as seed_<n>_free
+  #   Both     : for every run number, run the whole BaseGame sweep first, then the
+  #              whole FreeGame sweep. Each free-game combination (mutation +
+  #              replacement + selection, or mutation + baseline) uses the best base
+  #              reels that SAME combination just found in the BaseGame stage, and
+  #              starts from the same initial parents. Saves seed_<n> and seed_<n>_free,
+  #              identical to running BaseGame and then FreeGame (baseReelSource: same).
+  gameMode: Both
 
   # After each experiment, re-test the best reelset with this many spins
   # and print its stats. 0 = skip (faster). 100_000_000 = high-accuracy check.
-  finalCheckSpins: 300_000_000
+  # BaseGame stage: base game only (its free reels are not tuned yet).
+  # FreeGame stage: always the full game, whatever freeGame.evaluation says.
+  finalCheckSpins: 100_000_000
 
 # ---------------------------------------------------------------------
-#  FREE GAME TUNING (only used when run.gameMode is FreeGame)
+#  FREE GAME TUNING (used when run.gameMode is FreeGame or Both)
 #  The base-game reels are kept FIXED and only the free-game reels evolve.
 #  Every parent gets the same base reels, so they are compared fairly.
 #
-#  Usual workflow:
-#    1. gameMode: BaseGame, runNumber: 4  -> results saved under seed_4
-#    2. gameMode: FreeGame, runNumber: 4  -> reads base reels from seed_4,
-#                                            saves its results under seed_4_free
+#  Two ways to tune both parts of the game:
+#    a. gameMode: Both, runNumbers: [1-5]   -> one command does both stages per run
+#    b. two separate commands (same result as a):
+#       1. gameMode: BaseGame, runNumbers: [1-5] -> results saved under seed_1 ... seed_5
+#       2. gameMode: FreeGame, runNumbers: [1-5] -> run n reads its base reels from seed_n,
+#                                                   saves its results under seed_n_free
+#  gameMode Both always uses "same" below; baseReelSource is ignored there.
 # ---------------------------------------------------------------------
 freeGame:
   # Where the fixed base reels come from:
-  #   same   : for each combination (mutation + replacement + selection), use the
-  #            best base reels that SAME combination found in the BaseGame run
-  #            with the same runNumber. Every combination must exist there.
+  #   same   : for each combination (mutation + replacement + selection, or
+  #            mutation + baseline), use the best base reels that SAME combination
+  #            found in the BaseGame run with the same run number. Every
+  #            combination must exist there.
   #   manual : one reelset file (baseReelFile), used for every combination
   baseReelSource: same
 
@@ -62,10 +84,36 @@ freeGame:
   # parent files in TempParents, or { "BaseGameReel": [[...], ...] }
   baseReelFile: Optimizer/ReelSets/fixed_base.json
 
+  # How free-game candidates are simulated during the search:
+  #   fullGame : run.spins full-game spins per candidate; the base spins only serve to
+  #              trigger free games.
+  #   sessions : play the free-game sessions directly, no base spins. The base reels are
+  #              fixed, so their trigger rate (1 in X) is measured once per combination
+  #              and free RTP = average session win / X. Free hit rate and retrigger rate
+  #              are per free spin and come out unchanged. Same statistics with less
+  #              noise, about 5x faster near the targets (validated against fullGame,
+  #              see claude/free-sessions-validation.md). Needs a simulator built from
+  #              the current Simulator/src. Only free-game goals can be scored this way.
+  evaluation: sessions
+
+  # Sessions per evaluation. auto = run.spins / trigger rate: the free games a
+  # fullGame evaluation with run.spins base spins plays on average.
+  sessions: auto
+
+  # Base-game-only spins used to measure each base reelset's trigger rate (sessions only).
+  triggerRateSpins: 100_000_000
+
 # ---------------------------------------------------------------------
-#  EXPERIMENTS - every combination below is run one after another
+#  EXPERIMENTS - every combination below is run one after another,
+#  once per run number (and once per stage in gameMode Both)
 # ---------------------------------------------------------------------
 experiments:
+  # true  = run the GA combinations below
+  # false = skip the GA and run only the baselines. Use this to add baselines
+  #         to runs whose GA results already exist (each run starts from the
+  #         initial_population saved for it in resultFile).
+  runGA: true
+
   # Options: Generational, SteadyState, ElistismGenerational
   replacementTypes:
     - Generational
@@ -80,7 +128,31 @@ experiments:
 
   # How many reel positions are changed per mutation.
   # Reel length is 50, so 5 = 10%, 10 = 20%, 15 = 30%.
-  mutationCounts: [5]
+  mutationCounts: [1,3, 5,10]
+
+# ---------------------------------------------------------------------
+#  BASELINES - simple optimizers to compare the GA against.
+#  Each one gets exactly the GA's conditions: run.generations evaluations,
+#  the same starting reelsets (it starts from the best initial parent), the
+#  same spins, the same simulator seed and the same mutation operator.
+#  Saved next to the GA as  mutation_<m> -> <Method>_Baseline.
+# ---------------------------------------------------------------------
+baselines:
+  # Options: RandomSearch, HillClimbing, SimulatedAnnealing.  [] = none
+  #   RandomSearch       : a new random reelset every evaluation, keep the best
+  #                        (ignores the mutation count; run once, saved under each)
+  #   HillClimbing       : (1+1)-EA - mutate, keep the child if at least as good
+  #   SimulatedAnnealing : like HillClimbing, but sometimes accepts a worse child
+  methods: [RandomSearch, HillClimbing, SimulatedAnnealing]
+
+  simulatedAnnealing:
+    # A worse child is accepted with probability exp(-delta / T), where
+    # delta = ln(child fitness) - ln(current fitness), i.e. relative worsening.
+    # T falls geometrically from startTemperature to endTemperature.
+    #   0.14  -> a child 10% worse is accepted about half the time
+    #   0.002 -> worse children are practically never accepted
+    startTemperature: 0.14
+    endTemperature: 0.002
 
 # ---------------------------------------------------------------------
 #  REEL LAYOUT
@@ -97,7 +169,8 @@ reels:
 
 # ---------------------------------------------------------------------
 #  FITNESS GOALS - what the optimizer tries to hit, one list per gameMode.
-#  Only the list matching run.gameMode is used.
+#  Only the list matching the stage being run is used (gameMode Both uses
+#  BaseGame for its base stage and FreeGame for its free stage).
 #    type    : the statistic to optimize
 #    target  : the value you want
 #    weight  : importance; higher = optimizer cares more
@@ -120,7 +193,7 @@ fitnessVariables:
     - { type: freeRetriggerRate, target: 60, weight: 3, enabled: true }
 
 # ---------------------------------------------------------------------
-#  PATHS
+#  PATHS (relative to the "Math Optimization" folder)
 # ---------------------------------------------------------------------
 paths:
   tempParentsFolder: Optimizer/ReelSets/TempParents

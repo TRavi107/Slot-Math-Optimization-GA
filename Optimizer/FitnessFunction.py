@@ -2,7 +2,7 @@ import json, subprocess, tempfile, os
 import time
 
 from Parents import UpdateParentVars
-from Utility import save_reelset_file
+from Utility.Utility import save_reelset_file
 
 def Evaluate(spin_count, reelset_path, exe):
     fd, out_path = tempfile.mkstemp(suffix=".json")
