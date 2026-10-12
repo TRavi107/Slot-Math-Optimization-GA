@@ -1,0 +1,24 @@
+cff-version: 1.2.0
+message: "If you use this project, its code or its results, please cite it as below."
+type: software
+title: "Automatic Slot Reel Tuning by Simulation: Genetic Algorithm vs Local Search"
+abstract: >-
+  A C++ slot-game simulator and a Python optimizer that tune slot reel strips to target
+  RTP, hit rate and feature frequencies by simulation, with a 30-seed controlled experiment
+  comparing nine genetic-algorithm configurations with hill climbing, simulated annealing
+  and random search. Well-configured genetic algorithms and simulated annealing end in a
+  statistical draw; the choice of settings matters more than the choice of method.
+authors:
+  - family-names: Thapa
+    given-names: Ravi
+version: 1.0.0
+date-released: 2026-10-12
+license: MIT
+keywords:
+  - slot machine mathematics
+  - reel strip design
+  - genetic algorithm
+  - simulated annealing
+  - hill climbing
+  - simulation-based optimization
+  - Monte Carlo simulation
