@@ -155,6 +155,28 @@ at a random position; you win if matching symbols line up on one of the 20 payli
 more *scatter* symbols trigger a round of 10 **free spins**, played on a second, separate set of
 reels.
 
+> **Game rule note: six or more scatters.** The paytable has scatter prizes for 3, 4 and 5
+> scatters. A 5×3 window can show more than five, and the simulator handles that as follows:
+>
+> - **Base game:** 6+ scatters pay no scatter prize and do not trigger free spins.
+> - **Free game:** 6+ scatters pay no scatter prize but still retrigger 10 more free spins.
+>
+> **How often it matters.** On the two tuned base reelsets checked, 6+ scatters cannot occur at
+> all. On a tuned free reelset (Steady-state + Roulette, mutation 3) the exact chance is about
+> 1 in 965,000 free spins (one occurrence in about 1.55 million free spins in a 10M-spin run).
+> Even if those spins paid the 5-scatter prize (500× bet), free RTP would change by about
+> 0.00008, roughly 20 times smaller than the simulation noise of free RTP (SD ≈ 0.0015).
+> Random starting reels contain more scatters, so the case is more common early in a run,
+> but every method is scored by the same simulator, so it cannot favour one method over another.
+>
+> **Code history.** An earlier version of the free game looked up a prize for 6+ scatters
+> beyond the end of the paytable (undefined behaviour in C++). The Linux builds used for this
+> study read 0 there, which is the rule above; another compiler could read a tiny non-zero
+> value. The current code pays 0 explicitly. Recorded noise-study runs (a base-game and a
+> full-game run) were reproduced bit for bit with the fixed simulator, on both Linux and
+> Windows, so **all results in this README are unchanged**. Whether 6+ scatters *should* pay a prize is a game-design choice; changing it
+> would change future results, not these.
+
 Everything a player experiences — how much the game pays back on average, how often a spin
 wins, how often the bonus round comes — is decided by **which symbols sit where on the
 reel strips**. Mathematicians in the industry design these strips by hand: change a few
@@ -654,6 +676,10 @@ well-configured simple one under identical conditions.
 - **Free-game targets conflict**, so the free-game study compares methods on how well they
   compromise, not on whether they reach the target.
 - **Base and free reels tuned separately**, not jointly.
+- **Six or more scatters pay no scatter prize** (see the game rule note in section 3). This is
+  rare on tuned reels and identical for every method, but a game with a different rule (for
+  example, paying the 5-scatter prize, or spacing scatters so 6+ cannot appear) would need its
+  own run.
 
 **What could be improved next**
 
