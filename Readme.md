@@ -16,7 +16,7 @@ were added that start from the same reels, use the same mutation and get the sam
 budget. The 30-seed experiment then showed something more useful than "the GA works": **the
 well-configured GA and simple local search (hill climbing, simulated annealing) end in a
 statistical draw.** Both are good enough for the job; what decides success is choosing the
-right *settings*, not choosing a GA over local search. This README reports that finding as it
+right _settings_, not choosing a GA over local search. This README reports that finding as it
 came out.
 
 > **Findings in brief**
@@ -29,7 +29,7 @@ came out.
 >    0.075) and win about half of the seed-by-seed matches each. No well-configured GA is
 >    significantly better than simulated annealing, and simulated annealing is not
 >    significantly better than it, in any experiment.
-> 3. **Settings matter more than the method family.** A GA with plain *Generational*
+> 3. **Settings matter more than the method family.** A GA with plain _Generational_
 >    replacement is significantly worse than everything else except random search; heavy
 >    mutation (10 of 250 positions) hurts almost every method. Proper settings for both
 >    families are given in [section 7](#7-conclusions).
@@ -57,24 +57,28 @@ came out.
 7. [Conclusions](#7-conclusions)
 8. [Limitations and what could be improved](#8-limitations-and-what-could-be-improved)
 9. [Glossary](#9-glossary)
+10. [Data, licence and citation](#10-data-licence-and-citation)
 
 ---
 
 ## 1. Setting up
 
-Everything about installing and running is in **[RUNNING.md](RUNNING.md)**. In short:
+The full guide is in **[RUNNING.md](RUNNING.md)**, with instructions for Windows, Linux and
+macOS. In short:
 
-| Step | Linux / macOS | Windows |
-|---|---|---|
-| 1. Get the simulator — **download** it from *Releases* (no C++ needed) **or build** it with CMake | `build/simulator` | `build\simulator.exe` |
-| 2. Python environment | `python3 -m venv .venv && source .venv/bin/activate` | `python -m venv .venv; .venv\Scripts\Activate.ps1` |
-| 3. Packages | `pip install -r Requirements.txt` | same |
-| 4. Point `GA-config.yaml → paths.simulatorPath` at the simulator, then a quick test | `python Optimizer/main.py quick-test.yaml` | same |
+1. **Get the simulator.** Download the ready-made program for Windows or Linux from the
+   [Releases page](../../releases/latest) — no C++ tools needed — or build it yourself.
+2. **Install Python 3.10+** and the project's packages (`pip install -r Requirements.txt`).
+3. **Tell the project where the simulator is** (one line in `GA-config.yaml`).
 
-RUNNING.md has step-by-step instructions for Ubuntu/Debian, Fedora, Arch, macOS and
-Windows, explains every important script (optimizer, parallel runner, AWS spot setup,
-statistics, noise study, charts) and lists the exact order that reproduces every number and
-chart below.
+There are then two ways to reproduce this study:
+
+- **Check the published results (minutes).** Download `results.json` and
+  `results_fixedbase.json` from the [Releases page](../../releases/latest) and re-run the
+  statistics and charts. Every number below should match exactly.
+- **Repeat the whole experiment (about 14 hours on a 64-core machine).** Every random choice
+  is derived from the run number, so the same settings reproduce the same results on any
+  computer.
 
 ---
 
@@ -83,11 +87,13 @@ chart below.
 ```
 Slot-Math-Optimization-GA/
 ├── README.md                     this document: goal, method, results, conclusions
-├── RUNNING.md                    install and run guide (every OS, every script)
+├── LICENSE                       MIT licence
+├── CITATION.cff                  citation details (GitHub shows a "Cite this repository" button)
+├── RUNNING.md                    how to set up and reproduce the results (Windows, Linux, macOS)
 ├── GA-config.yaml                every setting of the study (targets, budget, methods, paths)
 ├── Requirements.txt              Python packages (PyYAML, numpy, pandas, matplotlib, scipy)
-├── Setup_spot.sh                 prepares a fresh AWS Ubuntu instance (tools, build, venv, S3)
-├── Spot_watch.sh                 watches for AWS spot interruption and saves results to S3
+├── Setup_spot.sh                 prepares a cloud (AWS) machine to run the experiment
+├── Spot_watch.sh                 saves finished results if the cloud machine is interrupted
 │
 ├── Simulator/                    C++20 slot-game simulator (the "fitness function")
 │   ├── CMakeLists.txt            build script (always build Release)
@@ -134,7 +140,7 @@ Slot-Math-Optimization-GA/
 │   │   └── ExtraGraphs.py        draws charts 15–17 (noise, head-to-head, overview)
 │   └── ReelSets/                 working reelset files (InitialParents/, TempParents/, fixed_base.json)
 │
-├── Results/                      (results.json is kept in S3/Zenodo, not in git)
+├── Results/                      (results*.json are release assets, not in git: see section 10)
 │   ├── Graphs/                   all charts in this README (+ FreeGame/), compute_report.md
 │   └── stats/                    test reports and CSVs: base, FreeGame/, FreeGame_fixedbase/,
 │                                 mutation_base/, mutation_free/, mutation_free_fixedbase/
@@ -152,7 +158,7 @@ Slot-Math-Optimization-GA/
 A video slot shows a window of symbols (here 5 columns × 3 rows). Each column is cut from a
 long **reel strip** — a fixed list of symbols (here 50 per reel). When you spin, each reel stops
 at a random position; you win if matching symbols line up on one of the 20 paylines. Three or
-more *scatter* symbols trigger a round of 10 **free spins**, played on a second, separate set of
+more _scatter_ symbols trigger a round of 10 **free spins**, played on a second, separate set of
 reels.
 
 > **Game rule note: six or more scatters.** The paytable has scatter prizes for 3, 4 and 5
@@ -174,7 +180,7 @@ reels.
 > study read 0 there, which is the rule above; another compiler could read a tiny non-zero
 > value. The current code pays 0 explicitly. Recorded noise-study runs (a base-game and a
 > full-game run) were reproduced bit for bit with the fixed simulator, on both Linux and
-> Windows, so **all results in this README are unchanged**. Whether 6+ scatters *should* pay a prize is a game-design choice; changing it
+> Windows, so **all results in this README are unchanged**. Whether 6+ scatters _should_ pay a prize is a game-design choice; changing it
 > would change future results, not these.
 
 Everything a player experiences — how much the game pays back on average, how often a spin
@@ -186,14 +192,14 @@ the numbers can only be measured by simulation, not calculated from a formula.
 
 The targets used in this study:
 
-| Game part | Statistic | Target | Meaning | Weight |
-|---|---|---|---|---|
-| Base game | RTP (return to player) | 0.57 | the base game pays back 57% of all bets on average | 10 |
-| | Hit rate | 3 | one spin in 3 wins something | 6 |
-| | Free-game trigger rate | 80 | the bonus round starts once every 80 spins | 3 |
-| Free game | Free RTP | 0.38 | the bonus round adds another 38% of bets (total ≈ 95%) | 10 |
-| | Free hit rate | 2.7 | one free spin in 2.7 wins | 6 |
-| | Retrigger rate | 60 | a free spin awards more free spins once in 60 | 3 |
+| Game part | Statistic              | Target | Meaning                                                | Weight |
+| --------- | ---------------------- | ------ | ------------------------------------------------------ | ------ |
+| Base game | RTP (return to player) | 0.57   | the base game pays back 57% of all bets on average     | 10     |
+|           | Hit rate               | 3      | one spin in 3 wins something                           | 6      |
+|           | Free-game trigger rate | 80     | the bonus round starts once every 80 spins             | 3      |
+| Free game | Free RTP               | 0.38   | the bonus round adds another 38% of bets (total ≈ 95%) | 10     |
+|           | Free hit rate          | 2.7    | one free spin in 2.7 wins                              | 6      |
+|           | Retrigger rate         | 60     | a free spin awards more free spins once in 60          | 3      |
 
 ### The questions this experiment answers
 
@@ -201,12 +207,12 @@ The project began with the aim of building a genetic algorithm for this task. As
 went on, the questions widened from "does the GA work?" to "which method should a slot
 mathematician actually use?". The experiment was designed to answer four questions:
 
-| | Question | Why it matters |
-|---|---|---|
-| **Q1** | Can reel strips be tuned automatically to several targets at once, using only simulation? | If not, nothing else matters. |
-| **Q2** | Which GA design choices matter — *replacement*, *selection*, *mutation strength*? | A GA has many settings; a designer needs to know which ones to get right. |
-| **Q3** | Is a GA better than simpler local search, given the same start and the same computing? | A complex method is only worth it if it beats a simple one under fair conditions. |
-| **Q4** | How much could the simulator's own randomness (noise) distort the answers? | Every score comes from a finite simulation; small differences might be luck. |
+|        | Question                                                                                  | Why it matters                                                                    |
+| ------ | ----------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| **Q1** | Can reel strips be tuned automatically to several targets at once, using only simulation? | If not, nothing else matters.                                                     |
+| **Q2** | Which GA design choices matter — _replacement_, _selection_, _mutation strength_?         | A GA has many settings; a designer needs to know which ones to get right.         |
+| **Q3** | Is a GA better than simpler local search, given the same start and the same computing?    | A complex method is only worth it if it beats a simple one under fair conditions. |
+| **Q4** | How much could the simulator's own randomness (noise) distort the answers?                | Every score comes from a finite simulation; small differences might be luck.      |
 
 The answers are summarised at the top of this page and argued in detail in
 [section 7](#7-conclusions).
@@ -217,8 +223,8 @@ The answers are summarised at the top of this page and argued in detail in
 
 ### Scoring a reelset (the fitness)
 
-The simulator plays a reelset for 10 million spins and reports each statistic *x*. Each goal
-has a target *t* and a weight *w*. The score is the weighted sum of relative errors:
+The simulator plays a reelset for 10 million spins and reports each statistic _x_. Each goal
+has a target _t_ and a weight _w_. The score is the weighted sum of relative errors:
 
 $$F = \sum_i w_i \cdot \frac{|x_i - t_i|}{t_i}$$
 
@@ -241,23 +247,23 @@ repeat until 1000 evaluations are used:
 keep the best reelset ever seen
 ```
 
-| Choice | Options compared |
-|---|---|
+| Choice                               | Options compared                                                                                                                                                                                                         |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **Selection** — who becomes a parent | **Tournament**: draw 3 at random, keep the best. **Roulette**: a wheel where better reelsets get bigger slices (sized by rank). **SUS**: the same wheel spun once with evenly spaced pointers — less luck than roulette. |
-| **Crossover** — mixing two parents | For each reel, a random cut point; the child takes parent 1's strip before it and parent 2's after it. |
-| **Mutation** — tweaking a child | Change *m* random positions (out of all 250) to a different symbol. *m* ∈ {1, 3, 5, 10}. |
-| **Replacement** — who survives | **Steady-state**: one child per step; it replaces the worst reelset if better. **Generational**: 10 children replace the whole population. **Elitist generational**: the 2 best survive, 8 children fill the rest. |
+| **Crossover** — mixing two parents   | For each reel, a random cut point; the child takes parent 1's strip before it and parent 2's after it.                                                                                                                   |
+| **Mutation** — tweaking a child      | Change _m_ random positions (out of all 250) to a different symbol. _m_ ∈ {1, 3, 5, 10}.                                                                                                                                 |
+| **Replacement** — who survives       | **Steady-state**: one child per step; it replaces the worst reelset if better. **Generational**: 10 children replace the whole population. **Elitist generational**: the 2 best survive, 8 children fill the rest.       |
 
 3 replacement strategies × 3 selection methods = **9 GA configurations**, each run at 4
 mutation counts.
 
 ### The comparison methods (local search and random search)
 
-| Method | How it works |
-|---|---|
-| **Random search** | A brand-new random reelset every evaluation; keep the best. Shows how hard the problem is. |
-| **Hill climbing** (a "(1+1) evolutionary algorithm") | One reelset; mutate it with the *same* mutation operator; keep the child if it is at least as good. |
-| **Simulated annealing** | Like hill climbing, but sometimes accepts a worse child, less and less often as the run goes on (temperature 0.14 → 0.002). |
+| Method                                               | How it works                                                                                                                |
+| ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| **Random search**                                    | A brand-new random reelset every evaluation; keep the best. Shows how hard the problem is.                                  |
+| **Hill climbing** (a "(1+1) evolutionary algorithm") | One reelset; mutate it with the _same_ mutation operator; keep the child if it is at least as good.                         |
+| **Simulated annealing**                              | Like hill climbing, but sometimes accepts a worse child, less and less often as the run goes on (temperature 0.14 → 0.002). |
 
 Hill climbing and simulated annealing were added as **fair, strong comparisons**: they use the
 GA's own mutation operator, start from the best of the GA's starting reelsets, and get the same
@@ -270,19 +276,19 @@ charts these three are labelled "baselines".
 
 ### 5.1 Design
 
-| Setting | Value |
-|---|---|
-| Seeds (independent repetitions) | **30** (run numbers 1–30) |
-| Stages per seed | base game, then free game (`gameMode: Both`) |
-| GA configurations | 9 (3 replacement × 3 selection) |
-| Mutation counts | 1, 3, 5, 10 positions out of 250 |
-| Baselines | Random search, Hill climbing, Simulated annealing |
-| Population size | 10 |
-| Budget per run | **1000 fitness evaluations** (equal for every method) |
-| Spins per evaluation | 10,000,000 |
-| Final check of each run's best reelset | 100,000,000 spins on a seed the run never used |
-| Runs | 1,350 per stage (+ 990 in the fixed-base check) |
-| Hardware | AWS c7a.16xlarge (AMD EPYC 9R14, 64 cores), 6 runs × 10 threads in parallel |
+| Setting                                | Value                                                                       |
+| -------------------------------------- | --------------------------------------------------------------------------- |
+| Seeds (independent repetitions)        | **30** (run numbers 1–30)                                                   |
+| Stages per seed                        | base game, then free game (`gameMode: Both`)                                |
+| GA configurations                      | 9 (3 replacement × 3 selection)                                             |
+| Mutation counts                        | 1, 3, 5, 10 positions out of 250                                            |
+| Baselines                              | Random search, Hill climbing, Simulated annealing                           |
+| Population size                        | 10                                                                          |
+| Budget per run                         | **1000 fitness evaluations** (equal for every method)                       |
+| Spins per evaluation                   | 10,000,000                                                                  |
+| Final check of each run's best reelset | 100,000,000 spins on a seed the run never used                              |
+| Runs                                   | 1,350 per stage (+ 990 in the fixed-base check)                             |
+| Hardware                               | AWS c7a.16xlarge (AMD EPYC 9R14, 64 cores), 6 runs × 10 threads in parallel |
 
 Because the replacement strategies make different numbers of children per step, they are
 compared at an equal **number of evaluations**, not generations: 1000 steps for Steady-state,
@@ -303,7 +309,7 @@ safeguards:
 
 1. **Independent final check.** The best reelset of every run is re-simulated with 10× more
    spins on an unused seed. All reported final errors are these re-checked values, because the
-   in-run best is the *luckiest* of 1000 noisy scores and is biased low (section 6.4).
+   in-run best is the _luckiest_ of 1000 noisy scores and is biased low (section 6.4).
 2. **Noise study.** The best reelset of each method, for each stage and mutation count (96
    reelsets), was re-simulated 30 times on different seeds: 2,880 extra simulations measuring
    exactly how much each statistic and the fitness wobble.
@@ -351,12 +357,12 @@ Each comparison below is paired by seed: both methods started from the same reel
 same simulator seed and budget. "Lower on" counts the seeds where the first method ended with
 the lower error; p is the Holm-corrected Wilcoxon test; A12 = 0.5 means no difference.
 
-| Experiment | Best GA (setting) | vs Simulated annealing | vs Hill climbing | Verdict |
-|---|---|---|---|---|
-| Base game, each method at its best mutation count | Steady-state + Tournament (m=1): **0.076** | SA (m=5) **0.075**; SA lower on 15/30; A12 0.53; p = 1.0 | HC (m=5) 0.084; HC lower on 12/30; A12 0.50; p = 1.0 | **Draw** |
-| Free game, mutation 5 | Elitist + Tournament: **1.174** | SA 1.277; GA lower on 19/30; A12 0.54; p = 1.0 | HC 1.559; GA lower on 16/30; A12 0.58; p = 1.0 | **Draw** |
-| Free game, mutation 3 | Steady-state + SUS: **1.262** | SA 1.532; GA lower on 22/30; A12 0.66; p = 0.72 | HC 1.780; GA lower on 27/30; A12 0.83; **p < 0.001** | GA beats HC; **draw with SA** |
-| Free game, fixed base, mutation 3 | Steady-state + SUS: **1.277** | SA 1.571; GA lower on 18/30; A12 0.56; p = 1.0 | HC 1.750; GA lower on 26/30; A12 0.76; **p < 0.001** | GA beats HC; **draw with SA** |
+| Experiment                                        | Best GA (setting)                          | vs Simulated annealing                                   | vs Hill climbing                                     | Verdict                       |
+| ------------------------------------------------- | ------------------------------------------ | -------------------------------------------------------- | ---------------------------------------------------- | ----------------------------- |
+| Base game, each method at its best mutation count | Steady-state + Tournament (m=1): **0.076** | SA (m=5) **0.075**; SA lower on 15/30; A12 0.53; p = 1.0 | HC (m=5) 0.084; HC lower on 12/30; A12 0.50; p = 1.0 | **Draw**                      |
+| Free game, mutation 5                             | Elitist + Tournament: **1.174**            | SA 1.277; GA lower on 19/30; A12 0.54; p = 1.0           | HC 1.559; GA lower on 16/30; A12 0.58; p = 1.0       | **Draw**                      |
+| Free game, mutation 3                             | Steady-state + SUS: **1.262**              | SA 1.532; GA lower on 22/30; A12 0.66; p = 0.72          | HC 1.780; GA lower on 27/30; A12 0.83; **p < 0.001** | GA beats HC; **draw with SA** |
+| Free game, fixed base, mutation 3                 | Steady-state + SUS: **1.277**              | SA 1.571; GA lower on 18/30; A12 0.56; p = 1.0           | HC 1.750; GA lower on 26/30; A12 0.76; **p < 0.001** | GA beats HC; **draw with SA** |
 
 Across every experiment, **no properly configured GA and simulated annealing can be told
 apart**. The GA's only significant advantage is over hill climbing in the free game at mutation 3.
@@ -367,20 +373,20 @@ apart**. The GA's only significant advantage is over hill climbing in the free g
 
 ![Base-game heatmap](Results/Graphs/3_heatmap_config_mutation.png)
 
-| Method (all 4 mutation counts, 120 runs) | Median | Middle 50% of runs |
-|---|---|---|
-| Steady-state + Tournament | **0.119** | 0.050 – 0.181 |
-| Hill climbing (baseline) | 0.127 | 0.050 – 0.191 |
-| Simulated annealing (baseline) | 0.145 | 0.057 – 0.192 |
-| Steady-state + SUS | 0.147 | 0.067 – 0.198 |
-| Steady-state + Roulette | 0.154 | 0.088 – 0.224 |
-| Elitist + Roulette | 0.155 | 0.067 – 0.244 |
-| Elitist + Tournament | 0.158 | 0.080 – 0.234 |
-| Elitist + SUS | 0.159 | 0.081 – 0.222 |
-| Generational + Tournament | 0.209 | 0.146 – 0.341 |
-| Generational + SUS | 0.305 | 0.186 – 0.479 |
-| Generational + Roulette | 0.440 | 0.251 – 0.776 |
-| Random search (baseline) | 37.5 | — |
+| Method (all 4 mutation counts, 120 runs) | Median    | Middle 50% of runs |
+| ---------------------------------------- | --------- | ------------------ |
+| Steady-state + Tournament                | **0.119** | 0.050 – 0.181      |
+| Hill climbing (baseline)                 | 0.127     | 0.050 – 0.191      |
+| Simulated annealing (baseline)           | 0.145     | 0.057 – 0.192      |
+| Steady-state + SUS                       | 0.147     | 0.067 – 0.198      |
+| Steady-state + Roulette                  | 0.154     | 0.088 – 0.224      |
+| Elitist + Roulette                       | 0.155     | 0.067 – 0.244      |
+| Elitist + Tournament                     | 0.158     | 0.080 – 0.234      |
+| Elitist + SUS                            | 0.159     | 0.081 – 0.222      |
+| Generational + Tournament                | 0.209     | 0.146 – 0.341      |
+| Generational + SUS                       | 0.305     | 0.186 – 0.479      |
+| Generational + Roulette                  | 0.440     | 0.251 – 0.776      |
+| Random search (baseline)                 | 37.5      | —                  |
 
 Every method except random search starts from a median error of about 80 and ends around 0.1: the
 base-game targets are reached to within a few percent on almost every seed.
@@ -504,10 +510,10 @@ inside Generational, and the GA significantly better than hill climbing only at 
 **Size of the noise.** Re-simulating the same reelset 30 times with 10M spins, the fitness
 wobbles by (standard deviation, median over reelsets):
 
-| Stage | SD of one 10M-spin score | Range over the 44 GA/baseline reelsets | Smallest real gap in the tests (100M re-check) |
-|---|---|---|---|
-| Base game | **0.013** | 0.007 – 0.025 | 0.030 |
-| Free game | **0.035** | 0.019 – 0.061 | 0.088 |
+| Stage     | SD of one 10M-spin score | Range over the 44 GA/baseline reelsets | Smallest real gap in the tests (100M re-check) |
+| --------- | ------------------------ | -------------------------------------- | ---------------------------------------------- |
+| Base game | **0.013**                | 0.007 – 0.025                          | 0.030                                          |
+| Free game | **0.035**                | 0.019 – 0.061                          | 0.088                                          |
 
 The underlying statistics are measured very precisely: base RTP ±0.0009, hit rate ±0.0013,
 trigger rate ±0.22 (on targets of 0.57, 3 and 80).
@@ -515,14 +521,14 @@ trigger rate ±0.22 (on targets of 0.57, 3 and 80).
 **Noise per configuration.** The noise is almost the same for every method, because it comes
 from the simulator, not the optimizer (median SD of fitness at 10M spins):
 
-| Configuration | Base SD | Free SD | | Configuration | Base SD | Free SD |
-|---|---|---|---|---|---|---|
-| Steady-state + Tournament | 0.012 | 0.036 | | Generational + Tournament | 0.014 | 0.038 |
-| Steady-state + SUS | 0.014 | 0.032 | | Generational + SUS | 0.018 | 0.032 |
-| Steady-state + Roulette | 0.014 | 0.031 | | Generational + Roulette | 0.014 | 0.029 |
-| Elitist + Tournament | 0.013 | 0.039 | | Hill climbing | 0.012 | 0.038 |
-| Elitist + SUS | 0.012 | 0.043 | | Simulated annealing | 0.011 | 0.035 |
-| Elitist + Roulette | 0.013 | 0.040 | | Random search | 0.030 | 0.093 |
+| Configuration             | Base SD | Free SD |     | Configuration             | Base SD | Free SD |
+| ------------------------- | ------- | ------- | --- | ------------------------- | ------- | ------- |
+| Steady-state + Tournament | 0.012   | 0.036   |     | Generational + Tournament | 0.014   | 0.038   |
+| Steady-state + SUS        | 0.014   | 0.032   |     | Generational + SUS        | 0.018   | 0.032   |
+| Steady-state + Roulette   | 0.014   | 0.031   |     | Generational + Roulette   | 0.014   | 0.029   |
+| Elitist + Tournament      | 0.013   | 0.039   |     | Hill climbing             | 0.012   | 0.038   |
+| Elitist + SUS             | 0.012   | 0.043   |     | Simulated annealing       | 0.011   | 0.035   |
+| Elitist + Roulette        | 0.013   | 0.040   |     | Random search             | 0.030   | 0.093   |
 
 **Was noise a deciding factor?** Mostly not:
 
@@ -545,38 +551,34 @@ from the simulator, not the optimizer (median SD of fitness at 10M spins):
 
 ### 6.5 Statistical summary
 
-| Question | Base game | Free game (Both) | Free game (fixed base) |
-|---|---|---|---|
-| Do replacement strategies differ? (Friedman, m=3/5/10) | yes, p < 0.001, W 0.24–0.79 | yes, p < 0.001, W 0.40–0.58 | yes, p < 0.001, W 0.40–0.57 |
-| Generational worse than the other two? | yes, every m ≥ 3 (and vs Steady-state at m=1) | yes, every m ≥ 3 | yes, every m |
-| Steady-state vs Elitist | tied except m=10 (Steady-state better) | Elitist better at m=1, 5; tied at 3, 10 | tied |
-| Selection matters within Steady-state / Elitist? | no | no (one pair at m=1) | no |
-| Tournament > Roulette within Generational? | yes, every m | at m=5 | yes, every m |
-| GA significantly better than hill climbing? | never | 6 variants at m=3 | 3 variants at m=3 |
-| GA significantly better than simulated annealing? | never | never | never |
-| Baseline significantly better than GA? | 20 comparisons (16 vs Generational, 4 at m=10) | 14 (all vs Generational) | 12 (all vs Generational) |
-| Everything better than random search? | yes, 30/30 seeds, A12 = 1.00 | yes | — |
+| Question                                               | Base game                                      | Free game (Both)                        | Free game (fixed base)      |
+| ------------------------------------------------------ | ---------------------------------------------- | --------------------------------------- | --------------------------- |
+| Do replacement strategies differ? (Friedman, m=3/5/10) | yes, p < 0.001, W 0.24–0.79                    | yes, p < 0.001, W 0.40–0.58             | yes, p < 0.001, W 0.40–0.57 |
+| Generational worse than the other two?                 | yes, every m ≥ 3 (and vs Steady-state at m=1)  | yes, every m ≥ 3                        | yes, every m                |
+| Steady-state vs Elitist                                | tied except m=10 (Steady-state better)         | Elitist better at m=1, 5; tied at 3, 10 | tied                        |
+| Selection matters within Steady-state / Elitist?       | no                                             | no (one pair at m=1)                    | no                          |
+| Tournament > Roulette within Generational?             | yes, every m                                   | at m=5                                  | yes, every m                |
+| GA significantly better than hill climbing?            | never                                          | 6 variants at m=3                       | 3 variants at m=3           |
+| GA significantly better than simulated annealing?      | never                                          | never                                   | never                       |
+| Baseline significantly better than GA?                 | 20 comparisons (16 vs Generational, 4 at m=10) | 14 (all vs Generational)                | 12 (all vs Generational)    |
+| Everything better than random search?                  | yes, 30/30 seeds, A12 = 1.00                   | yes                                     | —                           |
 
-Full tables, every p-value and effect size: `Results/stats/*/stats_report.md` and
-`mutation_report.md`.
+The full tables, with every p-value and effect size, are in the reports in `Results/stats/`.
 
 ### 6.6 Computing cost
 
-![Compute cost](Results/Graphs/10_compute_cost.png)
-
 ![Budget and population](Results/Graphs/11_budget_and_population.png)
 
-| | |
-|---|---|
-| One evaluation (10M base spins, 10 threads) | **0.155 s** (≈ 66 million spins per second) |
-| One run (1000 evaluations + final check) | ≈ 2.5 minutes |
-| Base stage of one seed (45 runs) | ≈ 2 hours |
-| Whole main study (both stages, 30 seeds) | 2.7 million simulator calls, 83 h wall time, 798 CPU-hours |
+|                                             |                                                            |
+| ------------------------------------------- | ---------------------------------------------------------- |
+| One evaluation (10M base spins, 10 threads) | **0.155 s** (≈ 66 million spins per second)                |
+| One run (1000 evaluations + final check)    | ≈ 2.5 minutes                                              |
+| Base stage of one seed (45 runs)            | ≈ 2 hours                                                  |
+| Whole main study (both stages, 30 seeds)    | 2.7 million simulator calls, 83 h wall time, 798 CPU-hours |
 
-Every GA and local-search method costs about the same per evaluation (0.150–0.165 s), so the equal-evaluation budget is
-also an equal-time budget. In the last quarter of the budget the best methods improved by less
-than one noise floor, so a longer budget would mostly re-measure noise. (The cost-vs-spins panel
-of chart 10 uses a thread model that does not match these runs; see RUNNING.md.)
+Every GA and local-search method costs about the same per evaluation (0.150–0.165 s), so
+the equal-evaluation budget is also an equal-time budget. In the last quarter of the budget the best methods improved by less
+than one noise floor, so a longer budget would mostly re-measure noise.
 
 ---
 
@@ -606,7 +608,7 @@ fairly. Under identical conditions the best GA and simulated annealing end level
 experiment (base game 0.076 vs 0.075; each lower on about half the seeds; no significant
 difference anywhere). The GA beats plain hill climbing only in the free game at one mutation
 setting. The likely reason is the structure of the problem: a good reel strip is mostly about
-*how many* of each symbol a reel has and roughly *where*, and small one-symbol changes reach it
+_how many_ of each symbol a reel has and roughly _where_, and small one-symbol changes reach it
 efficiently; mixing two parent strips (crossover), the GA's distinctive operator, adds little
 here.
 
@@ -624,12 +626,12 @@ properly.** The choice of settings matters far more than the choice between a GA
 search: a well-set GA and a well-set simulated annealing are interchangeable, while a badly set
 GA (Generational replacement, heavy mutation) is clearly worse than either.
 
-| | Proper settings (supported by this experiment) | Settings to avoid |
-|---|---|---|
-| **Genetic algorithm** | Steady-state or Elitist generational replacement; any selection (Tournament is the safe default); 3–5 of 250 positions mutated per child; population 10 | Plain Generational replacement; 10+ positions mutated per child |
-| **Simulated annealing** | 3–5 positions mutated per step; temperature 0.14 → 0.002 on the log-fitness scale | 1 position per step (too slow) |
-| **Hill climbing** | 3–5 positions per step; fine for the base game | Conflicting targets (free game), where it did significantly worse than SA-level methods at mutation 3 |
-| **Every method** | Re-check the final reelset with ≥ 100M spins; run several seeds and keep the best | Trusting the in-run best score; trusting one run |
+|                         | Proper settings (supported by this experiment)                                                                                                          | Settings to avoid                                                                                     |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| **Genetic algorithm**   | Steady-state or Elitist generational replacement; any selection (Tournament is the safe default); 3–5 of 250 positions mutated per child; population 10 | Plain Generational replacement; 10+ positions mutated per child                                       |
+| **Simulated annealing** | 3–5 positions mutated per step; temperature 0.14 → 0.002 on the log-fitness scale                                                                       | 1 position per step (too slow)                                                                        |
+| **Hill climbing**       | 3–5 positions per step; fine for the base game                                                                                                          | Conflicting targets (free game), where it did significantly worse than SA-level methods at mutation 3 |
+| **Every method**        | Re-check the final reelset with ≥ 100M spins; run several seeds and keep the best                                                                       | Trusting the in-run best score; trusting one run                                                      |
 
 **Practical recommendation for a slot mathematician.** Simulated annealing is the simplest
 choice that performed at the top in every experiment: it has one reelset, two temperature
@@ -701,26 +703,76 @@ well-configured simple one under identical conditions.
 - **Wider sensitivity studies:** population size (6/10/20), budget (500/1000/2000), hold-out seeds
   for choosing the mutation count, and more games.
 - **Tune both reel sets together**, with total RTP as an explicit goal.
-- **Engineering:** release simulator binaries for macOS, add automated tests for the simulator's
-  statistics, and fix the thread model in the cost chart.
+- **Engineering:** a ready-made simulator for macOS, and automated tests for the simulator's
+  statistics.
 
 ---
 
 ## 9. Glossary
 
-| Term | Meaning |
-|---|---|
-| **Reel strip / reelset** | The fixed list of symbols on each reel; a reelset is all 5 reels (here for base game and free game). |
-| **RTP** (return to player) | Average share of the bet paid back as wins over a very long time. 0.57 = 57%. |
-| **Hit rate** | How often a spin wins anything, written as "1 in X spins". |
-| **Trigger / retrigger rate** | How often the bonus round starts / how often a bonus spin gives more bonus spins, "1 in X". |
-| **Fitness / error** | The weighted sum of relative distances from the targets. 0 is perfect; lower is better. |
-| **Evaluation** | One simulation of one reelset (here 10M spins). The budget counts these. |
-| **Seed** | The number that fixes all randomness of a run. Same seed = same starting reelsets and same result. |
-| **Genetic algorithm (GA)** | A search that keeps a population of solutions and breeds better ones (selection, crossover, mutation, replacement). |
-| **Selection / crossover / mutation / replacement** | Picking parents / mixing two parents / randomly changing a few positions / deciding which solutions stay. |
-| **Hill climbing, simulated annealing** | Simple searches that improve one solution step by step; annealing sometimes accepts a worse step to escape dead ends. |
-| **Noise / noise floor** | Random variation from simulating a finite number of spins / the smallest difference that can be told apart from that variation. |
-| **Median, IQR** | The middle value of the 30 seeds / the range holding the middle half of them. |
-| **p-value, Holm correction** | Chance of a difference this large if the methods were truly equal / an adjustment so that running many tests does not create false findings. |
-| **A12 effect size** | Probability that one method ends lower than another on a run; 0.5 = no difference, ≥ 0.71 = large. |
+| Term                                               | Meaning                                                                                                                                      |
+| -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Reel strip / reelset**                           | The fixed list of symbols on each reel; a reelset is all 5 reels (here for base game and free game).                                         |
+| **RTP** (return to player)                         | Average share of the bet paid back as wins over a very long time. 0.57 = 57%.                                                                |
+| **Hit rate**                                       | How often a spin wins anything, written as "1 in X spins".                                                                                   |
+| **Trigger / retrigger rate**                       | How often the bonus round starts / how often a bonus spin gives more bonus spins, "1 in X".                                                  |
+| **Fitness / error**                                | The weighted sum of relative distances from the targets. 0 is perfect; lower is better.                                                      |
+| **Evaluation**                                     | One simulation of one reelset (here 10M spins). The budget counts these.                                                                     |
+| **Seed**                                           | The number that fixes all randomness of a run. Same seed = same starting reelsets and same result.                                           |
+| **Genetic algorithm (GA)**                         | A search that keeps a population of solutions and breeds better ones (selection, crossover, mutation, replacement).                          |
+| **Selection / crossover / mutation / replacement** | Picking parents / mixing two parents / randomly changing a few positions / deciding which solutions stay.                                    |
+| **Hill climbing, simulated annealing**             | Simple searches that improve one solution step by step; annealing sometimes accepts a worse step to escape dead ends.                        |
+| **Noise / noise floor**                            | Random variation from simulating a finite number of spins / the smallest difference that can be told apart from that variation.              |
+| **Median, IQR**                                    | The middle value of the 30 seeds / the range holding the middle half of them.                                                                |
+| **p-value, Holm correction**                       | Chance of a difference this large if the methods were truly equal / an adjustment so that running many tests does not create false findings. |
+| **A12 effect size**                                | Probability that one method ends lower than another on a run; 0.5 = no difference, ≥ 0.71 = large.                                           |
+
+---
+
+## 10. Data, licence and citation
+
+### Data and binaries
+
+Everything needed to check the results is attached to the repository's
+[latest release](../../releases/latest):
+
+| Release asset                                      | What it is                                                                                                                                                                          |
+| -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `results.json`                                     | Every run of the main study: 30 seeds × base and free stages, all GA configurations and baselines, their per-generation progress, best reelsets, 100M-spin final checks and timings |
+| `results_fixedbase.json`                           | The fixed-base free-game check (990 runs)                                                                                                                                           |
+| `simulator-windows-x64.exe`, `simulator-linux-x64` | Ready-made simulator for Windows and Linux (see RUNNING.md)                                                                                                                         |
+| `SHA256SUMS.txt`                                   | Checksums to confirm the downloads are intact                                                                                                                                       |
+
+Place the two JSON files in `Results/`. Every number and chart in this README can then be
+regenerated with the analysis scripts (RUNNING.md, part A), which take minutes, not hours.
+The noise study files are already in `NoiseStudy/`.
+
+### Licence
+
+Released under the [MIT Licence](LICENSE): you may use, change and share the code and data,
+including commercially, as long as the copyright notice is kept.
+
+### Author
+
+**Ravi Thapa**
+
+### How to cite
+
+If you use this project, its code or its results, please cite it:
+
+> Thapa, R. (2026). _Automatic Slot Reel Tuning by Simulation: Genetic Algorithm vs Local
+> Search_ (Version 1.0.0) [Computer software and dataset]. GitHub repository
+> Slot-Math-Optimization-GA.
+
+```bibtex
+@software{thapa_2026_slot_reel_tuning,
+  author  = {Thapa, Ravi},
+  title   = {Automatic Slot Reel Tuning by Simulation: Genetic Algorithm vs Local Search},
+  year    = {2026},
+  version = {1.0.0},
+  note    = {Source code, experiment results and simulator builds. GitHub repository Slot-Math-Optimization-GA}
+}
+```
+
+GitHub also shows these details through the **"Cite this repository"** button, from
+[`CITATION.cff`](CITATION.cff).
