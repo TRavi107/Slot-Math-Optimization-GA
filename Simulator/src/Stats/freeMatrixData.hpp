@@ -56,7 +56,6 @@ struct FreeMatrixData : public ReelMatrixData {
     void ResetFreeSpin() {
         if (thisSpinFreeSpins > maxFreeSpins) {
             maxFreeSpins = thisSpinFreeSpins;
-            //std::cout << thisSpinWinnings<<"\n";
         }
         if (thisSpinRetirgger > maxRetirgger)
             maxRetirgger = thisSpinRetirgger;

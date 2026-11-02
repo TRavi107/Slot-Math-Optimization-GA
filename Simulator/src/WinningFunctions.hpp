@@ -14,7 +14,6 @@ namespace WinningFunctions {
             for (int col = 0; col < row.size(); col++)
                 if (row[col] == scatterSymbol) 
                     scatterCount++; 
-            //break;
         }
     }
 

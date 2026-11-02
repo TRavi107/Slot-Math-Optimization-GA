@@ -2,7 +2,7 @@
 # Upload the sweep's results to S3 as soon as AWS announces a spot interruption
 # (AWS gives about 2 minutes' notice). Run it next to run_parallel.py, e.g. in a
 # second tmux window:
-#     bash spot_watch.sh ~/Slot-Math-Optimization-GA s3://sim-result-030777446278-us-east-1-an/sweep1
+#     bash Spot_watch.sh ~/Slot-Math-Optimization-GA s3://<your-bucket>/sweep1
 PROJECT="${1:-$HOME/Slot-Math-Optimization-GA}"
 DEST="${2:-s3://sim-result-030777446278-us-east-1-an/sweep1}"
 cd "$PROJECT" || exit 1

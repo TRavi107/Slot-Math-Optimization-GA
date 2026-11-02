@@ -190,9 +190,8 @@ def _file_sha(path):
 
 def machine_info(simulator_path):
     """
-    The machine and simulator build that produced the timings. The simulator part
-    comes from its own output, so call this after at least one evaluation.
-    No host or user name is stored, so results.json can be published as is.
+    Machine and simulator build that produced the timings (no host or user name).
+    Call after at least one evaluation: the build info comes from the simulator output.
     """
     system = platform.system()
     model, cores, mem = {"Linux": _cpu_linux, "Darwin": _cpu_macos,
@@ -231,7 +230,7 @@ def describe(info, threads=()):
 
 
 def warn_if_slow_build():
-    """A Debug simulator is many times slower and makes every timing meaningless."""
+    """Warn if the simulator is a Debug build (its timings are not representative)."""
     if _LAST_BUILD and _LAST_BUILD.get("optimized") is False:
         print("[compute] WARNING: the simulator was built WITHOUT optimisation "
               f"({_LAST_BUILD.get('buildType')}). Rebuild with -DCMAKE_BUILD_TYPE=Release; "

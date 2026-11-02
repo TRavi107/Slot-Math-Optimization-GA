@@ -88,8 +88,6 @@ struct SimResult {
     void AddSpinWinnings() {
         double total = base.thisSpinWinnings+free.thisSpinWinnings+buyGame.thisSpinWinnings;
 
-        // if (currentSpinWin != total)
-        //     std::cout << "current spin win " << total << " " << currentSpinWin << "\n";
 
         _updateWinDistribution(total);
 

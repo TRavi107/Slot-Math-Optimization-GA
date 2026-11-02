@@ -91,11 +91,6 @@ void free_game(SimResult& result, Rng::Xoshiro256ss& rng)
         }
 
         if (scatterCount>=3) {
-            // The paytable only has 3/4/5-scatter pays. Up to 15 scatters can land in a
-            // free spin, and indexing with 6+ read past the end of Paytable (undefined
-            // behaviour: 0 with GCC on Linux, garbage with other compilers). 6+ scatters
-            // pay 0, which is what the published Linux results were produced with; they
-            // still retrigger below.
             win = (scatterCount <= 5)
                 ? Paytable[static_cast<int>(GameSymbols::SC)][scatterCount - 3] * Constants::baseBet
                 : 0.0;
@@ -174,9 +169,6 @@ void RunSim(long long spinCount, SimResult& result, Rng::Xoshiro256ss& rng) {
     }
 }
 
-// Free-sessions mode: play `sessionCount` free-game sessions, each exactly as a base
-// spin with 3+ scatters would start one. Per session the win is recorded the way RunSim
-// records a base spin (win distribution, max win), so per-session totals line up.
 void RunFreeSessions(long long sessionCount, SimResult& result, Rng::Xoshiro256ss& rng) {
     for (long long i = 0; i < sessionCount; i++) {
         free_game(result, rng);
@@ -189,7 +181,6 @@ SimResult SimRunnerInit(const long long spinCount) {
     return SimResult(spinCount, Constants::baseBet, Constants::maxWin);
 }
 
-// Build description, recorded with every result so timings can be compared
 static std::string compilerName() {
 #if defined(__clang__)
     return std::string("Clang ") + __clang_version__;
