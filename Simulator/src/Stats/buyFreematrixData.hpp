@@ -1,8 +1,6 @@
 #pragma once
 #include "reelMatrixData.hpp"
-// ─────────────────────────────────────────────
-// BaseMatrixData
-// ─────────────────────────────────────────────
+// BuyFreeMatrixData
 struct BuyFreeMatrixData : public ReelMatrixData {
 
     long long totalFreeSpinsCount = 0;
@@ -29,7 +27,7 @@ struct BuyFreeMatrixData : public ReelMatrixData {
     BuyFreeMatrixData(long long spinCount, long long baseBet) : ReelMatrixData(spinCount, baseBet) {}
 
     BuyFreeMatrixData& operator+=(const BuyFreeMatrixData& other) {
-        // base fields — addBase merges totalWins, winningSpins, symbolsData, winDistribution
+        // base fields: addBase merges totalWins, winningSpins, symbolsData, winDistribution
         addBase(other);
 
         // derived fields

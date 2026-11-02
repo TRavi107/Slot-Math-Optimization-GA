@@ -1,6 +1,6 @@
 # =====================================================================
 #  Slot Reelset Optimizer - Configuration
-#  Edit the values below, then run (from the "Math Optimization" folder):
+#  Edit the values below, then run (from the project root):
 #      python Optimizer/main.py GA-config.yaml
 #  Lines starting with # are comments and are ignored.
 # =====================================================================
@@ -91,8 +91,8 @@ freeGame:
   #              fixed, so their trigger rate (1 in X) is measured once per combination
   #              and free RTP = average session win / X. Free hit rate and retrigger rate
   #              are per free spin and come out unchanged. Same statistics with less
-  #              noise, about 5x faster near the targets (validated against fullGame,
-  #              see claude/free-sessions-validation.md). Needs a simulator built from
+  #              noise, about 5x faster near the targets (checked against fullGame).
+  #              Needs a simulator built from
   #              the current Simulator/src. Only free-game goals can be scored this way.
   evaluation: sessions
 
@@ -193,7 +193,7 @@ fitnessVariables:
     - { type: freeRetriggerRate, target: 60, weight: 3, enabled: true }
 
 # ---------------------------------------------------------------------
-#  PATHS (relative to the "Math Optimization" folder)
+#  PATHS (relative to the project root)
 # ---------------------------------------------------------------------
 paths:
   tempParentsFolder: Optimizer/ReelSets/TempParents

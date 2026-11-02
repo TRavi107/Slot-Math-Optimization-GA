@@ -13,16 +13,9 @@ from Parents import Parent, UpdateParentVars, VariableType, findBest
 
 @dataclass(frozen=True)
 class FreeSessions:
-    """
-    How to evaluate a FreeGame candidate without base spins (freeGame.evaluation:
-    sessions): the simulator plays `sessions` free-game sessions directly and divides
-    the average session win by `triggerRate` (the fixed base reels' trigger rate,
-    "1 in X") to get free RTP per base spin. Free hit rate and retrigger rate are per
-    free spin and need no conversion. See the simulator's main.cpp for the details.
-
-    Wherever a `runBaseOnly` flag is passed to Evaluate (True = base game only,
-    False = full game), a FreeSessions value can be passed instead.
-    """
+    """Free-sessions evaluation: play `sessions` free-game sessions directly and divide the
+    average session win by `triggerRate` (1 in X of the fixed base reels) to get free RTP
+    per base spin. Can be passed wherever runBaseOnly is (see main.cpp)."""
     sessions: int
     triggerRate: float
 
@@ -100,12 +93,7 @@ def _write_results(data, filepath):
 
 
 def start_run_entry(startingParents, filepath, seed, run_meta):
-    """
-    Called once at the start of every run. Overwrites seed_<n>'s initial_population
-    and meta, so they always describe the run that produced the results under it
-    (an older run with the same number can no longer leave stale parents behind).
-    Combination results already stored under seed_<n> are kept until re-written.
-    """
+    """Called at the start of every run: overwrite seed_<n>'s initial_population and meta (combination results are kept)."""
     data = _load_results(filepath)
     seed_entry = data.setdefault(f"seed_{seed}", {})
     seed_entry["meta"] = run_meta

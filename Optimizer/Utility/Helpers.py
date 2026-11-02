@@ -1,17 +1,9 @@
 """
-Run plumbing for main.py: things that should not need editing when you change
-the algorithms or the experiment.
+Run plumbing for main.py: seeds, results keys, starting parents, free-game base
+reels and evaluation mode, final check and summary.
 
-    seeds          every seed a run uses, derived from the runNumber
-    results keys   where each experiment is saved in the results file
-    parents        which reelsets a run starts from
-    free game      where the fixed base reels come from, checked before spinning;
-                   how FreeGame candidates are simulated (full game or free sessions)
-    run helpers    per-run / per-stage config copy, final check and bestSpin record,
-                   end-of-batch summary
-
-Careful with the seed functions: changing a label changes the random stream, so
-existing seed_<n> results would no longer be reproducible.
+Careful with the seed labels: changing one changes the random stream and old
+seed_<n> results won't reproduce.
 """
 import copy
 import dataclasses
@@ -26,15 +18,9 @@ from Utility.Utility import (CreateInitialPopulation, EvaluateParents, LoadIniti
                      save_reelset_file, Evaluate, FreeSessions)
 
 
-# =====================================================================
-#  Seeds
-# =====================================================================
+# ---- Seeds ----
 def sim_seed_for(cfg):
-    """
-    One simulator seed for every evaluation in this run, GA and baselines alike
-    (common random numbers): all reelsets see the same reel stops, so fitness
-    differences come from the reels, not from spin luck.
-    """
+    """One simulator seed for every evaluation in the run (GA and baselines): common random numbers."""
     return derive_seed(cfg.runNumber, "sim", cfg.gameMode.name)
 
 
@@ -82,9 +68,7 @@ def trigger_rate_seed_for(cfg):
     return derive_seed(cfg.runNumber, "trigger_rate", cfg.gameMode.name)
 
 
-# =====================================================================
-#  Results keys
-# =====================================================================
+# ---- Results keys ----
 def ga_key(replacement, selection):
     return f"{replacement.name}_{selection.name}"
 
@@ -99,17 +83,11 @@ def experiment_keys(cfg):
 
 
 def results_seed(cfg):
-    """
-    Key results are saved under: BaseGame -> seed_<n>, FreeGame -> seed_<n>_free.
-    Keeping them apart lets both stages share one runNumber without the free-game
-    run overwriting the BaseGame results it reads its base reels from.
-    """
+    """Results key: BaseGame -> seed_<n>, FreeGame -> seed_<n>_free (so free runs don't overwrite base results)."""
     return f"{cfg.runNumber}_free" if cfg.gameMode.name == "FreeGame" else cfg.runNumber
 
 
-# =====================================================================
-#  Starting parents
-# =====================================================================
+# ---- Starting parents ----
 def _read_json(path):
     """Return parsed JSON, or None if the file is missing, empty or broken."""
     if not os.path.isfile(path) or os.path.getsize(path) == 0:
@@ -177,16 +155,12 @@ def _base_run_parents(cfg):
 
 
 def load_initial_parents(cfg):
-    """
-    The parents a run starts from, in this order:
-      1. FreeGame + same: the parents the BaseGame run with this runNumber started from
-      2. results file -> seed_<runNumber> -> initial_population (re-running or extending a run)
-      3. paths.seedParentsFile (a fixed starting set you provide)
-      4. otherwise new random parents, seeded by the runNumber
-    Saved parents always win over regenerating them: they are what the run really used,
-    even if the reel layout or generator has changed since, or the run predates seeding.
-    For fresh parents, use a new runNumber.
-    """
+    """Starting parents, first match wins:
+      1. FreeGame + same: the parents the BaseGame run with this runNumber used
+      2. results file -> seed_<runNumber> -> initial_population
+      3. paths.seedParentsFile
+      4. new random parents seeded by runNumber
+    Saved parents are always reused. For fresh parents use a new runNumber."""
     # FreeGame + same continues the BaseGame run, so it starts from the same parents
     if cfg.gameMode.name == "FreeGame" and cfg.freeGameBaseSource == "same":
         parents = _base_run_parents(cfg)
@@ -220,15 +194,9 @@ def evaluate_population(parents, cfg, label, evaluation=None):
                     evaluation, sim_seed_for(cfg))
 
 
-# =====================================================================
-#  Free game: how candidates are simulated
-# =====================================================================
+# ---- Free game: how candidates are simulated ----
 def measure_trigger_rate(base_reels, cfg):
-    """
-    Trigger rate ("1 in X") of one base reelset, from a base-only run with
-    freeGame.triggerRateSpins spins. Free games are counted but not played, so the free
-    reels in the file do not matter (the base reels are written there as placeholders).
-    """
+    """Trigger rate (1 in X) of a base reelset from a base-only run (free reels in the file are placeholders)."""
     path = f"{cfg.folder}/trigger_rate.json"
     save_reelset_file(base_reels, base_reels, path)
     out = Evaluate(cfg.triggerRateSpins, path, cfg.simulatorPath, trigger_rate_seed_for(cfg), True)
@@ -240,16 +208,11 @@ def measure_trigger_rate(base_reels, cfg):
 
 
 def evaluation_for(cfg, base_reels, trigger_rates):
-    """
-    What the simulator plays when scoring candidates in this stage:
-        BaseGame                         True  (base game only)
-        FreeGame, evaluation fullGame    False (full game)
-        FreeGame, evaluation sessions    FreeSessions(sessions, trigger rate of base_reels)
-    In sessions mode the trigger rate of each base reelset is measured once and kept in
-    `trigger_rates` (a dict the caller owns, keyed by the base reels). freeGame.sessions
-    auto = spins / trigger rate: the number of free games a full-game evaluation with
-    run.spins base spins plays on average, so both modes rest on the same free-game data.
-    """
+    """What the simulator plays when scoring candidates:
+        BaseGame                       True  (base game only)
+        FreeGame, fullGame             False (full game)
+        FreeGame, sessions             FreeSessions(sessions, trigger rate of base_reels)
+    Trigger rates are cached in `trigger_rates`. sessions auto = spins / trigger rate."""
     if cfg.gameMode.name == "BaseGame":
         return True
     if cfg.freeEvaluation != "sessions":
@@ -273,9 +236,7 @@ def evaluation_meta(evaluation):
     return {"mode": "baseOnly" if evaluation else "fullGame"}
 
 
-# =====================================================================
-#  Free game: fixed base reels
-# =====================================================================
+# ---- Free game: fixed base reels ----
 def _unwrap_reelset(reels):
     """Parent files written by save_reelset_file have an extra list level: [[reel0, reel1, ...]]."""
     if reels and isinstance(reels[0], list) and reels[0] and isinstance(reels[0][0], list):
@@ -304,14 +265,9 @@ def base_reels_from_file(cfg):
 
 
 def base_reels_from_same_combos(cfg):
-    """
-    same: for every experiment in this run (each GA combination and each baseline, per
-    mutation count), read the best base reels the BaseGame run with the same runNumber
-    (seed_<runNumber>) saved for that same experiment. A baseline's free-game stage
-    therefore continues that baseline's own base-game result.
-    Everything is loaded up front so a missing entry stops the run before any spinning.
-    Returns {(mutation, results key): base_reels}.
-    """
+    """baseReelSource same: best base reels each experiment found in seed_<runNumber>.
+    Loaded up front so a missing entry stops before any spinning.
+    Returns {(mutation, results key): base_reels}."""
     data = _read_json(cfg.resultFile)
     if data is None:
         raise ConfigError(f"freeGame: results file '{cfg.resultFile}' not found or empty. "
@@ -342,12 +298,7 @@ def base_reels_from_same_combos(cfg):
 
 
 def preflight(cfg):
-    """
-    Check every run can start before any spinning, so a 30-run batch can't fail
-    hours in because run 17 has no BaseGame results to read.
-    Both mode needs no check: its free stage reads the BaseGame results the same
-    run has just produced.
-    """
+    """Check every run can start before spinning (e.g. FreeGame runs need their BaseGame results)."""
     if cfg.runMode != "FreeGame":
         return
     if cfg.freeGameBaseSource == "manual":
@@ -357,21 +308,14 @@ def preflight(cfg):
         base_reels_from_same_combos(for_stage(for_run(cfg, n), cfg.stages[0]))
 
 
-# =====================================================================
-#  Run helpers
-# =====================================================================
+# ---- Run helpers ----
 def for_run(cfg, run_number):
     """Copy of the config for one run: identical settings, this run number as the seed."""
     return dataclasses.replace(cfg, runNumber=run_number)
 
 
 def for_stage(cfg, mode):
-    """
-    Copy of the config for one stage (BaseGame or FreeGame) of a run: that stage's
-    game mode and fitness goals. Seeds, results keys and parent loading all follow
-    gameMode, so in Both mode each stage behaves exactly as if it had been run on its
-    own with gameMode set to that stage (same seeds, same seed_<n> / seed_<n>_free keys).
-    """
+    """Config copy for one stage (BaseGame / FreeGame): that stage's game mode and goals, same as running it alone."""
     return dataclasses.replace(cfg, gameMode=mode, fitnessVariables=cfg.fitnessByMode[mode])
 
 
@@ -380,12 +324,7 @@ def is_both(cfg):
 
 
 def final_check_base_only(cfg):
-    """
-    The final check plays the same game the stage was tuned on: base game only in the
-    BaseGame stage (its free reels are still random starting reels, so playing them
-    would cost time and give meaningless free-game stats), full game in the FreeGame stage.
-    Free games are still triggered and counted, so freeTriggerRate stays valid.
-    """
+    """Final check plays the game the stage tuned: base only for BaseGame (free reels are still random), full game for FreeGame."""
     return cfg.gameMode.name == "BaseGame"
 
 

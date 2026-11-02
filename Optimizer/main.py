@@ -1,69 +1,22 @@
 """
 Slot reelset optimizer - entry point.
 
-Usage:
-    python main.py                   # uses GA-config.yaml
-    python main.py my_config.yaml    # uses another config file
+    python Optimizer/main.py                  # uses GA-config.yaml
+    python Optimizer/main.py my_config.yaml
 
-All settings live in the YAML config; nothing here needs editing for a normal run.
-This file holds the experiment itself: the GA's settings and generation loop, the
-baseline runner and the sweep over runs, stages and combinations. The run plumbing
-that shouldn't need editing (seeds, starting parents, free-game base reels, summary)
-lives in Helpers.py.
+All settings are in the YAML config. This file has the GA loop, the baseline
+runner and the sweep over runs / stages / combinations. Seeding, starting parents,
+free-game base reels and the summary are in Utility/Helpers.py.
 
-GAME MODES (run.gameMode)
-    BaseGame   tune the base reels                         -> saved under seed_<n>
-    FreeGame   keep base reels fixed, tune the free reels  -> saved under seed_<n>_free
-    Both       for every run number: the whole BaseGame sweep first, then the whole
-               FreeGame sweep. Each free-game combination (mutation + replacement +
-               selection, or mutation + baseline) uses the best base reels that SAME
-               combination just found in the BaseGame stage as its fixed base reels,
-               and starts from the same initial parents. Results are identical to
-               running BaseGame and then FreeGame (baseReelSource: same) separately
-               with the same run number and settings.
+Game modes (run.gameMode):
+    BaseGame   tune base reels                          -> seed_<n>
+    FreeGame   base reels fixed, tune free reels        -> seed_<n>_free
+    Both       BaseGame sweep, then FreeGame sweep; each free-game combination
+               starts from the base reels the same combination found
 
-FREE-GAME EVALUATION (freeGame.evaluation)
-    fullGame   every FreeGame candidate is scored on run.spins full-game spins.
-    sessions   every FreeGame candidate is scored on free-game sessions played
-               directly (no base spins): the base reels are fixed, so their trigger
-               rate is measured once per experiment and free RTP is scaled by it.
-               Same statistics, several times faster. Final checks stay full game.
-
-MULTIPLE RUNS
-    run.runNumbers lists the runs to execute, e.g. [1, 2, 3] or "1-30".
-    The whole experiment sweep is repeated once per run number, and each run is
-    saved under its own seed_<n> - exactly as if it had been run on its own.
-    To re-create one run later, set runNumbers: [n] with the same config.
-
-REPRODUCIBILITY
-    Each run number is that run's master seed. Every random choice (initial
-    parents, selection, crossover, mutation) and every simulator call is seeded
-    from it, so the same run number + config reproduces seed_<n> exactly.
-    Each (gameMode, mutation, replacement, selection) combination has its own
-    random stream, so running a single combination gives the same result as
-    running it inside a full sweep. Each baseline has its own stream too.
-
-BASELINES
-    baselines.methods adds Random search, Hill climbing (1+1)-EA and Simulated
-    annealing to every run. They get the GA's budget (run.generations evaluations),
-    its starting reelsets (they start from the best initial parent), its spins and
-    its simulator seed, and are saved next to the GA under
-        seed_<n> -> results -> mutation_<m> -> <Method>_Baseline
-    Set experiments.runGA: false to add baselines to runs whose GA results already
-    exist, without re-running the GA (each run starts from the initial_population
-    saved for it in the results file).
-
-STARTING PARENTS
-    A run reuses the initial parents saved for its runNumber if there are any,
-    otherwise it generates new ones seeded by the runNumber
-    (see Helpers.load_initial_parents). For fresh parents, use a new runNumber.
-
-COMPUTING COST (see Compute.py)
-    Every simulator call is timed. Each experiment saves its total timing (search,
-    final check, wall time) under ... -> <combo> -> timing,
-    and each stage of a run saves its totals under seed_<n> -> compute and the machine
-    (CPU, threads, OS, compiler, build mode) under seed_<n> -> machines.
-    Compare.py turns these into the computing-cost charts and report.
+Each run number is the master seed for everything (parents, selection, crossover,
+mutation, simulator), so the same run number + config gives the same seed_<n>.
+See Running.md for the details.
 """
 import copy
 import json
@@ -221,11 +174,7 @@ def run_optimization(initial_parents, replacement, selection, mutation_count, cf
 
 
 def run_baseline(start_parents, method, mutation_count, cfg, fixed_base_reels, evaluation=None):
-    """
-    One baseline run on the GA's terms: same evaluated starting population, same
-    budget (run.generations evaluations), same spins and simulator seed, same
-    simulator mode, same mutation operator. Returns (BaselineRun, combo_meta).
-    """
+    """One baseline run with the GA's starting population, budget, spins, sim seed and mutation. Returns (BaselineRun, combo_meta)."""
     budget = cfg.generations
     seed = baseline_seed_for(cfg, method, mutation_count)
     rng = make_rng(cfg.runNumber, *baseline_stream_labels(cfg, method, mutation_count))
@@ -430,12 +379,8 @@ def run_stage(cfg):
 
 # ---------------- one run: every stage ----------------
 def run_one(cfg):
-    """
-    Run every stage of cfg.runMode for cfg.runNumber: BaseGame, FreeGame, or (Both)
-    BaseGame then FreeGame. In Both, the free stage reads each combination's best base
-    reels from the BaseGame results this run has just saved under seed_<n>.
-    Returns [(combination label, best fitness)] for the end-of-batch summary.
-    """
+    """Every stage of cfg.runMode for cfg.runNumber (Both = BaseGame then FreeGame).
+    Returns [(combination label, best fitness)] for the summary."""
     summary = []
     both = is_both(cfg)
     for i, mode in enumerate(cfg.stages, start=1):

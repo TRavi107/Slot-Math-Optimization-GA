@@ -1,37 +1,15 @@
 """
-Mutation-count tests for the GA reelset-tuning experiment (companion to Stats.py).
+Mutation-count tests (companion to Stats.py).
 
-Stats.py tests methods against each other at ONE mutation count at a time. This script adds the two
-comparisons it does not make:
+1. per method: mutation 1 vs 3 vs 5 vs 10 (Friedman, then Wilcoxon + Holm)
+2. every method at its own best mutation count, GA vs baselines
 
-  1. mutation (<method>)      For each method: mutation 1 vs 3 vs 5 vs 10.
-                              Friedman across the four counts, then pairwise Wilcoxon + Holm.
-  2. best mutation            Every method at its OWN best mutation count (lowest median error),
-                              then GA vs baselines (Holm over the GA-baseline pairs only) and an
-                              exploratory everything-vs-everything family.
+Same statistics and noise floor as Stats.py, on the stored final checks.
+Random search ignores the mutation count, so it is left out.
+Note: the best count is picked and tested on the same 30 seeds.
 
-Same statistics as Stats.py: runs are paired by seed (every method and mutation count on seed_k starts
-from the same initial population), two-sided Wilcoxon signed-rank (zero_method="pratt"), Holm
-correction inside each family, Vargha-Delaney A12, and the same noise floor
-(2.77 x fitness SD, 0.034 base / 0.10 free at 10M spins, scaled to the re-check spins).
-
-Scores are the stored final checks (bestSpin, source "finalCheck"), with fitness recomputed from the
-config's targets and weights - the numbers Stats.py uses with --reeval auto/stored when every run has
-a final check. Random search ignores the mutation count, so it is left out of both families.
-
-Caveat for family 2: each method's best mutation count is picked on the same 30 seeds it is then
-tested on, which slightly favours methods whose medians vary more across counts. Say so in the paper,
-or pick the counts on one stage and test on the other.
-
-Usage (from the "Math Optimization" folder):
-    python Optimizer/MutationStats.py                         # Results/results.json, base game
-    python Optimizer/MutationStats.py --stage free
-    python Optimizer/MutationStats.py Results/other.json --stage free --out Results/stats/mut_free
-
-Writes to <out> (default Results/stats/mutation_<stage>):
-    mutation_report.md       tables + one sentence per supported claim
-    mutation_pairwise.csv    every comparison      mutation_friedman.csv   omnibus tests
-    best_mutation.csv        each method's best count and median at every count
+    python Optimizer/Stats/MutationsStats.py
+    python Optimizer/Stats/MutationsStats.py --stage free
 """
 import argparse
 import itertools
@@ -56,7 +34,7 @@ OUTPUT_KEYS = {"baseRTP": "baseRTP", "baseHitRate": "baseHitRate", "freeRTP": "f
                "freeRetriggerRate": "freeReTriggerRate"}
 
 
-# ----------------------------------------------------------------- loading
+# ---- loading ----
 def load_goals(config_path, stage):
     import yaml
     with open(config_path, encoding="utf-8") as f:
@@ -103,7 +81,7 @@ def load(json_file, stage, goals):
     return pd.DataFrame(rows)
 
 
-# ----------------------------------------------------------------- statistics (same as Stats.py)
+# ---- statistics (same as Stats.py) ----
 def a12(x, y):
     x, y = np.asarray(x, float), np.asarray(y, float)
     return ((x[:, None] < y[None, :]).sum() + 0.5 * (x[:, None] == y[None, :]).sum()) / (len(x) * len(y))
@@ -154,7 +132,7 @@ def compare_family(wide, family, alpha, floor, keep=None):
     return fr, rows
 
 
-# ----------------------------------------------------------------- report
+# ---- report ----
 def fmt_p(p):
     return "n/a" if p != p else ("< 0.001" if p < 0.001 else f"{p:.3f}")
 

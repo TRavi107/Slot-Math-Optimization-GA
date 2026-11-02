@@ -1,52 +1,21 @@
 """
-Statistical tests for the GA reelset-tuning experiment.
+Statistical tests for the experiment.
 
-Every "X beats Y" claim in the paper gets a p-value (Holm-corrected), an effect size (Vargha-Delaney A12)
-and a check that the gap is bigger than the simulator's own measurement noise.
+1. Re-evaluate: each run's final best reelset is scored again with 100M spins on a
+   seed the run never used (the in-run best is biased low). --reeval auto|stored|run|off
+2. Test: runs are paired by seed. Per mutation count and family:
+   Friedman -> Wilcoxon signed-rank -> Holm. Effect size Vargha-Delaney A12.
+   Families: strategy, selection (per strategy), ga_vs_baselines, all (exploratory)
+3. Noise floor: fitness SD at 10M spins is 0.034 base / 0.10 free (NoiseStudy.py),
+   scaled by 1/sqrt(spins); a gap must be > 2.77 SD. Claims are listed only if
+   Holm-significant, A12 at least small and above the floor.
 
-Pipeline
---------
-1. RE-EVALUATE. Each run's final best reelset is measured again with many spins (default 100M) on a
-   simulator seed the run never used. The in-run "final best" is the lowest of ~1000 noisy 10M-spin
-   measurements, so it is biased low (winner's curse); the re-evaluated error is not.
-   --reeval auto   (default) use the run's own final check (bestSpin, written by main.py when
-                   run.finalCheckSpins > 0) if it has at least --reeval-spins spins, else simulate here
-   --reeval stored only use the stored final checks; stop if one is missing or too short
-   --reeval run    always simulate here, with a fresh seed
-   --reeval off    skip re-evaluation and test the in-run 10M final best (biased; not for the paper)
-   Simulations run here are cached in <out>/reeval_<stage>.json, so a re-run of this script (or one
-   stopped half way) only simulates what is missing. Fitness is always recomputed from the simulator
-   output with the targets and weights in the config, the same formula as the optimizer.
+    python Optimizer/Stats/Stats.py
+    python Optimizer/Stats/Stats.py --stage free
+    python Optimizer/Stats/Stats.py --reeval off      # quick look, in-run numbers
 
-2. TEST. Runs are PAIRED by seed (every method on seed_k starts from the same initial population).
-   For each mutation rate and each planned family:
-       Friedman omnibus test -> pairwise Wilcoxon signed-rank -> Holm correction inside the family
-   Families:
-       strategy         Steady-state vs Elitist vs Generational (per seed: median over the 3 selections)
-       selection (...)  Tournament vs Roulette vs SUS, inside each replacement strategy
-       ga_vs_baselines  every GA configuration vs every baseline
-       all              exploratory, everything vs everything
-   Effect size A12 = P(X < Y) + 0.5 P(X = Y), X = first method's error, Y = second's; > 0.5 means the
-   first method tends to end LOWER. Bands (Vargha & Delaney 2000): |A12 - 0.5| < 0.06 negligible,
-   < 0.14 small, < 0.21 medium, otherwise large.
-
-3. NOISE FLOOR. From the simulator noise study (claude/noise-study-results.md): fitness SD at 10M spins
-   is 0.034 (BaseGame) and 0.10 (FreeGame), scaling as 1/sqrt(spins). Two independent measurements must
-   differ by 2.77 SD to be distinguishable at 95%. A claim is only listed when it is significant after
-   Holm, its A12 is at least small AND the median gap is above that floor.
-
-Usage (from the "Math Optimization" folder):
-    python Optimizer/Stats.py                                  # Results/results.json, base game
-    python Optimizer/Stats.py --stage free
-    python Optimizer/Stats.py --reeval run --reeval-spins 300_000_000
-    python Optimizer/Stats.py --reeval off                     # quick look, in-run numbers
-    python Optimizer/Stats.py --metric evals                   # evaluations to reach error <= 0.2
-
-Writes to <out> (default Results/stats, or Results/stats/FreeGame):
-    stats_report.md      paper-ready tables and one sentence per supported claim
-    stats_pairwise.csv   every comparison        stats_friedman.csv  omnibus tests
-    stats_runs.csv       every run's in-run and re-evaluated error, with the seed and spins used
-    reeval_<stage>.json  cache of the simulations run by this script
+Output (Results/stats or Results/stats/FreeGame): stats_report.md, stats_pairwise.csv,
+stats_friedman.csv, stats_runs.csv, reeval_<stage>.json (cache)
 """
 import argparse
 import hashlib
@@ -85,7 +54,7 @@ def _int(v):
     return int(str(v).replace("_", "").strip())
 
 
-# ----------------------------------------------------------------- config
+# ---- config ----
 def load_settings(config_path, stage):
     """Fitness goals for the stage, simulator path and a scratch folder, read from the GA config."""
     import yaml
@@ -109,7 +78,7 @@ def fitness_of(output, goals):
     return sum(w * abs(output[k] - t) / t for k, t, w in goals)
 
 
-# ----------------------------------------------------------------- loading
+# ---- loading ----
 def _unwrap(reels):
     """Parent files have an extra list level: [[reel0, reel1, ...]]."""
     if reels and isinstance(reels[0], list) and reels[0] and isinstance(reels[0][0], list):
@@ -155,7 +124,7 @@ def load(json_file, stage="base"):
     return pd.DataFrame(rows)
 
 
-# ----------------------------------------------------------------- re-evaluation
+# ---- re-evaluation ----
 def _reeval_seed(master, stage, mutation, combo):
     """Simulator seed for this script's re-evaluation: a label no optimizer stream uses, so it is
     independent of the run's own simulator seed and of its final-check seed."""
@@ -217,7 +186,7 @@ def reevaluate(df, mode, stage, spins, settings, cache_path):
         from Optimizer.Utility.Utility import Evaluate, save_reelset_file   # project modules (Optimizer/)
         if not os.path.isfile(settings["simulator"]):
             raise SystemExit(f"[stats] simulator not found at {settings['simulator']} (paths.simulatorPath). "
-                             "Build it, or run from the 'Math Optimization' folder.")
+                             "Build it, or run from the project root.")
         base_only = stage == "base"      # same mode as the optimizer scored this stage in
         path = os.path.join(settings["scratch"], "stats_reeval.json")
         print(f"[stats] re-evaluating {len(unique)} final reelset(s) with {spins:,} spins each "
@@ -245,7 +214,7 @@ def reevaluate(df, mode, stage, spins, settings, cache_path):
     return df
 
 
-# ----------------------------------------------------------------- statistics
+# ---- statistics ----
 def a12(x, y):
     """Vargha-Delaney A12 for MINIMISATION: probability a run of x ends lower than a run of y (ties = 1/2)."""
     x, y = np.asarray(x, float), np.asarray(y, float)
@@ -329,7 +298,7 @@ def families(df, score):
         yield "all (exploratory)", m, g.pivot_table(index="seed", columns="method", values=score)
 
 
-# ----------------------------------------------------------------- report
+# ---- report ----
 def fmt_p(p):
     return "n/a" if p != p else ("< 0.001" if p < 0.001 else f"{p:.3f}")
 
@@ -406,7 +375,7 @@ def write_report(df, fried, pair, out, args, score, unit, floor, min_n):
         f.write("\n".join(L) + "\n")
 
 
-# ----------------------------------------------------------------- main
+# ---- main ----
 def main():
     ap = argparse.ArgumentParser(description="Re-evaluate final reelsets, then Friedman + Wilcoxon/Holm + A12.")
     ap.add_argument("results", nargs="?", default="Results/results.json")

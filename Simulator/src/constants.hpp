@@ -75,9 +75,7 @@ struct GameFeatureConsts {
 namespace Constants {
 
 
-    // ─────────────────────────────────────────────
     // File paths and sheet names
-    // ─────────────────────────────────────────────
     inline const std::string reelSetFilePath = std::string(SOURCE_DIR) + "/src/reelset.json";
     inline const char* baseReelWorkBook = "BaseGameReel";
     inline const char* freeReelWorkBook = "FreeGameReel";
@@ -85,14 +83,12 @@ namespace Constants {
     inline const int baseBet = 20;
     inline const int freeSpinsCount = 10;
     inline const int maxWin = 22000;
-    // ─────────────────────────────────────────────
     // Matrix dimensions  [rows, cols]
-    // ─────────────────────────────────────────────
     inline constexpr int matrixSize[2] = { 3,5 };
 
     inline GameSymbols gameSymbolFromString(const char* input) {
 
-        std::string value(input);  // convert once at the top
+        std::string value(input);
         std::transform(value.begin(), value.end(), value.begin(), ::toupper);
 
         if (value == "AA") return GameSymbols::AA;

@@ -80,9 +80,7 @@ ORDER = ["Steady-state + Tournament", "Steady-state + SUS", "Steady-state + Roul
          "Hill climbing", "Simulated annealing"]
 
 
-# ---------------------------------------------------------------------------
 # 15: how big is simulator noise next to the errors and the seed-to-seed spread
-# ---------------------------------------------------------------------------
 def chart_noise():
     fig, axes = plt.subplots(1, 2, figsize=(13, 6.2), sharey=True)
     for ax, (df, mode, title) in zip(axes, [(base, "BaseGame", "Base game"),
@@ -132,9 +130,7 @@ def chart_noise():
     plt.close(fig)
 
 
-# ---------------------------------------------------------------------------
 # 16: same seed, same parents, same mutation: how often does each GA beat hill climbing
-# ---------------------------------------------------------------------------
 def chart_paired():
     ga = ORDER[:9]
     stages = [(base, "Base game"), (free, "Free game (Both mode)"),
@@ -184,9 +180,7 @@ def chart_paired():
     plt.close(fig)
 
 
-# ---------------------------------------------------------------------------
 # 17: one picture of all three experiments, each method at its best mutation count
-# ---------------------------------------------------------------------------
 def chart_overview():
     files = [("best_mut_base", "Base game", floor100["BaseGame"]),
              ("best_mut_free", "Free game (Both mode)", floor100["FreeGame"]),

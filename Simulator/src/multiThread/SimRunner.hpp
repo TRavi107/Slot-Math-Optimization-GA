@@ -31,12 +31,11 @@ namespace SimRunner {
     //   The work is cut into fixed-size jobs (jobSize, JOB_SPINS by default). Job j
     //   always uses the RNG seeded with Rng::jobSeed(seed, j), and job results are
     //   merged in job order. So the result depends only on (seed, spinCount, jobSize)
-    //   — never on the number of CPU cores or on which thread happened to run which job.
+    //   and never on the number of CPU cores or on which thread happened to run which job.
     //   (The timing in RunInfo does depend on the machine; it is not part of the result.)
     //
     //   "spins" below means the unit the caller counts: base spins in the normal
     //   modes, free-game sessions in the free-sessions mode (main.cpp).
-    // ─────────────────────────────────────────────
 
     constexpr long long JOB_SPINS = 1'000'000;   // fixed: changing it changes results
     // Free-sessions mode: one session is ~10-20 free spins, so a much smaller job keeps
@@ -62,9 +61,7 @@ namespace SimRunner {
         return static_cast<int>(std::max(1LL, std::min<long long>(workers, jobCount)));
     }
 
-    // ─────────────────────────────────────────────
     // Progress bar printer
-    // ─────────────────────────────────────────────
     inline void print_progress(long long completed, long long total) {
         int percent = static_cast<int>((static_cast<double>(completed) / total) * 100);
         int filled = percent / 5;   // 20 blocks = 100%
@@ -73,10 +70,8 @@ namespace SimRunner {
             << "  (" << completed << "/" << total << " spins)" << std::flush << "\r";
     }
 
-    // ─────────────────────────────────────────────
     // Multi-threaded, deterministic simulation runner
     // workerOverride > 0 fixes the thread count (results stay identical).
-    // ─────────────────────────────────────────────
     template <typename Result, typename MakeResult, typename RunSim>
     inline Result RunMultiThreadSim(const long long spinCount, const uint64_t seed,
                                     MakeResult makeResult, RunSim runSim,
@@ -104,13 +99,13 @@ namespace SimRunner {
             }
         };
 
-        // ── Launch workers (futures so exceptions reach the caller) ──
+        // launch workers (futures so exceptions reach the caller)
         std::vector<std::future<void>> futures;
         futures.reserve(workers);
         for (int i = 0; i < workers; ++i)
             futures.push_back(std::async(std::launch::async, worker));
 
-        // ── Progress monitor ──────────────────────────────────────────
+        // progress monitor
         auto allDone = [&]() {
             for (auto& f : futures)
                 if (f.wait_for(std::chrono::milliseconds(0)) != std::future_status::ready)
@@ -136,7 +131,7 @@ namespace SimRunner {
         print_progress(spinCount, spinCount);
         std::cout << "\n";
 
-        // ── Merge in job order — fixed floating-point summation order ─
+        // merge in job order (fixed floating-point summation order)
         Result finalSim = makeResult(spinCount);
         for (auto& r : jobResults)
             finalSim += *r;

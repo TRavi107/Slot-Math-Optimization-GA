@@ -1,24 +1,15 @@
 """
-Set up experiment 2: the FreeGame stage re-run with ONE fixed base reelset for every method and seed.
+Set up experiment 2: FreeGame stage re-run with ONE fixed base reelset for every
+method and seed (in Both mode each method's free stage uses its own base reels,
+which mixes base-stage luck into the free-game comparison).
 
-Why: in Both mode each combination's free stage starts from the base reels that same combination found,
-so free-game differences mix free-stage search quality with base-stage luck. Fixing the base reels
-removes that confound. Everything else (seeds, initial free reels, budget, spins, sessions mode,
-final check) stays as in the original sweep.
+Writes, without touching existing files: the fixed base reelset, a copy of the
+results with BaseGame entries only, and a FreeGame config pointing at them.
 
-What it writes (nothing existing is modified):
-  1. <base-file>      the fixed base reelset   (default Optimizer/ReelSets/fixed_base.json)
-  2. <out-results>    a copy of the results with only the BaseGame entries (seed_<n>), no seed_<n>_free.
-                      The new runs read their initial parents from it and write their own seed_<n>_free,
-                      so old Both-mode free results can never mix with the new ones.
-  3. <config-out>     a FreeGame config pointing at 1 and 2 (comments from the original are not kept).
+    python Optimizer/prepare_fixedBase.py GA-config.yaml
+    python Optimizer/prepare_fixedBase.py GA-config.yaml --base seed_18/mutation_1/SteadyState_RouletteSelection
 
-Usage (from the "Math Optimization" folder):
-    python Optimizer/prepare_fixedbase.py GA-config.yaml
-    python Optimizer/prepare_fixedbase.py GA-config.yaml --base seed_18/mutation_1/SteadyState_RouletteSelection
-    python Optimizer/prepare_fixedbase.py GA-config.yaml --mutations 3,5 --baselines HillClimbing,SimulatedAnnealing
-
-Then (a fresh Parallel/ folder is required, see the printed notes):
+Then (in a fresh Parallel/ folder):
     python Optimizer/run_parallel.py launch GA-config-fixedbase.yaml --runs 1-30 --threads 10
     python Optimizer/run_parallel.py merge  GA-config-fixedbase.yaml --runs 1-30
 """

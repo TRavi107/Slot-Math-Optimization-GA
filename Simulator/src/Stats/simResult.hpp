@@ -3,9 +3,7 @@
 #include "freeMatrixData.hpp"
 #include "buyFreematrixData.hpp"
 #include <iostream>
-// ─────────────────────────────────────────────
 // SimResult
-// ─────────────────────────────────────────────
 struct SimResult {
     long long spinCount = 0;
     int BASEBET = 0;
@@ -49,11 +47,10 @@ struct SimResult {
         return *this;
     }
 
-    // operator+ then becomes trivial and benefits from NRVO
     SimResult operator+(const SimResult& other) const {
-        SimResult result = *this;   // copy once
-        result += other;            // modify in place
-        return result;              // NRVO eliminates this copy
+        SimResult result = *this;
+        result += other;
+        return result;
     }
 
     void calculate() {
