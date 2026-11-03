@@ -1,26 +1,8 @@
 """
-Computing cost: the time of every simulator call, and the machine it ran on.
+Computing cost: timing of every simulator call and the machine it ran on.
 
-Every simulator call goes through Utility.Evaluate, which records it here:
-    seconds      wall time of the call as the optimizer pays it (process start,
-                 reading the reelset, spinning, writing and reading the JSON)
-    simSeconds   time the simulator itself spent spinning (its "compute" block)
-    spins, threads, baseOnly
-    mode         fullGame | baseOnly | freeSessions. In freeSessions calls "spins"
-                 is the number of free-game sessions played, not base spins.
-
-main.py takes a mark() before a piece of work and since(mark) after it, so each
-experiment gets exactly its own calls, without passing a timer through every
-function. Nothing here changes any result: timing is recorded next to the
-results, never used by the search.
-
-What ends up in results.json:
-    seed_<n> -> compute -> totalSeconds       total time of this stage of the run
-    seed_<n> -> machines -> <id>              the machine description (CPU, threads, OS,
-                                              compiler, build mode, ...)
-    seed_<n> -> results -> mutation_<m> -> <combo> -> timing
-                                              per experiment: total simulator time of the
-                                              search, final check, wall time
+Utility.Evaluate logs each call here. main.py uses mark() / since() to get the calls
+of one experiment. Timing is only saved next to the results, never used by the search.
 """
 import hashlib
 import json
@@ -33,9 +15,7 @@ _CALLS = []          # one record per simulator call made by this process
 _LAST_BUILD = {}     # the simulator's own "build" block, from the latest call
 
 
-# =====================================================================
-#  Call log
-# =====================================================================
+# ---- Call log ----
 def record_call(seconds, spins, run_only_base, output):
     """Called by Utility.Evaluate after every simulator call."""
     global _LAST_BUILD
@@ -116,9 +96,7 @@ def experiment_timing(start_calls, search_calls, final_calls, wall_seconds, mach
     return timing
 
 
-# =====================================================================
-#  Machine description
-# =====================================================================
+# ---- Machine description ----
 def _run(cmd):
     try:
         return subprocess.run(cmd, capture_output=True, text=True, timeout=5).stdout.strip()
@@ -212,9 +190,8 @@ def _file_sha(path):
 
 def machine_info(simulator_path):
     """
-    The machine and simulator build that produced the timings. The simulator part
-    comes from its own output, so call this after at least one evaluation.
-    No host or user name is stored, so results.json can be published as is.
+    Machine and simulator build that produced the timings (no host or user name).
+    Call after at least one evaluation: the build info comes from the simulator output.
     """
     system = platform.system()
     model, cores, mem = {"Linux": _cpu_linux, "Darwin": _cpu_macos,
@@ -253,7 +230,7 @@ def describe(info, threads=()):
 
 
 def warn_if_slow_build():
-    """A Debug simulator is many times slower and makes every timing meaningless."""
+    """Warn if the simulator is a Debug build (its timings are not representative)."""
     if _LAST_BUILD and _LAST_BUILD.get("optimized") is False:
         print("[compute] WARNING: the simulator was built WITHOUT optimisation "
               f"({_LAST_BUILD.get('buildType')}). Rebuild with -DCMAKE_BUILD_TYPE=Release; "

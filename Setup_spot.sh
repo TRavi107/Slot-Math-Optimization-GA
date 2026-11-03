@@ -1,8 +1,7 @@
 #!/bin/bash
-# Set up a fresh Ubuntu 24.04 spot instance for the slot-math GA sweep.
 #
 # Usage (on the instance, after copying or cloning the project):
-#     bash setup_spot.sh ~/Slot-Math-Optimization-GA sim-result-030777446278-us-east-1-an
+#     bash Setup_spot.sh ~/Slot-Math-Optimization-GA <your-bucket>
 #     (arguments: project folder, S3 bucket for the results)
 #
 # Installs the build tools, builds the simulator (Release, tuned for this CPU),

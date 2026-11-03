@@ -10,11 +10,7 @@
 #include "Utility/MiniJson.hpp"
 #include "Utility/Rng.hpp"
 #include "constants.hpp"
-// ─────────────────────────────────────────────
-// get_col_data
-// Reads a single reel strip from one Excel column (1-based col index).
-// Skips null/empty cells, starts from row 2 (row index 1 in 0-based).
-// ─────────────────────────────────────────────
+// get_reel_data: reads the reels of one reelset from the reelset JSON file.
 namespace ReelFunctions {
 
     inline void get_reel_data(const char* sheetName, const char* jsonFilePath,
@@ -84,14 +80,13 @@ namespace ReelFunctions {
 
                 GameSymbols sym = Constants::gameSymbolFromString(cell.str.c_str());
                 if (sym == GameSymbols::Invalid)
-                    continue;                                   // skip unknown symbols, as before
+                    continue;                                   // skip unknown symbols
 
                 out.push_back(sym);
             }
         }
     }
 
-    // Kept so existing code that names ReelFunctions::Xoshiro256ss still compiles.
     using Xoshiro256ss = Rng::Xoshiro256ss;
 
     // generate_slot_matrix
@@ -99,7 +94,6 @@ namespace ReelFunctions {
     // then transposes from [col][row] to [row][col].
     // The RNG is passed in (no hidden thread_local / random_device),
     // so the same seed always produces the same stops.
-    // ─────────────────────────────────────────────
     inline void generate_slot_matrix(const std::vector<std::vector<GameSymbols>>& reelsVector,
                                  const int matrixSize[2],
                                  std::vector<std::vector<GameSymbols>>& matrix,

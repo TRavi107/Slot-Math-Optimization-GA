@@ -1,49 +1,23 @@
 """
-Run several run numbers (seeds) of the optimizer at the same time.
-
-Run from the "Math Optimization" folder:
+Run several run numbers at the same time. Results are the same as running them one
+by one (every run is seeded only by its run number).
 
     python Optimizer/run_parallel.py launch GA-config.yaml --workers 6 --threads 10
     python Optimizer/run_parallel.py status GA-config.yaml
     python Optimizer/run_parallel.py merge  GA-config.yaml
+    python Optimizer/run_parallel.py pull   GA-config.yaml --s3 s3://bucket/prefix
 
-launch  Starts one optimizer process per run number, at most --workers at a time.
-        Each run gets its own folder Parallel/run_<n>/ with its own config, temp
-        reelsets, initial parents and results file, so runs cannot overwrite each
-        other's files. Each simulator call uses --threads threads (SIM_THREADS).
-        A 10M-spin call has only 10 jobs, so --threads 10 is the useful maximum;
-        a good --workers is (CPU cores) / threads.
-        Runs that already finished are skipped, so after an interruption (e.g. a
-        spot instance being reclaimed) just run the same command again.
+launch  one process per run in Parallel/run_<n>/, at most --workers at once.
+        Finished runs are skipped, so after a spot interruption just run it again.
+        A 10M-spin call has 10 jobs, so --threads 10 is the useful max.
+status  done / running / failed runs
+merge   copy every finished seed_<n> (and seed_<n>_free) into the config's
+        resultFile (old file backed up first)
+pull    download finished runs from S3 (needs --s3)
 
-status  Shows which runs are done, running or failed.
-
-merge   Copies seed_<n> (and seed_<n>_free) of every finished run into the
-        resultFile from the config. A backup of the old file is saved first.
-
-pull    (needs --s3) Downloads the finished runs from S3 into Parallel/, e.g. on a
-        new spot instance, so the next launch skips them.
-
-Results are identical to running the same run numbers one after another:
-every run is seeded only by its run number, never by timing or thread count.
-
-Options:
-    --runs 1-30       run numbers to do (default: run.runNumbers from the config)
-    --workers N       runs at the same time (default: CPU cores // threads)
-    --threads N       simulator threads per run (default: 10)
-    --s3 URI          S3 location for uploads, e.g. s3://sim-result-temp/sweep1
-                      launch: after each run finishes (or fails), uploads
-                              <URI>/Parallel/run_<n>/{results.json, log.txt, config.yaml, DONE}
-                      merge:  uploads the combined file to <URI>/results.json
-                              (plus a timestamped copy, so no merge overwrites another)
-                      pull:   downloads the finished runs back
-                      Uses boto3 if installed, otherwise the aws CLI. A failed upload
-                      is reported and retried at the end; it never stops the runs.
-
-Example on a spot instance:
-    python Optimizer/run_parallel.py pull   GA-config.yaml --runs 1-30 --s3 s3://sim-result-temp/sweep1
-    python Optimizer/run_parallel.py launch GA-config.yaml --runs 1-30 --s3 s3://sim-result-temp/sweep1
-    python Optimizer/run_parallel.py merge  GA-config.yaml --runs 1-30 --s3 s3://sim-result-temp/sweep1
+--runs 1-30, --workers N, --threads N (default 10), --s3 URI
+With --s3 each run uploads results.json, log.txt, config.yaml and DONE (last).
+Uses boto3 if installed, else the aws CLI; a failed upload never stops the runs.
 """
 import argparse
 import copy
@@ -63,7 +37,7 @@ PARALLEL_DIR = "Parallel"
 MAIN_SCRIPT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "main.py")
 
 
-# ---------------------------------------------------------------- helpers
+# ---- helpers ----
 def load_yaml(path):
     with open(path, encoding="utf-8") as f:
         return yaml.safe_load(f) or {}
@@ -97,7 +71,7 @@ def keys_for_run(data, n):
     return [k for k in data if k == f"seed_{n}" or k.startswith(f"seed_{n}_")]
 
 
-# ---------------------------------------------------------------- S3
+# ---- S3 ----
 RUN_FILES = ["results.json", "log.txt", "config.yaml", "DONE"]   # DONE last: it marks a complete upload
 
 
@@ -173,7 +147,7 @@ def runs_from(args, raw):
         sys.exit(f"ERROR: {e}")
 
 
-# ---------------------------------------------------------------- launch
+# ---- launch ----
 def prepare_run(n, raw, main_results):
     """Create Parallel/run_<n>/ with its own config and files. Returns the config path."""
     d = run_dir(n)
@@ -285,7 +259,7 @@ def launch(args):
               f"{args.config}")
 
 
-# ---------------------------------------------------------------- status / merge
+# ---- status / merge ----
 def status(args):
     raw = load_yaml(args.config)
     for n in runs_from(args, raw):
@@ -372,7 +346,7 @@ def pull(args):
         print(f"[pull] not finished in S3 (launch will run them): {absent}")
 
 
-# ---------------------------------------------------------------- main
+# ---- main ----
 def main():
     p = argparse.ArgumentParser(description="Run several optimizer runs at the same time.")
     p.add_argument("command", choices=["launch", "status", "merge", "pull"])

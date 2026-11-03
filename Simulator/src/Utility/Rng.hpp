@@ -1,11 +1,9 @@
 #pragma once
 #include <cstdint>
 
-// ─────────────────────────────────────────────
 // Deterministic, portable RNG used by the whole simulator.
 // Same seed -> same sequence on every compiler / OS / CPU
 // (unlike std::uniform_int_distribution, whose output is implementation-defined).
-// ─────────────────────────────────────────────
 namespace Rng {
 
     struct Xoshiro256ss {

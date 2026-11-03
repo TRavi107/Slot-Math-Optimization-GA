@@ -118,14 +118,7 @@ def _positive_float(value, where):
 
 
 def _run_numbers(run):
-    """
-    run.runNumbers accepts:
-        runNumbers: [1, 2, 3]        explicit list (recommended - easy to re-create one run)
-        runNumbers: "1-30"           inclusive range, same as [1, 2, ..., 30]
-        runNumbers: [1-10, 50]       ranges and numbers mixed
-        runNumbers: 4                a single run
-    The old single setting `runNumber: 4` still works.
-    """
+    """run.runNumbers: [1, 2, 3] | "1-30" | [1-10, 50] | 4  (old runNumber: 4 also works)"""
     if "runNumbers" in run:
         raw, where = run["runNumbers"], "run.runNumbers"
     elif "runNumber" in run:
@@ -202,12 +195,10 @@ def _fitness(raw, mode):
 
 
 def _baselines(raw):
-    """
-    Optional section; leaving it out runs no baselines (older configs keep working).
+    """Optional baselines section (none if missing):
         baselines:
           methods: [RandomSearch, HillClimbing, SimulatedAnnealing]
-          simulatedAnnealing: { startTemperature: 0.14, endTemperature: 0.002 }
-    """
+          simulatedAnnealing: { startTemperature: 0.14, endTemperature: 0.002 }"""
     bl = raw.get("baselines") or {}
     names = bl.get("methods") or []
     if not isinstance(names, list):
@@ -229,11 +220,7 @@ def _baselines(raw):
 
 
 def _free_evaluation(fg):
-    """
-    freeGame.evaluation / sessions / triggerRateSpins (all optional; leaving them out
-    keeps the full-game evaluation older configs used).
-    Returns (evaluation, sessions, triggerRateSpins); sessions 0 = auto.
-    """
+    """freeGame.evaluation / sessions / triggerRateSpins (optional, default fullGame). Returns (evaluation, sessions, triggerRateSpins); sessions 0 = auto."""
     evaluation = str(fg.get("evaluation", "fullGame")).strip()
     if evaluation not in FREE_EVALUATIONS:
         raise ConfigError(f"freeGame.evaluation '{evaluation}' must be one of: "

@@ -30,7 +30,7 @@ namespace Utility {
     }
 
 
-    // Returns a random int in [min, max] — both endpoints inclusive
+    // random int in [min, max], inclusive
     inline int randomInt(int min, int max) {
         static thread_local std::mt19937 rng(std::random_device{}());
         std::uniform_int_distribution<int> dist(min, max);
@@ -77,7 +77,7 @@ namespace Utility {
             << "\n";
         std::cout << std::string(32, '-') << "\n";
 
-        std::cout << std::fixed << std::setprecision(2);   // set once; sticky for the rest
+        std::cout << std::fixed << std::setprecision(2);
         for (const auto& key : order) {
             double count = winDistribution.count(key) ? winDistribution.at(key) : 0;
             double pct = (total > 0) ? (count / total * 100.0) : 0.0;

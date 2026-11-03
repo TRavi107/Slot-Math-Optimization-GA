@@ -1,8 +1,6 @@
 #pragma once
 #include "reelMatrixData.hpp"
-// ─────────────────────────────────────────────
 // FreeMatrixData
-// ─────────────────────────────────────────────
 struct FreeMatrixData : public ReelMatrixData {
     long long totalFreeSpinsCount = 0;
     long long triggerCount = 0;
@@ -24,7 +22,7 @@ struct FreeMatrixData : public ReelMatrixData {
     FreeMatrixData(long long spinCount, long long baseBet) : ReelMatrixData(spinCount, baseBet) {}
 
     FreeMatrixData& operator+=(const FreeMatrixData& other) {
-        // base fields — addBase merges totalWins, winningSpins, symbolsData, winDistribution
+        // base fields: addBase merges totalWins, winningSpins, symbolsData, winDistribution
         addBase(other);
 
         // derived fields
@@ -58,7 +56,6 @@ struct FreeMatrixData : public ReelMatrixData {
     void ResetFreeSpin() {
         if (thisSpinFreeSpins > maxFreeSpins) {
             maxFreeSpins = thisSpinFreeSpins;
-            //std::cout << thisSpinWinnings<<"\n";
         }
         if (thisSpinRetirgger > maxRetirgger)
             maxRetirgger = thisSpinRetirgger;

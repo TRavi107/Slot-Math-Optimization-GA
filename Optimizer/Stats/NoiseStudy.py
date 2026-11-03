@@ -1,31 +1,16 @@
 #!/usr/bin/env python3
 """
-Noise study on the GA's final reelsets.
+Simulator noise study on the final reelsets.
 
-For every combination in Results/results.json (each GA replacement x selection pair
-and each baseline, per mutation count and game mode) it takes the best reelset
-across all GA runs (seed_<n>), re-simulates it RUNS times with different seeds, and
-reports the run-to-run noise of every statistic and of the GA fitness.
+Takes the best reelset of every combination, re-simulates it RUNS times with
+different seeds and reports the SD of every stat and of the fitness. Run i uses the
+same seed for every reelset, so paired differences are measured too.
 
-  - BaseGame results (seed_<n>)      are simulated base game only, as the GA scored them
-  - FreeGame results (seed_<n>_free) are simulated as the full game
-  - Fitness targets and weights come from the results file itself: targets from
-    bestSpin.expectedOutput, weights solved from bestSpin.errorPercent and
-    bestSpin.fitness (needs at least as many saved combinations as goals).
-    With fewer, pass --config GA-config.yaml; it is checked against the saved fitness.
-  - Run i uses the same simulator seed for every reelset (common random numbers),
-    so the paired-difference noise between combinations is measured too.
+    python Optimizer/Stats/NoiseStudy.py
+    python Optimizer/Stats/NoiseStudy.py --mode FreeGame --mutation 5
+    python Optimizer/Stats/NoiseStudy.py --runs 20 --spins 40000000
 
-Run from the "Math Optimization" folder:
-    python noise_study.py                         # all modes, all mutation counts
-    python noise_study.py --mode FreeGame --mutation 5
-    python noise_study.py --runs 20 --spins 40000000
-
-Outputs (in --out, default NoiseStudy/):
-    reelsets/<mode>_mutation_<m>_<combo>.json  the reelsets tested
-    noise_runs.csv                             one row per simulation
-    noise_summary.csv                          mean and SD per combination and metric
-    report.txt                                 the printed report
+Output (default NoiseStudy/): reelsets/, noise_runs.csv, noise_summary.csv, report.txt
 """
 import argparse, csv, json, math, os, statistics as st, subprocess, sys, tempfile
 from concurrent.futures import ThreadPoolExecutor
@@ -44,7 +29,7 @@ MODE_STATS = {
 ALL_STATS = MODE_STATS["FreeGame"]
 
 
-# ---------------------------------------------------------------- fitness goals
+# ---- fitness goals ----
 def mode_of(seed_key):
     return "FreeGame" if seed_key.endswith("_free") else "BaseGame"
 
@@ -183,7 +168,7 @@ def best_per_combination(data, modes, mutations):
     return best
 
 
-# ---------------------------------------------------------------- simulation
+# ---- simulation ----
 def seed_for(run):
     """Well-mixed seed per run index (splitmix64). Shared by every reelset -> CRN."""
     x = (0x5EED0000 + run) * 0x9E3779B97F4A7C15 & (2**64 - 1)
@@ -212,7 +197,7 @@ def fitness(row, goals):
     return sum(w * abs(row[k] - t) / t for k, (t, w) in goals.items())
 
 
-# ---------------------------------------------------------------- report helpers
+# ---- report helpers ----
 def sd(v):
     return st.stdev(v) if len(v) > 1 else float("nan")
 

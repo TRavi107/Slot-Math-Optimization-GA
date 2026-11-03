@@ -1,8 +1,6 @@
 #pragma once
 #include "reelMatrixData.hpp"
-// ─────────────────────────────────────────────
-// BaseMatrixData
-// ─────────────────────────────────────────────
+// BuyFreeMatrixData
 struct BuyFreeMatrixData : public ReelMatrixData {
 
     long long totalFreeSpinsCount = 0;
@@ -29,7 +27,7 @@ struct BuyFreeMatrixData : public ReelMatrixData {
     BuyFreeMatrixData(long long spinCount, long long baseBet) : ReelMatrixData(spinCount, baseBet) {}
 
     BuyFreeMatrixData& operator+=(const BuyFreeMatrixData& other) {
-        // base fields — addBase merges totalWins, winningSpins, symbolsData, winDistribution
+        // base fields: addBase merges totalWins, winningSpins, symbolsData, winDistribution
         addBase(other);
 
         // derived fields
@@ -45,11 +43,6 @@ struct BuyFreeMatrixData : public ReelMatrixData {
         }
         return *this;
     }
-    //void AddBuyStripWins(const int& _scatterCount,const double& winAmount) {
-    //    totalWins += winAmount;
-    //    buyStripsWins += winAmount;
-    //    scatterCount[_scatterCount - 3] += 1;
-    //}
     void calculate() override {
         ReelMatrixData::calculate();
         triggerRate = SPINCOUNT / (triggerCount ? triggerCount : 1.f);
@@ -63,10 +56,6 @@ struct BuyFreeMatrixData : public ReelMatrixData {
         averagebuyStripsWins = buyStripsWins / triggerCount;
         
     }
-    //void updateWinnings(double currentWin) override {
-    //    ReelMatrixData::updateWinnings(currentWin);
-    //    buyStripsWins += currentWin;
-    //}
     
     void AddFreeSpins(const int spins, const bool isRetrigger = false) {
         totalFreeSpinsCount += spins;
@@ -79,7 +68,6 @@ struct BuyFreeMatrixData : public ReelMatrixData {
     void ResetFreeSpin() {
         if (thisSpinFreeSpins > maxFreeSpins) {
             maxFreeSpins = thisSpinFreeSpins;
-            //std::cout << thisSpinWinnings<<"\n";
         }
         if (thisSpinRetirgger > maxRetirgger)
             maxRetirgger = thisSpinRetirgger;

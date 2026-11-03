@@ -8,6 +8,12 @@ reel strips automatically, and a controlled experiment (30 independent seeds, 2,
 optimization runs, 2.7 million simulator calls, about 83 hours of computing) comparing nine
 genetic-algorithm (GA) designs with three simpler search methods.
 
+Earlier studies have tuned slot reels automatically with a GA [1], differential evolution [2],
+a parallel GA [3] and variable neighbourhood search [4], mostly aiming at the base-game RTP
+alone. This project adds a controlled, statistically tested comparison of GA designs against
+local search on several targets at once (RTP, hit rate, trigger and retrigger rates), for both
+the base game and the free game, with the simulator's own noise measured.
+
 ### How the project developed
 
 The project **started as a genetic-algorithm project**: the plan was to show that a GA can tune
@@ -58,6 +64,7 @@ came out.
 8. [Limitations and what could be improved](#8-limitations-and-what-could-be-improved)
 9. [Glossary](#9-glossary)
 10. [Data, licence and citation](#10-data-licence-and-citation)
+11. [References](#11-references)
 
 ---
 
@@ -185,8 +192,9 @@ reels.
 
 Everything a player experiences — how much the game pays back on average, how often a spin
 wins, how often the bonus round comes — is decided by **which symbols sit where on the
-reel strips**. Mathematicians in the industry design these strips by hand: change a few
-symbols, simulate millions of spins, check the numbers, repeat. With 9 symbols and 250
+reel strips**. In the industry these strips are usually designed by hand: change a few
+symbols, simulate millions of spins, check the numbers, repeat. Earlier work has automated
+this with metaheuristics [1–4] (see the introduction). With 9 symbols and 250
 positions per reel set, the number of possible strips is astronomically large (9²⁵⁰), and
 the numbers can only be measured by simulation, not calculated from a formula.
 
@@ -247,12 +255,12 @@ repeat until 1000 evaluations are used:
 keep the best reelset ever seen
 ```
 
-| Choice                               | Options compared                                                                                                                                                                                                         |
-| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Selection** — who becomes a parent | **Tournament**: draw 3 at random, keep the best. **Roulette**: a wheel where better reelsets get bigger slices (sized by rank). **SUS**: the same wheel spun once with evenly spaced pointers — less luck than roulette. |
-| **Crossover** — mixing two parents   | For each reel, a random cut point; the child takes parent 1's strip before it and parent 2's after it.                                                                                                                   |
-| **Mutation** — tweaking a child      | Change _m_ random positions (out of all 250) to a different symbol. _m_ ∈ {1, 3, 5, 10}.                                                                                                                                 |
-| **Replacement** — who survives       | **Steady-state**: one child per step; it replaces the worst reelset if better. **Generational**: 10 children replace the whole population. **Elitist generational**: the 2 best survive, 8 children fill the rest.       |
+| Choice                               | Options compared                                                                                                                                                                                                             |
+| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Selection** — who becomes a parent | **Tournament**: draw 3 at random, keep the best. **Roulette**: a wheel where better reelsets get bigger slices (sized by rank). **SUS** [5]: the same wheel spun once with evenly spaced pointers — less luck than roulette. |
+| **Crossover** — mixing two parents   | For each reel, a random cut point; the child takes parent 1's strip before it and parent 2's after it.                                                                                                                       |
+| **Mutation** — tweaking a child      | Change _m_ random positions (out of all 250) to a different symbol. _m_ ∈ {1, 3, 5, 10}.                                                                                                                                     |
+| **Replacement** — who survives       | **Steady-state**: one child per step; it replaces the worst reelset if better. **Generational**: 10 children replace the whole population. **Elitist generational**: the 2 best survive, 8 children fill the rest.           |
 
 3 replacement strategies × 3 selection methods = **9 GA configurations**, each run at 4
 mutation counts.
@@ -263,7 +271,7 @@ mutation counts.
 | ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
 | **Random search**                                    | A brand-new random reelset every evaluation; keep the best. Shows how hard the problem is.                                  |
 | **Hill climbing** (a "(1+1) evolutionary algorithm") | One reelset; mutate it with the _same_ mutation operator; keep the child if it is at least as good.                         |
-| **Simulated annealing**                              | Like hill climbing, but sometimes accepts a worse child, less and less often as the run goes on (temperature 0.14 → 0.002). |
+| **Simulated annealing** [6]                          | Like hill climbing, but sometimes accepts a worse child, less and less often as the run goes on (temperature 0.14 → 0.002). |
 
 Hill climbing and simulated annealing were added as **fair, strong comparisons**: they use the
 GA's own mutation operator, start from the best of the GA's starting reelsets, and get the same
@@ -327,9 +335,9 @@ rule that out, the free stage was run a second time (**fixed-base check**, 990 r
 ### 5.5 Statistics
 
 - **Friedman test** — do the methods differ at all (per mutation count)?
-- **Wilcoxon signed-rank test, paired by seed**, with **Holm correction** for running many
+- **Wilcoxon signed-rank test, paired by seed**, with **Holm correction** [7] for running many
   comparisons — which pairs differ? (α = 0.05)
-- **Vargha–Delaney A12** effect size — the chance that method A ends lower than method B on a
+- **Vargha–Delaney A12** effect size [8] — the chance that method A ends lower than method B on a
   run (0.5 = no difference; ≥0.71 is "large").
 - A result counts as a finding only if it is **significant after Holm, at least a small effect,
   and larger than the noise floor**.
@@ -685,7 +693,7 @@ well-configured simple one under identical conditions.
 
 **What could be improved next**
 
-- **Multi-objective search** (e.g. NSGA-II) for the free game: show the designer the whole
+- **Multi-objective search** (e.g. NSGA-II [9]) for the free game: show the designer the whole
   trade-off between hit rate and retrigger rate instead of a single weighted compromise, and
   check whether the targets are reachable at all.
 - **Better mutation:** start strong and reduce it over time, or let it adapt to progress; add
@@ -776,3 +784,36 @@ If you use this project, its code or its results, please cite it:
 
 GitHub also shows these details through the **"Cite this repository"** button, from
 [`CITATION.cff`](CITATION.cff).
+
+---
+
+## 11. References
+
+**Earlier work on automatic slot-reel tuning**
+
+1. T. Balabanov, I. Zankinski, B. Shumanov. _Slot Machines RTP Optimization with Genetic
+   Algorithms._ Numerical Methods and Applications (NMA 2014), LNCS 8962, pp. 55–61, Springer, 2015. [doi:10.1007/978-3-319-15585-2_6](https://doi.org/10.1007/978-3-319-15585-2_6)
+2. T. Balabanov, I. Zankinski, B. Shumanov. _Slot Machine RTP Optimization and Symbols Wins
+   Equalization with Discrete Differential Evolution._ Large-Scale Scientific Computing
+   (LSSC 2015), LNCS 9374, Springer, 2015.
+   [doi:10.1007/978-3-319-26520-9_22](https://doi.org/10.1007/978-3-319-26520-9_22)
+3. D. Keremedchiev, P. Tomov, M. Barova. _Slot Machine Base Game Evolutionary RTP
+   Optimization._ Numerical Analysis and Its Applications (NAA 2016), LNCS 10187, Springer, 2017.
+   [doi:10.1007/978-3-319-57099-0_45](https://doi.org/10.1007/978-3-319-57099-0_45)
+4. P.-A. Kamanas, A. Sifaleras, N. Samaras. _Slot Machine RTP Optimization Using Variable
+   Neighborhood Search._ Mathematical Problems in Engineering, vol. 2021, 2021.
+   [doi:10.1155/2021/8784065](https://doi.org/10.1155/2021/8784065)
+
+**Methods used**
+
+5. J. E. Baker. _Reducing Bias and Inefficiency in the Selection Algorithm._ Proceedings of the
+   2nd International Conference on Genetic Algorithms, pp. 14–21, 1987.
+6. S. Kirkpatrick, C. D. Gelatt, M. P. Vecchi. _Optimization by Simulated Annealing._ Science
+   220(4598), pp. 671–680, 1983.
+7. S. Holm. _A Simple Sequentially Rejective Multiple Test Procedure._ Scandinavian Journal of
+   Statistics 6(2), pp. 65–70, 1979.
+8. A. Vargha, H. D. Delaney. _A Critique and Improvement of the CL Common Language Effect Size
+   Statistics of McGraw and Wong._ Journal of Educational and Behavioral Statistics 25(2),
+   pp. 101–132, 2000.
+9. K. Deb, A. Pratap, S. Agarwal, T. Meyarivan. _A Fast and Elitist Multiobjective Genetic
+   Algorithm: NSGA-II._ IEEE Transactions on Evolutionary Computation 6(2), pp. 182–197, 2002.

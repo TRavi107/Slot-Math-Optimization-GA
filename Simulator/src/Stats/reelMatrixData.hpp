@@ -59,10 +59,9 @@ struct ReelMatrixData {
     void updateSymbolsData(double currentWin, int winningComCount, const GameSymbols symbol) {
         if (currentWin == 0.f) return;
 
-        // Find or create — returns reference to existing or newly inserted element
         auto it = symbolsData.find(symbol);
         if (it == symbolsData.end()) {
-            // Not found — insert a new SymbolData initialized for this symbol
+            // first win for this symbol
             SymbolData newData;
             newData.SYMBOL = symbol;
             newData.TOTALSPINS = SPINCOUNT;
@@ -70,7 +69,7 @@ struct ReelMatrixData {
             it = symbolsData.emplace(symbol, newData).first;
         }
 
-        SymbolData& sd = it->second;  // ← reference, not copy — edits persist
+        SymbolData& sd = it->second;
 
         sd.winSpinsCount++;
         sd.UpdateWinningComb(winningComCount);

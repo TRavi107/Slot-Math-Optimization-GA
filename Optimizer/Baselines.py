@@ -1,40 +1,15 @@
 """
-Baseline optimizers for reelset tuning, run under exactly the GA's conditions.
+Baseline optimizers: RandomSearch, HillClimbing ((1+1)-EA) and SimulatedAnnealing.
 
-What every baseline shares with the GA (so the comparison is fair):
-    starting reelsets   the run's evaluated initial population; a baseline starts
-                        from its best member (the GA has seen all of them too)
-    budget              run.generations fitness evaluations after the initial
-                        population - the same 1000 the GA spends
-    simulator seed      the run's sim seed (common random numbers): a reelset gets
-                        the same score whichever method proposes it
-    spins, goals        the same run.spins and fitnessVariables
-    evaluation          the same simulator mode (FreeGame: full game or free sessions)
-    mutation operator   Selection.mutate with the same mutation count
+They run on the GA's terms: same starting population (start from its best member),
+same budget (run.generations evaluations), same spins, same simulator seed, same
+mutation operator.
 
-Methods
-    RandomSearch        every evaluation is a brand-new random reelset; keep the best.
-                        Does not use the mutation count.
-    HillClimbing        (1+1)-EA: mutate the current reelset, keep the child if it is
-                        at least as good. Ties are accepted, so it can drift across
-                        flat regions. This is a Steady-state GA with population 1 and
-                        no crossover, so it is the baseline the GA most needs to beat.
-    SimulatedAnnealing  like HillClimbing, but a worse child is still accepted with
-                        probability exp(-delta / T), where
-                            delta = ln(child fitness) - ln(current fitness)
-                        and T cools geometrically from startTemperature to
-                        endTemperature over the budget.
+SA accepts a worse child with probability exp(-delta / T), delta = ln(child) - ln(current).
+ln because the error goes from ~50 to ~0.05 during a run, and on a linear scale one
+temperature can't work at both ends. T cools geometrically from start to end temperature.
 
-Why ln(fitness) in the annealing test: the error falls from ~50 to ~0.05 during a
-run. On an absolute scale any temperature is either far too hot near the end or
-frozen at the start. On a log scale T means "how much relative worsening is
-tolerated": T = 0.14 accepts a child 10 % worse than the current one about half the
-time; T = 0.002 practically never does.
-
-History layout (one row per evaluation, same layout as the GA's results):
-    [best fitness so far, fitness of the reelset the method is currently on]
-RandomSearch's second column is the reelset it just sampled. Row k is the state
-after k + 1 evaluations, so Compare.py plots baselines and GA on one x-axis.
+History rows: [best so far, current fitness], one per evaluation (same layout as the GA).
 """
 import copy
 import math

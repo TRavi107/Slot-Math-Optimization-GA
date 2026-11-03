@@ -1,47 +1,15 @@
 """
-GA reelset-tuning report charts.
+Report charts from the results file (Results/results.json).
 
-Reads the save_sim_results JSON layout:
-    seed_<S> -> results -> mutation_<M> -> <Replacement>_<Selection> -> results = [[best, mean], ...]
-    seed_<S> -> results -> mutation_<M> -> <Method>_Baseline         -> results = [[best, current], ...]
-and, when the runs recorded it (see Compute.py), the computing cost:
-    seed_<S> -> compute / machines,   ... -> <combo> -> timing
+Final-error charts use the final check (bestSpin.fitness, re-run on an unused seed).
+The in-run best is biased low, so it is only used for curves over the run.
+x-axis is fitness evaluations, so all strategies share one budget axis.
 
-FINAL ERRORS: every chart that compares where runs ENDED uses the run's final check
-(bestSpin.fitness, re-measured with finalCheckSpins on a seed the run never used), the same
-numbers Stats.py tests. The in-run final best is the lowest of ~1000 noisy 10M-spin measurements
-and is biased low, so it is only used for curves over the run (convergence, speed to target,
-best vs mean). Files without final checks fall back to the in-run value, and the axis labels
-say which one is shown.
+Charts 1-9 (base / free), 10-12 computing cost (only if timing was recorded),
+13-14 free game. Output: Results/Graphs and Results/Graphs/FreeGame.
 
-and writes these PNGs:
-    1_convergence_by_strategy.png   best-so-far vs fitness evaluations, per strategy + baselines (in-run)
-    2_final_error_by_mutation.png   final error for every mutation rate (GA box + seed dots, baseline dots beside)
-    3_heatmap_config_mutation.png   median final error, config x mutation (baselines are rows too)
-    4_speed_to_target.png           evaluations needed to reach error <= 0.5 / 0.2 (in-run, one mutation rate)
-    5_steadystate_by_mutation.png   Steady-state vs hill climbing convergence for each mutation rate (in-run)
-    6_selection_comparison.png      selection method within each strategy, baselines alongside (median + IQR)
-    7_best_vs_mean.png              best vs population-mean error over the run (diversity; GA only; in-run)
-    8_final_best_mean_gap.png       final best vs final mean per strategy x mutation (GA only; in-run)
-    9_ga_vs_baselines.png           a top-group GA configuration vs each baseline: convergence + per-seed finals
-  computing cost (only for runs that recorded timing):
-    10_compute_cost.png, 11_budget_and_population.png, 12_machine_comparison.png, compute_report.md
-  free game (paper figures):
-    13_free_fixed_base_check.png    Both-mode free stage vs the fixed-base re-run: medians per method x
-                                    mutation (rank agreement) and the paired per-run difference
-    14_free_game_tradeoff.png       where the free-game error comes from: hit-rate error vs retrigger-rate
-                                    error of every final reelset (the two basins)
-
-x-axis is "fitness evaluations": every run costs the same BUDGET evaluations (run.generations,
-read from the file's meta), so children-per-step = BUDGET / steps (with 1000: SteadyState 1000
-steps -> 1, Generational 100 -> 10, Elitist 125 -> 8, every baseline 1000 -> 1).
-Mutation <M> is shown as M stops out of REEL_SIZE (stops per reelset, read from the file).
-Random search ignores the mutation count, so the same random-search runs appear at every rate.
-
-Usage (from the project root):
     python Optimizer/Stats/Compare.py
     python Optimizer/Stats/Compare.py --results Results/results.json --fixed Results/results_fixedbase.json
-Base charts go to Results/Graphs, free charts to Results/Graphs/FreeGame.
 """
 import argparse
 import json
@@ -60,7 +28,7 @@ from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
 from matplotlib.ticker import NullFormatter
 
-# ----------------------------------------------------------------- settings
+# ---- settings ----
 # Defaults only: load() replaces them with the values in the results file.
 BUDGET = 1000        # fitness evaluations per run (run.generations)
 REEL_SIZE = 250       # stops per reelset -> mutation % = M / REEL_SIZE
@@ -76,7 +44,7 @@ def _set_scale(budget, reel_size):
     step = max(1, BUDGET // 100)
     GRID = np.arange(step, BUDGET + 1, step)
 
-# ----------------------------------------------------------------- style
+# ---- style ----
 INK, INK2, MUTED, GRIDC, SURF = "#0b0b0b", "#52514e", "#8a8984", "#e6e5e0", "#ffffff"
 STRATS = ["SteadyState", "ElistismGenerational", "Generational"]
 SC = {"SteadyState": "#2a78d6", "ElistismGenerational": "#eb6834", "Generational": "#1baf7a"}
@@ -85,8 +53,7 @@ SELS = ["TournamentSelection", "RouletteSelection", "SUS"]
 SELL = {"TournamentSelection": "Tournament", "RouletteSelection": "Roulette", "SUS": "SUS"}
 SEQ = ["#86b6ef", "#5598e7", "#2a78d6", "#1c5cab", "#0d366b", "#0a2a52"]   # light -> dark, low -> high mutation
 
-# baselines: stored as <Method>_Baseline. Non-solid lines and their own marker shapes, so they
-# never rely on colour alone. Random search is a gray dotted reference line (the floor to beat).
+# baselines (<Method>_Baseline): dashed/dotted lines with their own markers; random search gray dotted
 BASELINE_TAG = "Baseline"
 BLS = ["HillClimbing", "SimulatedAnnealing", "RandomSearch"]
 BC = {"HillClimbing": "#a3329e", "SimulatedAnnealing": "#7a5c00", "RandomSearch": "#5c5b57"}
@@ -132,7 +99,7 @@ def _config_label(strat, sel):
     return f"{SL.get(strat, strat)} + {SELL.get(sel, sel)}"
 
 
-# ----------------------------------------------------------------- loading
+# ---- loading ----
 def _stops(reelset):
     """Number of stops in a reelset, accepting the extra list level parent files use."""
     if reelset and isinstance(reelset[0], list) and reelset[0] and isinstance(reelset[0][0], list):
@@ -249,7 +216,7 @@ def _cap(s):
     return s[:1].upper() + s[1:]
 
 
-# ----------------------------------------------------------------- charts
+# ---- charts ----
 def chart1_convergence(df, curves, out_dir, muts):
     fig, axes = plt.subplots(1, len(muts), figsize=(4.4 * len(muts), 4.2), sharey=True, squeeze=False)
     for ax, m in zip(axes[0], muts):
@@ -384,9 +351,7 @@ def chart4_speed(df, out_dir, mut):
 
 
 def chart5_steadystate_by_mutation(curves, out_dir, seeds, rates):
-    """Steady-state GA (solid) against hill climbing (dashed) at every mutation rate. Hill climbing
-    is a population-1 Steady-state GA without crossover, so the gap is what the population and
-    crossover add."""
+    """Steady-state GA (solid) vs hill climbing (dashed) at every mutation rate."""
     fig, ax = plt.subplots(figsize=(8, 4.5))
     ends = []
     for r, c in zip(rates, SEQ):
@@ -502,8 +467,7 @@ def chart8_best_mean_gap(df, out_dir, rates):
 
 
 def _best_ga_config(df, mut):
-    """(config label, strategy, selection) of the GA configuration with the lowest median final error.
-    Only a representative of the top group: Stats.py shows several configurations tied with it."""
+    """(config label, strategy, selection) of the GA config with the lowest median final error."""
     ga = _ga(df[df.mutation == mut])
     if ga.empty:
         return None
@@ -513,10 +477,8 @@ def _best_ga_config(df, mut):
 
 
 def chart9_ga_vs_baselines(df, curves, out_dir, mut):
-    """The GA configuration with the lowest median final error at this mutation rate (a representative
-    of the top group, not a significant winner) against each baseline: median convergence with IQR,
-    then each seed's final error, with the GA and hill climbing joined per seed so wins and losses are
-    visible run by run."""
+    """Best GA config at this mutation rate vs each baseline: median convergence (IQR band),
+    then per-seed final errors, GA and hill climbing joined per seed."""
     g = df[df.mutation == mut]
     ga = _ga(g)
     bls = [b for b in BLS if (g.strategy == b).any()]
@@ -575,8 +537,8 @@ def chart9_ga_vs_baselines(df, curves, out_dir, mut):
     return _save(fig, out_dir, "9_ga_vs_baselines")
 
 
-# ================================================================= computing cost
-# Fitness SD of ONE 10M-spin evaluation (simulator noise study, claude/noise-study-results.md;
+# ---- computing cost ----
+# Fitness SD of ONE 10M-spin evaluation (NoiseStudy.py;
 # worst case over the reelsets measured), scaling as 1/sqrt(spins). Same numbers as Stats.py.
 NOISE_SD_10M = {"base": 0.034, "free": 0.10}
 Z_DIFF_95 = 2.77                 # two independent measurements must differ by 2.77 SD to tell apart (95%)
@@ -1175,7 +1137,7 @@ def run_compute(df, curves, json_file, stage, out_dir, mut):
             compute_report(df, curves, cc, stage, out_dir, mut)]
 
 
-# ================================================================= free game (paper figures)
+# ---- free game ----
 def _method_label(strat, sel):
     """'Steady-state + Tournament' / 'Hill climbing' (no 'Baseline:' prefix, for compact plots)."""
     if sel == BASELINE_TAG:
@@ -1185,10 +1147,8 @@ def _method_label(strat, sel):
 
 
 def chart13_free_fixed_base(both_json, fixed_json, out_dir):
-    """Robustness check for the free-game stage. In Both mode each method's free stage starts from the
-    base reels it found itself; the fixed-base re-run gives every method one identical base reelset.
-    Left: median final-check error per method x mutation in both experiments (on the diagonal = the
-    base reels made no difference). Right: per run (same method, mutation and seed) fixed minus Both."""
+    """Free stage, Both mode vs fixed-base re-run. Left: median final error per method x mutation
+    (diagonal = base reels made no difference). Right: per-run difference, fixed minus Both."""
     from scipy import stats as sps
     a, _ = load(both_json, "free")
     b, _ = load(fixed_json, "free")
@@ -1246,9 +1206,8 @@ def chart13_free_fixed_base(both_json, fixed_json, out_dir):
 
 
 def chart14_free_tradeoff(json_files, out_dir):
-    """Where the free-game error comes from. Every final reelset (final check) as hit-rate error vs
-    retrigger-rate error, coloured by its fitness. The target is (0, 0); runs pile up in two places:
-    hit rate too frequent with retrigger on target, or hit rate on target with retriggers far too frequent."""
+    """Hit-rate error vs retrigger-rate error of every final free-game reelset, coloured by fitness.
+    Target is (0, 0)."""
     frames = []
     for label, path in json_files:
         d, _ = load(path, "free")
@@ -1300,9 +1259,9 @@ def chart14_free_tradeoff(json_files, out_dir):
     return _save(fig, out_dir, "14_free_game_tradeoff")
 
 
-# ----------------------------------------------------------------- main
+# ---- main ----
 def _report(df, json_file, stage, out_dir):
-    """Print what was loaded, so a missing method or stage is obvious before reading charts."""
+    """Print what was loaded (methods, stages, seeds)."""
     seeds = sorted(df.seed.unique(), key=lambda s: int(s.split("_")[1]))
     ga = _ga(df)
     bls = [b for b in BLS if (df.strategy == b).any()]
@@ -1352,8 +1311,7 @@ def run_all(json_file, out_dir="plots", speed_mutation=5, stage="base", compute=
 
 
 def run_free(json_file, fixed_json, out_dir, speed_mutation=5):
-    """Minimal free-game set for the paper: heatmap (3) and GA vs baselines (9) on the main runs,
-    the fixed-base robustness check (13) and the hit-rate / retrigger trade-off (14)."""
+    """Free-game charts: heatmap (3), GA vs baselines (9), fixed-base check (13), trade-off (14)."""
     os.makedirs(out_dir, exist_ok=True)
     df, curves = load(json_file, "free")
     _report(df, json_file, "free", out_dir)

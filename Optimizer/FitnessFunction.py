@@ -28,16 +28,6 @@ def evaluate_parent(parent, spins , simulatorPath, path):
     output = Evaluate(spins, path,simulatorPath)
 
     elapsed = time.perf_counter() - start
-    # print(f"Simulation Took {elapsed:.4f} seconds")
 
     UpdateParentVars(parent,output)
     return output
-# HERE = Path(__file__).resolve().parent
-# reelset = HERE / "reelset.json"
-
-# if not reelset.is_file():
-#     raise FileNotFoundError(reelset)
-
-# res = Evaluate(100_000_000, str(reelset))
-
-# print(res["totalRTP"], res["baseRTP"])
